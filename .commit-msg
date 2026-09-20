@@ -1,9 +1,4 @@
-feat(ui): rediseño completo del Dashboard según manual de marca La Mundial
+fix(ui): usar logo-color.png oficial de La Mundial en sidebar
 
-- Sidebar con gradiente navy oficial (#091133 → #0F1A5A)
-- Ribbon brand superior en header (gradiente tricolor oficial)
-- Cards de producto usando clases CSS del design system (.product-card, .product-icon-*)
-- KPIs alimentados con datos reales de audit logs (accesos hoy, productos, operaciones)
-- Tabla de actividad reciente con iconos contextuales y tiempo relativo
-- Tipografía Poppins, colores exclusivamente de la paleta oficial
-- Logo blanco en sidebar, avatar con gradiente brand
+- Cambiado logo-white.png por logo-color.png (logo oficial del manual de marca)
+- Contenedor blanco con bordes redondeados para mostrar el logo a color sobre el sidebar navy

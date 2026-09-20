@@ -132,13 +132,15 @@ export const DashboardPage: React.FC = () => {
         className="w-[260px] flex flex-col flex-shrink-0 z-20"
         style={{ background: 'linear-gradient(180deg, #091133 0%, #0F1A5A 100%)' }}
       >
-        {/* Logo */}
-        <div className="h-20 flex items-center justify-center px-6 border-b border-white/10">
-          <img
-            src="/logo-white.png"
-            alt="La Mundial de Seguros"
-            className="h-10 object-contain opacity-95"
-          />
+        {/* Logo oficial La Mundial de Seguros */}
+        <div className="h-20 flex items-center justify-center px-5 border-b border-white/10">
+          <div className="bg-white rounded-xl px-4 py-2 w-full flex justify-center shadow-sm">
+            <img
+              src="/logo-color.png"
+              alt="La Mundial de Seguros"
+              className="h-10 object-contain mix-blend-multiply"
+            />
+          </div>
         </div>
 
         {/* Perfil del usuario */}
