@@ -1,4 +1,4 @@
-import { LogOut, ClipboardList, Settings } from 'lucide-react';
+import { LogOut, ClipboardList, LayoutGrid, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { logout, getCurrentUser } from '@/lib/nexus-auth';
@@ -11,75 +11,81 @@ type Props = {
 export function PortalHeader({ active = 'dashboard' }: Props) {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const admin = isPortalAdmin(user);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  return (
-    <header className="border-b-2 border-[#E84F51] bg-white shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-        <MundialBrand variant="dark" isotipoClassName="h-12 w-12" />
+  const navItems = [
+    { key: 'dashboard' as const, label: 'Ramos', icon: LayoutGrid, to: '/dashboard' },
+    { key: 'audit' as const, label: 'Bitácora', icon: ClipboardList, to: '/audit' },
+    ...(admin
+      ? [{ key: 'settings' as const, label: 'Configuración SSO', icon: Settings, to: '/settings/sso' }]
+      : []),
+  ];
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              active === 'dashboard'
-                ? 'bg-[#0F1A5A] text-white'
-                : 'text-[#0F1A5A] hover:bg-[#F0F2F8]'
-            }`}
-          >
-            Productos
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/audit')}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              active === 'audit'
-                ? 'bg-[#0F1A5A] text-white'
-                : 'text-[#0F1A5A] hover:bg-[#F0F2F8]'
-            }`}
-          >
-            <ClipboardList size={16} />
-            Bitácora
-          </button>
-          {user && isPortalAdmin(user) && (
+  const initials = (user?.nombre ?? 'U')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('');
+
+  return (
+    <header className="bg-white shadow-[0_1px_0_rgba(9,17,51,0.06)]">
+      <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #0F1A5A, #2E6DBF 55%, #E84F51)' }} />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <button type="button" onClick={() => navigate('/dashboard')} className="text-left">
+          <MundialBrand isotipoClassName="h-10 w-10" />
+        </button>
+
+        <nav className="flex items-center gap-1 sm:gap-1.5">
+          {navItems.map(({ key, label, icon: Icon, to }) => (
             <button
+              key={key}
               type="button"
-              onClick={() => navigate('/settings/sso')}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                active === 'settings'
-                  ? 'bg-[#0F1A5A] text-white'
+              onClick={() => navigate(to)}
+              className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                active === key
+                  ? 'bg-[#0F1A5A] text-white shadow-sm'
                   : 'text-[#0F1A5A] hover:bg-[#F0F2F8]'
               }`}
             >
-              <Settings size={16} />
-              SSO
+              <Icon size={16} />
+              <span className="hidden sm:inline">{label}</span>
             </button>
-          )}
+          ))}
 
           {user && (
-            <div className="hidden sm:flex flex-col items-end pl-2 border-l border-[#dddddd] ml-1">
-              <span className="text-sm font-bold text-[#091133]">{user.nombre}</span>
-              <span className="text-[10px] uppercase tracking-wider text-[#777777] font-semibold">
-                {user.empresa ?? 'La Mundial'}
-              </span>
+            <div className="hidden md:flex items-center gap-3 ml-3 pl-4 border-l border-[#e4e6ee]">
+              <div
+                className="h-9 w-9 rounded-full grid place-items-center text-[11px] font-bold text-white"
+                style={{ background: 'linear-gradient(135deg, #0F1A5A, #162A7F)' }}
+              >
+                {initials}
+              </div>
+              <div className="leading-tight">
+                <p className="text-sm font-bold text-[#091133]">{user.nombre}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#ACACAC]">
+                  {user.empresa ?? 'La Mundial'}
+                </p>
+              </div>
             </div>
           )}
 
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-[#E84F51] hover:bg-red-50 transition-colors"
+            className="ml-1 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-[#E84F51] hover:bg-red-50 transition-colors"
             title="Cerrar sesión"
           >
-            <LogOut size={18} />
-            <span className="hidden md:inline">Salir</span>
+            <LogOut size={17} />
+            <span className="hidden lg:inline">Salir</span>
           </button>
-        </div>
+        </nav>
       </div>
     </header>
   );
