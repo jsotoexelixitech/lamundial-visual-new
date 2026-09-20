@@ -66,6 +66,17 @@ body {
   to   { opacity: 1; }
 }
 
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) scale(1); }
+  33%      { transform: translateY(-30px) scale(1.05); }
+  66%      { transform: translateY(20px) scale(0.95); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 .animate-slide-up {
   animation: slide-up 0.6s ease-out forwards;
 }
@@ -82,7 +93,10 @@ body {
   animation: slide-up 0.6s ease-out 0.4s both;
 }
 .animate-fade-in {
-  animation: fade-in 0.8s ease-out forwards;
+  animation: fade-in 1.5s ease-out forwards;
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ═══════════════════════════════════════════════════
