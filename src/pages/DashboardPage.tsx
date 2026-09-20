@@ -8,12 +8,13 @@ import {
 import { getCurrentUser, logout } from '@/lib/nexus-auth';
 import { PRODUCTS } from '@/lib/portal-config';
 import type { ProductConfig } from '@/lib/portal-config';
-import { LaunchModal } from '@/components/LaunchModal';
+import { buildModuleUrl } from '@/lib/module-launcher';
+import { registerAudit, getToken } from '@/lib/nexus-auth';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
-  const [selectedProduct, setSelectedProduct] = useState<ProductConfig | null>(null);
+  const [launching, setLaunching] = useState<string | null>(null);
 
   if (!user) {
     navigate('/login');
@@ -40,6 +41,29 @@ export const DashboardPage: React.FC = () => {
       case 'Pendiente': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'En revisión': return 'bg-blue-100 text-blue-700 border-blue-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const handleLaunch = async (product: ProductConfig) => {
+    setLaunching(product.key);
+    try {
+      const token = getToken();
+      if (!token) throw new Error('No hay sesión activa.');
+      
+      const targetUrl = buildModuleUrl(product.key, token);
+      
+      await registerAudit({
+        accion: `launch_${product.key}`,
+        producto: product.key,
+        detalle: { method: 'direct_token', targetUrl: targetUrl.split('?')[0] },
+      });
+      
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      console.error('Error al lanzar módulo:', err);
+      alert('Error al lanzar módulo. Verifica tu sesión.');
+    } finally {
+      setLaunching(null);
     }
   };
 
@@ -197,10 +221,11 @@ export const DashboardPage: React.FC = () => {
               <div className="flex flex-col gap-4">
                 {PRODUCTS.map((product) => {
                   const deco = getProductDecorations(product.key);
+                  const isLaunching = launching === product.key;
                   return (
                   <div 
                     key={product.key} 
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => handleLaunch(product)}
                     className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:border-[#0F1A5A]/30 transition-all cursor-pointer group relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-full -z-10 group-hover:bg-[#0F1A5A]/5 transition-colors"></div>
@@ -291,14 +316,6 @@ export const DashboardPage: React.FC = () => {
           </div>
         </main>
       </div>
-
-      {/* Modal de Lanzamiento SSO */}
-      {selectedProduct && (
-        <LaunchModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
     </div>
   );
 };
