@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, FileText, Activity,
   Bell, Settings, LogOut, Search,
   PlayCircle, Car, Building, Heart,
-  ExternalLink, CheckCircle2, Zap, ArrowRight
+  ExternalLink, CheckCircle2, Zap, ArrowRight, Clock
 } from 'lucide-react';
 import { getCurrentUser, logout, getToken, ssoDelegate, registerAudit, getAuditLogs } from '@/lib/nexus-auth';
 import type { AuditLog } from '@/lib/nexus-auth';
