@@ -1,3 +1,5 @@
-fix(ui): usar logo-mundial.png en el sidebar
+feat(portal): rediseño premium de dashboard y login
 
-El archivo logo-color.png era el equivocado (Exelixi). logo-mundial.png es el correcto de La Mundial.
+- Login: Diseño Split-Screen corporativo de alta conversión.
+- Dashboard: Sidebar minimalista blanco y floating cards modernas.
+- Paleta alineada estricta a Azul Pennsylvania (#0F1A5A) y Rojo Imperial (#E84F51).
