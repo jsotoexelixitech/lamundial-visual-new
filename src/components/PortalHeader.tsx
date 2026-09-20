@@ -1,10 +1,11 @@
-import { LogOut, ClipboardList } from 'lucide-react';
+import { LogOut, ClipboardList, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { logout, getCurrentUser } from '@/lib/nexus-auth';
+import { isPortalAdmin } from '@/lib/portal-sso-config';
 
 type Props = {
-  active?: 'dashboard' | 'audit';
+  active?: 'dashboard' | 'audit' | 'settings';
 };
 
 export function PortalHeader({ active = 'dashboard' }: Props) {
@@ -45,6 +46,20 @@ export function PortalHeader({ active = 'dashboard' }: Props) {
             <ClipboardList size={16} />
             Bitácora
           </button>
+          {user && isPortalAdmin(user) && (
+            <button
+              type="button"
+              onClick={() => navigate('/settings/sso')}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                active === 'settings'
+                  ? 'bg-[#0F1A5A] text-white'
+                  : 'text-[#0F1A5A] hover:bg-[#F0F2F8]'
+              }`}
+            >
+              <Settings size={16} />
+              SSO
+            </button>
+          )}
 
           {user && (
             <div className="hidden sm:flex flex-col items-end pl-2 border-l border-[#dddddd] ml-1">

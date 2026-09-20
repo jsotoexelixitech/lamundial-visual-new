@@ -7,6 +7,7 @@ import { getCurrentUser, getToken, ssoDelegate, registerAudit } from '@/lib/nexu
 import { PRODUCTS } from '@/lib/portal-config';
 import type { ProductConfig, ProductKey } from '@/lib/portal-config';
 import { buildFallbackModuleUrl, buildSsoPayload } from '@/lib/sso-launch';
+import { getEffectiveApiKey } from '@/lib/portal-sso-config';
 
 const CARD_STYLE: Record<ProductKey, { icon: React.ReactNode; accent: string; border: string }> = {
   rcv: {
@@ -49,7 +50,9 @@ export const DashboardPage: React.FC = () => {
       let url: string;
 
       try {
-        const response = await ssoDelegate(payload);
+        const response = await ssoDelegate(payload, {
+          apiKey: getEffectiveApiKey(product.key),
+        });
         if (!response.success || !response.redirect_url) {
           throw new Error('SSO no devolvió URL de acceso.');
         }

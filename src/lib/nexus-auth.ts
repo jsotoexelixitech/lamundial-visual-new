@@ -77,12 +77,21 @@ export function getToken(): string | null {
  */
 export async function ssoDelegate(
   payload: SsoDelegatePayload,
+  options?: { apiKey?: string },
 ): Promise<SsoDelegateResponse> {
   const token = getToken();
-  if (!token) throw new Error('No hay sesión activa para el SSO.');
+  const apiKey = options?.apiKey?.trim();
+
+  if (!apiKey && !token) {
+    throw new Error('Configure la API Key SSO en Configuración o inicie sesión.');
+  }
+
+  const headers: Record<string, string> = {};
+  if (apiKey) headers['x-api-key'] = apiKey;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   const { data } = await api.post<SsoDelegateResponse>('/api/auth/sso-delegate', payload, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
   });
   return data;
 }

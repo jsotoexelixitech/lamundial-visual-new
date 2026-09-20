@@ -1,20 +1,33 @@
 import type { ProductConfig } from './portal-config';
 import { portalConfig } from './portal-config';
 import type { SsoDelegatePayload } from './nexus-auth';
+import { getFlowMetadataOverrides } from './portal-sso-config';
 
-/** Metadata Sis2000 por defecto en cierre (sobrescribir con VITE_SSO_*). */
-export function getSsoDefaults() {
-  return {
+/** Metadata Sis2000 por defecto en cierre (sobrescribir con VITE_SSO_* o panel admin). */
+export function getSsoDefaults(productKey?: ProductConfig['key']) {
+  const env = {
     cproductor: String(import.meta.env.VITE_SSO_CPRODUCTOR ?? '80080').trim(),
     cusuario: String(import.meta.env.VITE_SSO_CUSUARIO ?? '4').trim(),
     centidad: String(import.meta.env.VITE_SSO_CENTIDAD ?? 'P').trim(),
     citem: String(import.meta.env.VITE_SSO_CITEM ?? import.meta.env.VITE_SSO_CPRODUCTOR ?? '80080').trim(),
   };
+  if (!productKey) return env;
+  const o = getFlowMetadataOverrides(productKey);
+  return {
+    cproductor: o.cproductor?.trim() || env.cproductor,
+    cusuario: o.cusuario?.trim() || env.cusuario,
+    centidad: o.centidad?.trim() || env.centidad,
+    citem: o.citem?.trim() || env.citem,
+  };
 }
 
 export function buildSsoPayload(product: ProductConfig): SsoDelegatePayload {
-  const defaults = getSsoDefaults();
-  const cramo = product.defaultCramo;
+  const defaults = getSsoDefaults(product.key);
+  const flowCramo = getFlowMetadataOverrides(product.key).cramo?.trim();
+  const cramo =
+    flowCramo && !Number.isNaN(Number(flowCramo))
+      ? Number(flowCramo)
+      : product.defaultCramo;
 
   const base: SsoDelegatePayload = {
     target: product.target,
