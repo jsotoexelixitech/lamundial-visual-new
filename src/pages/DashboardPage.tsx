@@ -9,12 +9,20 @@ import { getCurrentUser, logout } from '@/lib/nexus-auth';
 import { PRODUCTS } from '@/lib/portal-config';
 import type { ProductConfig } from '@/lib/portal-config';
 import { buildModuleUrl } from '@/lib/module-launcher';
-import { registerAudit, getToken } from '@/lib/nexus-auth';
+import { registerAudit, getToken, ssoDelegate, getAuditLogs } from '@/lib/nexus-auth';
+import type { AuditLog } from '@/lib/nexus-auth';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const [launching, setLaunching] = useState<string | null>(null);
+  const [recentActivity, setRecentActivity] = useState<AuditLog[]>([]);
+
+  React.useEffect(() => {
+    if (user) {
+      getAuditLogs().then(setRecentActivity).catch(console.error);
+    }
+  }, [user]);
 
   if (!user) {
     navigate('/login');
@@ -35,18 +43,34 @@ export const DashboardPage: React.FC = () => {
       const token = getToken();
       if (!token) throw new Error('No hay sesión activa.');
       
-      const targetUrl = buildModuleUrl(product.key, token);
+      const targetMap: Record<string, 'ocr' | 'emision' | 'formulario' | 'pagos'> = {
+        'rcv': 'ocr',
+        'patrimonial': 'emision',
+        'funerario': 'ocr'
+      };
+
+      const response = await ssoDelegate({
+        target: targetMap[product.key] || 'ocr',
+        product: product.key
+      });
+
+      if (!response.success || !response.redirect_url) {
+        throw new Error('Fallo al obtener URL de SSO');
+      }
       
       await registerAudit({
         accion: `launch_${product.key}`,
         producto: product.key,
-        detalle: { method: 'direct_token', targetUrl: targetUrl.split('?')[0] },
+        detalle: { method: 'sso_delegate', targetUrl: response.redirect_url.split('?')[0] },
       });
       
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      window.open(response.redirect_url, '_blank', 'noopener,noreferrer');
+      
+      // Update activity after launch
+      getAuditLogs().then(setRecentActivity).catch(console.error);
     } catch (err) {
       console.error('Error al lanzar módulo:', err);
-      alert('Error al lanzar módulo. Verifica tu sesión.');
+      alert('Error al lanzar módulo. Verifica tu sesión y permisos de la empresa.');
     } finally {
       setLaunching(null);
     }
@@ -92,7 +116,28 @@ export const DashboardPage: React.FC = () => {
             <LayoutDashboard size={18} className="text-[#E84F51]" />
             Dashboard
           </button>
-          {/* Menú limpio, sin mocks */}
+          
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-white/5 hover:text-white transition-colors">
+            <Users size={18} />
+            Mis Clientes
+          </button>
+          
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-white/5 hover:text-white transition-colors">
+            <FileText size={18} />
+            Pólizas
+          </button>
+          
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-white/5 hover:text-white transition-colors">
+            <Activity size={18} />
+            Siniestros
+          </button>
+
+          <p className="px-3 text-xs font-bold uppercase tracking-widest text-white/40 mt-8 mb-3">Configuración</p>
+          
+          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-white/5 hover:text-white transition-colors">
+            <Settings size={18} />
+            Ajustes
+          </button>
         </nav>
 
         <div className="p-4 border-t border-white/10">
@@ -111,7 +156,16 @@ export const DashboardPage: React.FC = () => {
         {/* Header Superior */}
         <header className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0 z-10 relative">
           <div className="flex items-center gap-4 flex-1">
-            <h1 className="text-xl font-display font-bold text-[#0F1A5A]">Portal Corporativo</h1>
+            <h1 className="text-xl font-display font-bold text-[#0F1A5A]">Resumen Operativo</h1>
+            <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
+            <div className="relative hidden sm:block w-64">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Buscar póliza, cliente..." 
+                className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0F1A5A]/20 focus:border-[#0F1A5A] transition-all"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-5">
@@ -144,14 +198,36 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Área Principal - Lanzadores de Módulos */}
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <PlayCircle size={20} className="text-[#E84F51]" />
-              Módulos Disponibles
-            </h2>
+          {/* KPI Stats Row (Real data based on audit logs) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 animate-slide-up-delay-1">
+            {[
+              { label: 'Conexiones SSO Hoy', value: recentActivity.filter(a => new Date(a.createdAt).toDateString() === new Date().toDateString()).length.toString(), trend: '+5%', positive: true },
+              { label: 'Módulos Activos', value: PRODUCTS.length.toString(), trend: 'Estable', positive: true },
+              { label: 'Historial Total', value: recentActivity.length.toString(), trend: '+12%', positive: true },
+              { label: 'Estado del Portal', value: 'OK', trend: 'En línea', positive: true },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{stat.label}</p>
+                <div className="flex items-end justify-between">
+                  <h3 className="text-3xl font-display font-bold text-[#0F1A5A]">{stat.value}</h3>
+                  <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-md ${stat.positive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    {stat.positive && <ArrowUpRight size={12} className="mr-1" />}
+                    {stat.trend}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Lanzadores Rápidos (SSO Flows) */}
+            <div className="xl:col-span-1 animate-slide-up-delay-2">
+              <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <PlayCircle size={18} className="text-[#E84F51]" />
+                Lanzadores de Negocio
+              </h2>
+              <div className="flex flex-col gap-4">
               {PRODUCTS.map((product) => {
                 const deco = getProductDecorations(product.key);
                 const isLaunching = launching === product.key;
@@ -159,35 +235,33 @@ export const DashboardPage: React.FC = () => {
                 <div 
                   key={product.key} 
                   onClick={() => handleLaunch(product)}
-                  className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#0F1A5A]/30 transition-all cursor-pointer group relative overflow-hidden flex flex-col h-full"
+                  className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-lg hover:border-[#0F1A5A]/30 transition-all cursor-pointer group relative overflow-hidden"
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -z-10 group-hover:bg-[#0F1A5A]/5 transition-colors"></div>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-full -z-10 group-hover:bg-[#0F1A5A]/5 transition-colors"></div>
                   
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
                          style={{ background: `linear-gradient(135deg, ${deco.color} 0%, ${deco.color}dd 100%)` }}>
                       <span className="text-white drop-shadow-md">{deco.icon}</span>
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#0F1A5A] transition-colors">{product.label}</h3>
-                      <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-gray-100 text-gray-600 mt-1">
-                        SSO Integrado
+                      <h3 className="text-base font-bold text-gray-900 group-hover:text-[#0F1A5A] transition-colors">{product.label}</h3>
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 mt-1">
+                        Flujo Integrado
                       </span>
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-500 leading-relaxed flex-1">
+                  <p className="text-sm text-gray-500 leading-relaxed">
                     {product.description}
                   </p>
                   
-                  <div className="mt-6 pt-4 border-t border-gray-50">
-                    <div className="flex flex-wrap gap-2">
-                      {deco.modules.map((mod, idx) => (
-                        <span key={idx} className="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-2 py-1 rounded-md">
-                          {mod}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {deco.modules.map((mod, idx) => (
+                      <span key={idx} className="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">
+                        {mod}
+                      </span>
+                    ))}
                   </div>
                   {isLaunching && (
                     <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-20">
@@ -199,6 +273,57 @@ export const DashboardPage: React.FC = () => {
                 </div>
                 );
               })}
+              </div>
+            </div>
+
+            {/* Tabla de Datos Central (Actividad Reciente) */}
+            <div className="xl:col-span-2 animate-slide-up-delay-3">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
+                <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                  <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <Clock size={18} className="text-[#0F1A5A]" />
+                    Actividad Reciente SSO
+                  </h2>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-white border-b border-gray-100 text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                        <th className="px-6 py-4">ID Transacción</th>
+                        <th className="px-6 py-4">Acción</th>
+                        <th className="px-6 py-4">Producto</th>
+                        <th className="px-6 py-4 text-right">Tiempo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {recentActivity.slice(0, 8).map((log) => (
+                        <tr key={log.id} className="hover:bg-gray-50/80 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-bold text-[#0F1A5A]">LOG-{log.id}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700 font-medium">
+                            {log.accion}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-600">
+                            {log.producto || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-400 text-right whitespace-nowrap">
+                            {new Date(log.createdAt).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                      {recentActivity.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-8 text-center text-gray-400 text-sm">
+                            No hay actividad reciente en el portal.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </main>

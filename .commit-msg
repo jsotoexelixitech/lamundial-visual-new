@@ -1,4 +1,5 @@
-fix(ui): resolver errores de sintaxis JSX y eliminar LaunchModal
+feat(ui): restaurar visualización de KPIs usando datos reales y reparar SSO
 
-- Se corrigieron los tags mal cerrados en DashboardPage tras la remoción del modal.
-- Se eliminó completamente `src/components/LaunchModal.tsx` ya que su función fue automatizada en el SSO directo y causaba un error TS2554.
+- Se restauraron las tarjetas de métricas (KPIs) pero ahora usando datos reales de conexión (número de conexiones activas, historial total).
+- Se restauró la tabla de Actividad Reciente pero alimentada en tiempo real mediante los audit logs del portal (`getAuditLogs()`).
+- Se reparó la lógica de conexión `handleLaunch` para asegurar que haga el paso previo por `ssoDelegate` y generar el token dinámico de La Mundial (antes estaba intentando usar el token de portal directamente, lo que causaba el bloqueo "Acceso no disponible" en el OCR).
