@@ -1,6 +1,4 @@
-refactor(ui): remover datos falsos (mocks) del dashboard y centrar SSO
+fix(ui): resolver errores de sintaxis JSX y eliminar LaunchModal
 
-- Se eliminaron las tablas de 'Actividad Reciente' y tarjetas de 'KPIs' que contenían información simulada y no funcional.
-- Se eliminaron los enlaces de menú inactivos del CRM.
-- Se reestructuró la cuadrícula principal para que los Lanzadores de SSO ocupen el centro de la atención de forma elegante.
-- Se actualizó `nexus-auth.ts` para que el SSO funcione de forma totalmente invisible usando el token en memoria.
+- Se corrigieron los tags mal cerrados en DashboardPage tras la remoción del modal.
+- Se eliminó completamente `src/components/LaunchModal.tsx` ya que su función fue automatizada en el SSO directo y causaba un error TS2554.

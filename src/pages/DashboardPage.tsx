@@ -93,6 +93,7 @@ export const DashboardPage: React.FC = () => {
             Dashboard
           </button>
           {/* Menú limpio, sin mocks */}
+        </nav>
 
         <div className="p-4 border-t border-white/10">
           <button 
@@ -188,11 +189,17 @@ export const DashboardPage: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                  </p>
+                  {isLaunching && (
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-20">
+                      <div className="flex items-center gap-2 text-[#E84F51] font-bold">
+                        <Activity className="animate-pulse" size={20} /> Conectando...
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+                );
+              })}
             </div>
-
           </div>
         </main>
       </div>
