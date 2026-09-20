@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, BarChart2, LayoutDashboard, ChevronDown, Shield } from 'lucide-react';
 import { getCurrentUser, logout } from '@/lib/nexus-auth';
 import clsx from 'clsx';
+import { publicAsset } from '@/lib/public-asset';
 
 interface Props {
   activePage?: 'dashboard' | 'audit';
@@ -25,7 +26,7 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0"
                style={{ boxShadow: '0 4px 12px rgba(15,26,90,0.25)' }}>
-            <img src="/logo-mundial.png" alt="La Mundial" className="w-full h-full object-cover" />
+            <img src={publicAsset('brand/mundial-isotipo.svg')} alt="La Mundial" className="w-full h-full object-contain p-1 bg-white" />
           </div>
           <div>
             <span className="font-display font-bold text-mundial-gray text-base leading-tight block">
@@ -92,7 +93,9 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
           {menuOpen && (
             <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-slide-up">
               <div className="px-4 py-2 border-b border-gray-100 mb-2">
-                <p className="text-xs text-gray-400">Empresa ID: {user?.empresaId}</p>
+                {user?.empresa ? (
+                  <p className="text-xs text-gray-400">{user.empresa}</p>
+                ) : null}
               </div>
               <button
                 id="nav-audit-menu"

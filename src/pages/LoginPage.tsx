@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
-import { login } from '@/lib/nexus-auth';
+import { login, getCurrentUser } from '@/lib/nexus-auth';
+import { MundialBrand } from '@/components/brand/MundialBrand';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -10,12 +11,15 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const btnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (getCurrentUser()) navigate('/dashboard', { replace: true });
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      setError('Por favor completa todos los campos.');
+      setError('Completa correo y contraseña.');
       return;
     }
     setLoading(true);
@@ -25,129 +29,136 @@ export const LoginPage: React.FC = () => {
       navigate('/dashboard');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg || 'Credenciales incorrectas. Verifica tu email y contraseña.');
+      setError(msg || 'Credenciales incorrectas.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center bg-[#091133] font-sans">
-      
-      {/* ─── FONDOS INMERSIVOS (AURORA GLOW) ─── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[10%] left-[20%] w-[50vw] h-[50vw] rounded-full blur-[140px] opacity-20 mix-blend-screen"
-             style={{ background: '#E84F51', animation: 'float-slow 25s ease-in-out infinite' }} />
-        <div className="absolute bottom-[0%] right-[10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-30 mix-blend-screen"
-             style={{ background: '#162A7F', animation: 'float-slow 20s ease-in-out infinite reverse' }} />
-        
-        {/* Malla de puntos para darle textura premium */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
-      </div>
-
-      {/* ─── CONTENIDO CENTRAL (GLASSMORPHISM) ─── */}
-      <div className="relative z-10 w-full max-w-md px-6 sm:px-0 animate-slide-up">
-        
-        {/* LOGO FLOTANTE */}
-        <div className="flex justify-center mb-10">
-          <div className="bg-white/5 p-4 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
-            <img 
-              src="/logo-mundial.png" 
-              alt="La Mundial de Seguros" 
-              className="h-14 sm:h-16 object-contain"
-              style={{ filter: 'drop-shadow(0px 4px 12px rgba(0,0,0,0.5)) brightness(1.2)' }}
-            />
-          </div>
+    <div className="min-h-screen flex flex-col lg:flex-row font-sans">
+      {/* Panel marca — manual La Mundial */}
+      <aside
+        className="relative lg:w-[44%] xl:w-[42%] flex flex-col justify-between p-8 sm:p-12 text-white overflow-hidden"
+        style={{
+          background: 'linear-gradient(145deg, #091133 0%, #0F1A5A 48%, #162A7F 100%)',
+        }}
+      >
+        <div
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 20% 30%, rgba(232,79,81,0.35), transparent 45%),
+              radial-gradient(circle at 80% 70%, rgba(74,141,213,0.25), transparent 50%)
+            `,
+          }}
+        />
+        <div className="relative z-10">
+          <MundialBrand variant="light" isotipoClassName="h-16 w-16" />
         </div>
 
-        {/* TARJETA DE LOGIN */}
-        <div className="bg-white/10 backdrop-blur-2xl rounded-[32px] p-8 sm:p-10 shadow-[0_32px_64px_rgba(0,0,0,0.4)] border border-white/20 relative overflow-hidden">
-          {/* Brillo interno en la tarjeta */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+        <div className="relative z-10 my-12 lg:my-0 max-w-md">
+          <p className="text-[#E84F51] text-xs font-black uppercase tracking-[0.28em] mb-4">
+            Suscripción digital
+          </p>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold leading-snug mb-4">
+            Emisión de pólizas en minutos
+          </h1>
+          <p className="text-white/75 text-sm sm:text-base leading-relaxed">
+            Accede a los flujos RCV, Patrimoniales y Funerario con la misma seguridad
+            y canal configurado para La Mundial de Seguros.
+          </p>
+          <div
+            className="mt-8 h-1 w-24 rounded-full"
+            style={{
+              background: 'linear-gradient(90deg, #0F1A5A, #2E6DBF 55%, #E84F51)',
+            }}
+          />
+        </div>
 
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight mb-2">
-              Acceso Exclusivo
-            </h2>
-            <p className="text-white/50 text-sm font-light">
-              Portal Corporativo · La Mundial de Seguros
-            </p>
+        <p className="relative z-10 text-white/40 text-xs">
+          © {new Date().getFullYear()} La Mundial de Seguros
+        </p>
+      </aside>
+
+      {/* Formulario */}
+      <main className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-[#F7F7F7]">
+        <div className="w-full max-w-md animate-slide-up">
+          <div className="lg:hidden mb-8 flex justify-center">
+            <MundialBrand variant="dark" isotipoClassName="h-14 w-14" />
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="group">
-              <div className="relative">
+          <div className="bg-white rounded-2xl border border-[#dddddd] shadow-[0_12px_40px_rgba(9,17,51,0.08)] p-8 sm:p-10">
+            <h2 className="text-2xl font-bold text-[#091133] mb-1">Iniciar sesión</h2>
+            <p className="text-sm text-[#777777] mb-8">
+              Usa tu usuario de Nexus / operaciones La Mundial.
+            </p>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="login-email" className="block text-xs font-bold uppercase tracking-wider text-[#0F1A5A] mb-2">
+                  Correo
+                </label>
                 <input
                   id="login-email"
                   type="email"
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Correo electrónico"
-                  className="w-full px-5 py-4 rounded-2xl text-sm border border-white/10 bg-white/5 focus:bg-white/10 focus:border-white/30 focus:ring-4 focus:ring-white/5 outline-none transition-all text-white font-medium placeholder:text-white/40"
+                  className="w-full px-4 py-3 rounded-xl border border-[#dddddd] bg-[#FAFAFA] text-[#091133] text-sm outline-none focus:border-[#0F1A5A] focus:ring-2 focus:ring-[#0F1A5A]/15 transition-all"
                   disabled={loading}
                 />
               </div>
-            </div>
 
-            <div className="group">
-              <div className="relative">
-                <input
-                  id="login-password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Contraseña"
-                  className="w-full px-5 py-4 pr-12 rounded-2xl text-sm border border-white/10 bg-white/5 focus:bg-white/10 focus:border-white/30 focus:ring-4 focus:ring-white/5 outline-none transition-all text-white font-medium placeholder:text-white/40"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors p-2"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+              <div>
+                <label htmlFor="login-password" className="block text-xs font-bold uppercase tracking-wider text-[#0F1A5A] mb-2">
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 pr-12 rounded-xl border border-[#dddddd] bg-[#FAFAFA] text-[#091133] text-sm outline-none focus:border-[#0F1A5A] focus:ring-2 focus:ring-[#0F1A5A]/15 transition-all"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#777777] hover:text-[#091133]"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {error && (
-              <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3 animate-fade-in mt-1 backdrop-blur-md">
-                <AlertCircle size={18} className="text-[#E84F51] flex-shrink-0 mt-0.5" />
-                <p className="text-white/90 text-sm font-medium">{error}</p>
-              </div>
-            )}
+              {error && (
+                <div className="flex gap-3 items-start rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                  <AlertCircle size={18} className="text-[#E84F51] shrink-0 mt-0.5" />
+                  <p className="text-sm text-[#991B1B] font-medium">{error}</p>
+                </div>
+              )}
 
-            <button
-              ref={btnRef}
-              type="submit"
-              className="w-full py-4 mt-4 rounded-2xl text-white text-base font-bold transition-all hover:scale-[1.02] shadow-[0_0_20px_rgba(232,79,81,0.3)] hover:shadow-[0_0_30px_rgba(232,79,81,0.5)] relative overflow-hidden group flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)' }}
-              disabled={loading}
-            >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-              <span className="relative z-10 flex justify-center items-center gap-2">
-                {loading ? (
-                  <span className="animate-pulse">Autenticando...</span>
-                ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)' }}
+              >
+                {loading ? 'Verificando…' : (
                   <>
-                    Ingresar
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    Entrar al portal
+                    <ArrowRight size={18} />
                   </>
                 )}
-              </span>
-            </button>
-          </form>
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
-
-      {/* FOOTER INVISIBLE/SUTIL */}
-      <div className="absolute bottom-6 w-full text-center pointer-events-none opacity-30">
-        <p className="text-white text-xs tracking-widest uppercase font-semibold">
-          © {new Date().getFullYear()} La Mundial de Seguros
-        </p>
-      </div>
+      </main>
     </div>
   );
 };

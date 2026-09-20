@@ -15,9 +15,8 @@ export interface LoginResponse {
     id: number;
     nombre: string;
     email: string;
-    empresaId: number;
     empresa?: string;
-    roleId: number;
+    role?: string;
   };
 }
 
@@ -29,7 +28,7 @@ export interface SsoDelegatePayload {
   ccanalalt_in?: string;
   cscanalalt_in?: number;
   cgestor_in?: string;
-  product?: string;
+  product?: 'rcv' | 'funerario' | 'patrimoniales';
   centidad?: string;
   citem?: string;
   cproducto?: string;

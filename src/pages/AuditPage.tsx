@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, BarChart2, LayoutDashboard, ChevronDown, RefreshCw } from 'lucide-react';
+import { BarChart2, RefreshCw } from 'lucide-react';
 import { getCurrentUser, getAuditLogs, type AuditLog } from '@/lib/nexus-auth';
-import { Navbar } from '@/components/Navbar';
+import { PortalHeader } from '@/components/PortalHeader';
 
 const ACTION_LABELS: Record<string, string> = {
   launch_rcv: 'Lanzar RCV',
@@ -48,7 +48,7 @@ export const AuditPage: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: '#F7F7F7' }} id="audit-page">
-      <Navbar activePage="audit" />
+      <PortalHeader active="audit" />
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         {/* Header */}

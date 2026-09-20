@@ -12,7 +12,7 @@ export function buildModuleUrl(product: ProductKey, token: string): string {
     case 'rcv':
       return `${modules.ocr}?nexus_token=${encodeURIComponent(token)}`;
     case 'patrimonial':
-      return `${modules.emision}?nexus_token=${encodeURIComponent(token)}`;
+      return `${modules.emision}?nexus_token=${encodeURIComponent(token)}&product=patrimoniales`;
     case 'funerario':
       return `${modules.ocr}?nexus_token=${encodeURIComponent(token)}&product=funerario`;
     default:
