@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, Activity, Settings, 
   Search, Bell, ChevronDown, Shield, TrendingUp, Clock, 
-  ArrowUpRight, AlertCircle, PlayCircle 
+  ArrowUpRight, AlertCircle, PlayCircle, Car, Building, Heart
 } from 'lucide-react';
 import { getCurrentUser, logout } from '@/lib/nexus-auth';
 import { PRODUCTS } from '@/lib/portal-config';
@@ -40,6 +40,15 @@ export const DashboardPage: React.FC = () => {
       case 'Pendiente': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'En revisión': return 'bg-blue-100 text-blue-700 border-blue-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
+  const getProductDecorations = (key: string) => {
+    switch(key) {
+      case 'rcv': return { color: '#E84F51', icon: <Car size={24} />, modules: ['OCR', 'Formulario', 'Emisión', 'Pagos'] };
+      case 'patrimonial': return { color: '#0F1A5A', icon: <Building size={24} />, modules: ['Emisión', 'Cotización', 'Póliza'] };
+      case 'funerario': return { color: '#888888', icon: <Heart size={24} />, modules: ['OCR', 'Formulario', 'Emisión'] };
+      default: return { color: '#ACACAC', icon: <Shield size={24} />, modules: ['General'] };
     }
   };
 
@@ -186,7 +195,9 @@ export const DashboardPage: React.FC = () => {
                 Lanzadores de Negocio
               </h2>
               <div className="flex flex-col gap-4">
-                {PRODUCTS.map((product) => (
+                {PRODUCTS.map((product) => {
+                  const deco = getProductDecorations(product.key);
+                  return (
                   <div 
                     key={product.key} 
                     onClick={() => setSelectedProduct(product)}
@@ -196,11 +207,11 @@ export const DashboardPage: React.FC = () => {
                     
                     <div className="flex items-center gap-4 mb-3">
                       <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                           style={{ background: `linear-gradient(135deg, ${product.color} 0%, ${product.color}dd 100%)` }}>
-                        <span className="text-white drop-shadow-sm">{product.icon}</span>
+                           style={{ background: `linear-gradient(135deg, ${deco.color} 0%, ${deco.color}dd 100%)` }}>
+                        <span className="text-white drop-shadow-sm">{deco.icon}</span>
                       </div>
                       <div>
-                        <h3 className="text-base font-bold text-gray-900 group-hover:text-[#0F1A5A] transition-colors">{product.title}</h3>
+                        <h3 className="text-base font-bold text-gray-900 group-hover:text-[#0F1A5A] transition-colors">{product.label}</h3>
                         <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 mt-1">
                           Flujo Integrado
                         </span>
@@ -210,14 +221,15 @@ export const DashboardPage: React.FC = () => {
                       {product.description}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-1.5">
-                      {product.modules.map((mod, idx) => (
+                      {deco.modules.map((mod, idx) => (
                         <span key={idx} className="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">
-                          {mod.name}
+                          {mod}
                         </span>
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
