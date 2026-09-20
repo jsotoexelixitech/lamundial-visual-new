@@ -5,6 +5,7 @@ import {
   Car,
   Building2,
   Heart,
+  Package,
   ArrowRight,
   Loader2,
   ExternalLink,
@@ -17,41 +18,53 @@ import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
 import { publicAsset } from '@/lib/public-asset';
 import {
   fetchPortalProducts,
+  fetchPortalMe,
   getCurrentUser,
   getToken,
   ssoDelegate,
   registerAudit,
   type PortalProductDto,
 } from '@/lib/nexus-auth';
-import type { ProductKey } from '@/lib/portal-config';
 import { buildFallbackModuleUrl, buildSsoPayload, getSsoDefaults } from '@/lib/sso-launch';
 
-const CARD_STYLE: Record<ProductKey, { icon: React.ReactNode; accent: string; tint: string }> = {
-  rcv: {
-    icon: <Car size={26} strokeWidth={1.75} />,
-    accent: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)',
-    tint: '#E84F51',
-  },
-  patrimonial: {
-    icon: <Building2 size={26} strokeWidth={1.75} />,
-    accent: 'linear-gradient(135deg, #0F1A5A 0%, #091133 100%)',
-    tint: '#0F1A5A',
-  },
-  funerario: {
-    icon: <Heart size={26} strokeWidth={1.75} />,
-    accent: 'linear-gradient(135deg, #2E6DBF 0%, #0F1A5A 100%)',
-    tint: '#2E6DBF',
-  },
-};
+function cardVisual(product: PortalProductDto) {
+  if (product.product === 'rcv') {
+    return {
+      icon: <Car size={26} strokeWidth={1.75} />,
+      accent: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)',
+      tint: '#E84F51',
+    };
+  }
+  if (product.product === 'funerario') {
+    return {
+      icon: <Heart size={26} strokeWidth={1.75} />,
+      accent: 'linear-gradient(135deg, #2E6DBF 0%, #0F1A5A 100%)',
+      tint: '#2E6DBF',
+    };
+  }
+  if (product.product === 'patrimoniales') {
+    return {
+      icon: <Building2 size={26} strokeWidth={1.75} />,
+      accent: 'linear-gradient(135deg, #0F1A5A 0%, #091133 100%)',
+      tint: '#0F1A5A',
+    };
+  }
+  return {
+    icon: <Package size={26} strokeWidth={1.75} />,
+    accent: 'linear-gradient(135deg, #162A7F 0%, #0F1A5A 100%)',
+    tint: '#162A7F',
+  };
+}
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = useMemo(() => getCurrentUser(), []);
   const userId = user?.id;
   const [products, setProducts] = useState<PortalProductDto[]>([]);
+  const [canalBanner, setCanalBanner] = useState(getSsoDefaults());
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState('');
-  const [launching, setLaunching] = useState<ProductKey | null>(null);
+  const [launching, setLaunching] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState('');
 
   useEffect(() => {
@@ -65,8 +78,18 @@ export const DashboardPage: React.FC = () => {
       setLoadingProducts(true);
       setProductsError('');
       try {
-        const list = await fetchPortalProducts();
-        if (!cancelled) setProducts(list);
+        const [list, me] = await Promise.all([fetchPortalProducts(), fetchPortalMe()]);
+        if (!cancelled) {
+          setProducts(list);
+          if (me?.canal) {
+            setCanalBanner({
+              cproductor: me.canal.cproductor,
+              cusuario: me.canal.cusuario,
+              centidad: me.canal.centidad,
+              citem: me.canal.citem,
+            });
+          }
+        }
       } catch (err) {
         if (!cancelled) {
           const detail =
@@ -85,8 +108,6 @@ export const DashboardPage: React.FC = () => {
   }, [userId]);
 
   if (!user) return null;
-
-  const canal = getSsoDefaults();
 
   const handleLaunch = async (product: PortalProductDto) => {
     setLaunching(product.key);
@@ -127,9 +148,9 @@ export const DashboardPage: React.FC = () => {
       }
 
       await registerAudit({
-        accion: `launch_${product.key}`,
-        producto: product.key,
-        detalle: { target: payload.target, product: payload.product },
+        accion: `launch_${product.cproducto}`,
+        producto: product.cproducto,
+        detalle: { target: payload.target, product: payload.product, cproducto: product.cproducto },
       });
 
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -146,7 +167,6 @@ export const DashboardPage: React.FC = () => {
     <div className="min-h-screen bg-[#F7F7F7] flex flex-col">
       <PortalHeader active="dashboard" />
 
-      {/* Banda institucional */}
       <section
         className="relative overflow-hidden text-white"
         style={{ background: 'linear-gradient(120deg, #091133 0%, #0F1A5A 58%, #162A7F 100%)' }}
@@ -166,16 +186,16 @@ export const DashboardPage: React.FC = () => {
             Hola, {firstName}
           </h1>
           <p className="text-white/70 mt-3 max-w-2xl text-sm sm:text-base leading-relaxed">
-            Selecciona un ramo para abrir su flujo de emisión con acceso único (SSO) y el canal
-            configurado para {user.empresa ?? 'La Mundial de Seguros'}.
+            Productos del marketplace Sis2000 según tu canal. Cada tarjeta abre su flujo con SSO y
+            el <span className="text-white/90">cproducto</span> correspondiente.
           </p>
 
           <dl className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl">
             {[
               { label: 'Empresa', value: user.empresa ?? 'La Mundial' },
               { label: 'Perfil', value: user.role ?? 'Operaciones' },
-              { label: 'Productor', value: canal.cproductor },
-              { label: 'Usuario Sis2000', value: canal.cusuario },
+              { label: 'Productor', value: canalBanner.cproductor },
+              { label: 'Canal', value: `${canalBanner.centidad} · ${canalBanner.citem}` },
             ].map((item) => (
               <div
                 key={item.label}
@@ -209,9 +229,9 @@ export const DashboardPage: React.FC = () => {
         )}
 
         <div className="flex items-end justify-between gap-4 mb-6">
-          <h2 className="font-display text-xl font-bold text-[#091133]">Emisiones disponibles</h2>
+          <h2 className="font-display text-xl font-bold text-[#091133]">Productos disponibles</h2>
           <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#ACACAC]">
-            {loadingProducts ? '…' : `${products.length} flujo${products.length === 1 ? '' : 's'}`}
+            {loadingProducts ? '…' : `${products.length} producto${products.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
@@ -224,78 +244,78 @@ export const DashboardPage: React.FC = () => {
         {!loadingProducts && products.length === 0 && (
           <div className="rounded-2xl border border-[#e4e6ee] bg-white p-12 text-center">
             <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
-            <p className="font-semibold text-[#091133]">Sin flujos asignados</p>
+            <p className="font-semibold text-[#091133]">Sin productos asignados</p>
             <p className="text-sm text-[#777777] mt-2 max-w-md mx-auto">
-              Tu empresa o rol aún no tiene submódulos activos para RCV, Patrimoniales o Funerario.
-              Un administrador debe configurarlos en Nexus Admin.
+              No hay productos Sis2000 para tu canal o faltan submódulos/permisos. Un administrador
+              debe configurar canal en Admin y activar OCR/Emisión.
             </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {!loadingProducts &&
             products.map((product) => {
-            const style = CARD_STYLE[product.key];
-            const busy = launching === product.key;
+              const style = cardVisual(product);
+              const busy = launching === product.key;
 
-            return (
-              <article
-                key={product.key}
-                className="group relative bg-white rounded-2xl border border-[#e4e6ee] overflow-hidden flex flex-col shadow-[0_2px_10px_rgba(9,17,51,0.04)] hover:shadow-[0_16px_40px_-16px_rgba(9,17,51,0.28)] hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <div className="h-1.5 w-full" style={{ background: style.accent }} />
+              return (
+                <article
+                  key={product.key}
+                  className="group relative bg-white rounded-2xl border border-[#e4e6ee] overflow-hidden flex flex-col shadow-[0_2px_10px_rgba(9,17,51,0.04)] hover:shadow-[0_16px_40px_-16px_rgba(9,17,51,0.28)] hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="h-1.5 w-full" style={{ background: style.accent }} />
 
-                <div className="p-6 sm:p-7 flex flex-col flex-1">
-                  <div className="flex items-start justify-between gap-3 mb-6">
-                    <div
-                      className="h-14 w-14 rounded-xl text-white grid place-items-center shadow-md"
+                  <div className="p-6 sm:p-7 flex flex-col flex-1">
+                    <div className="flex items-start justify-between gap-3 mb-6">
+                      <div
+                        className="h-14 w-14 rounded-xl text-white grid place-items-center shadow-md"
+                        style={{ background: style.accent }}
+                      >
+                        {style.icon}
+                      </div>
+                      <span
+                        className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em]"
+                        style={{ color: style.tint, background: `${style.tint}14` }}
+                      >
+                        {product.cproducto} · ramo {product.cramo}
+                      </span>
+                    </div>
+
+                    <h3 className="font-display text-xl font-bold text-[#091133] mb-2">{product.label}</h3>
+                    <p className="text-sm text-[#777777] leading-relaxed flex-1">{product.description}</p>
+
+                    <div className="mt-5 pt-4 border-t border-[#eceef4] flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#ACACAC]">
+                      <ShieldCheck size={13} style={{ color: style.tint }} />
+                      {product.moduleLabel}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={busy || launching !== null}
+                      onClick={() => handleLaunch(product)}
+                      className="mt-5 inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
                       style={{ background: style.accent }}
                     >
-                      {style.icon}
-                    </div>
-                    <span
-                      className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em]"
-                      style={{ color: style.tint, background: `${style.tint}14` }}
-                    >
-                      Ramo {product.defaultCramo}
-                    </span>
+                      {busy ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Generando acceso…
+                        </>
+                      ) : (
+                        <>
+                          Abrir flujo
+                          <ArrowRight size={17} className="group-hover:translate-x-0.5 transition-transform" />
+                        </>
+                      )}
+                    </button>
                   </div>
 
-                  <h3 className="font-display text-xl font-bold text-[#091133] mb-2">{product.label}</h3>
-                  <p className="text-sm text-[#777777] leading-relaxed flex-1">{product.description}</p>
-
-                  <div className="mt-5 pt-4 border-t border-[#eceef4] flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#ACACAC]">
-                    <ShieldCheck size={13} style={{ color: style.tint }} />
-                    {product.moduleLabel}
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={busy || launching !== null}
-                    onClick={() => handleLaunch(product)}
-                    className="mt-5 inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
-                    style={{ background: style.accent }}
-                  >
-                    {busy ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" />
-                        Generando acceso…
-                      </>
-                    ) : (
-                      <>
-                        Abrir flujo
-                        <ArrowRight size={17} className="group-hover:translate-x-0.5 transition-transform" />
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {busy && (
-                  <div className="absolute inset-0 bg-white/55 backdrop-blur-[2px] pointer-events-none" />
-                )}
-              </article>
-            );
-          })}
+                  {busy && (
+                    <div className="absolute inset-0 bg-white/55 backdrop-blur-[2px] pointer-events-none" />
+                  )}
+                </article>
+              );
+            })}
         </div>
 
         <footer className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e4e6ee] pt-6 text-xs text-[#ACACAC]">

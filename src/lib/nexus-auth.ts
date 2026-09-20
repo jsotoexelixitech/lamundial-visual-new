@@ -26,12 +26,14 @@ export interface SsoDelegatePayload {
   cusuario?: string;
   cramo?: number;
   ccanalalt_in?: string;
-  cscanalalt_in?: number;
+  cscanalalt_in?: number | string;
   cgestor_in?: string;
   product?: 'rcv' | 'funerario' | 'patrimoniales';
   centidad?: string;
   citem?: string;
   cproducto?: string;
+  xform?: string;
+  xproducto?: string;
 }
 
 export interface SsoDelegateResponse {
@@ -43,7 +45,7 @@ export interface SsoDelegateResponse {
 
 /** Producto lanzable desde GET /api/portal/products */
 export interface PortalProductDto {
-  key: 'rcv' | 'patrimonial' | 'funerario';
+  key: string;
   label: string;
   description: string;
   target: 'ocr' | 'emision' | 'formulario' | 'pagos';
@@ -52,6 +54,24 @@ export interface PortalProductDto {
   moduleLabel: string;
   submoduloId: number;
   submoduloNombre: string;
+  cproducto: string;
+  cramo: number;
+  xform?: string;
+  xlogo?: string;
+  cproductor?: string;
+  cusuario?: string;
+  centidad?: string;
+  citem?: string;
+  ccanalaltIn?: string;
+  cscanalaltIn?: string;
+}
+
+export interface PortalCanalDto {
+  centidad: string;
+  citem: string;
+  cproductor: string;
+  cusuario: string;
+  source: string;
 }
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
@@ -99,6 +119,22 @@ export async function ssoDelegate(payload: SsoDelegatePayload): Promise<SsoDeleg
     headers: { Authorization: `Bearer ${token}` },
   });
   return data;
+}
+
+export async function fetchPortalMe(): Promise<{
+  canal?: PortalCanalDto;
+} | null> {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const { data } = await api.get<{
+      success: boolean;
+      data: { canal?: PortalCanalDto };
+    }>('/api/portal/me', { headers: { Authorization: `Bearer ${token}` } });
+    return data.data ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchPortalProducts(): Promise<PortalProductDto[]> {
