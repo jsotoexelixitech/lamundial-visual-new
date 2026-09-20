@@ -1,5 +1,9 @@
-feat(ui): restaurar visualización de KPIs usando datos reales y reparar SSO
+feat(ui): rediseño completo del Dashboard según manual de marca La Mundial
 
-- Se restauraron las tarjetas de métricas (KPIs) pero ahora usando datos reales de conexión (número de conexiones activas, historial total).
-- Se restauró la tabla de Actividad Reciente pero alimentada en tiempo real mediante los audit logs del portal (`getAuditLogs()`).
-- Se reparó la lógica de conexión `handleLaunch` para asegurar que haga el paso previo por `ssoDelegate` y generar el token dinámico de La Mundial (antes estaba intentando usar el token de portal directamente, lo que causaba el bloqueo "Acceso no disponible" en el OCR).
+- Sidebar con gradiente navy oficial (#091133 → #0F1A5A)
+- Ribbon brand superior en header (gradiente tricolor oficial)
+- Cards de producto usando clases CSS del design system (.product-card, .product-icon-*)
+- KPIs alimentados con datos reales de audit logs (accesos hoy, productos, operaciones)
+- Tabla de actividad reciente con iconos contextuales y tiempo relativo
+- Tipografía Poppins, colores exclusivamente de la paleta oficial
+- Logo blanco en sidebar, avatar con gradiente brand
