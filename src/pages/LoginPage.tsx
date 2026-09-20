@@ -34,18 +34,13 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex" style={{ background: '#F7F7F7' }}>
       {/* Columna Izquierda - Branding Corporativo */}
-      <div className="hidden lg:flex flex-1 relative flex-col justify-between p-16 overflow-hidden"
+      <div className="hidden lg:flex flex-1 relative flex-col justify-center p-16 overflow-hidden"
            style={{ background: '#0F1A5A' }}>
         
         {/* Gradiente sutil y formas limpias alineadas a la marca */}
         <div className="absolute inset-0 opacity-40 bg-gradient-to-br from-[#162a7f] to-[#091133]"></div>
         <div className="absolute -bottom-48 -left-48 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute top-1/4 -right-32 w-[400px] h-[400px] bg-[#E84F51]/15 rounded-full blur-3xl"></div>
-
-        <div className="relative z-10 animate-fade-in">
-          <img src="/logo-white.png" alt="La Mundial" className="h-20 object-contain" 
-               onError={(e) => { e.currentTarget.src = '/logo-mundial.png' }} />
-        </div>
 
         <div className="relative z-10 animate-slide-up-delay-1">
           <h1 className="text-6xl font-display font-bold text-white leading-tight mb-6 tracking-wide">
@@ -57,7 +52,7 @@ export const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="relative z-10 flex gap-4 animate-slide-up-delay-2">
+        <div className="relative z-10 flex gap-4 mt-12 animate-slide-up-delay-2">
           <span className="text-white/50 text-xs font-semibold uppercase tracking-widest">Lealtad</span>
           <span className="text-white/30 text-xs font-semibold uppercase tracking-widest">•</span>
           <span className="text-white/50 text-xs font-semibold uppercase tracking-widest">Verdad</span>
@@ -69,15 +64,14 @@ export const LoginPage: React.FC = () => {
       {/* Columna Derecha - Formulario Limpio (Blanco) */}
       <div className="flex-1 flex items-center justify-center p-8 bg-white relative">
         <div className="w-full max-w-md animate-slide-up">
-          {/* Logo visible solo en mobile */}
-          <div className="lg:hidden flex justify-center mb-10">
-            <img src="/logo-color.png" alt="La Mundial" className="h-16 object-contain" 
-                 onError={(e) => { e.currentTarget.src = '/logo-mundial.png' }} />
+          {/* Logo Oficial de La Mundial */}
+          <div className="flex justify-center lg:justify-start mb-10">
+            <img src="/logo-mundial.png" alt="La Mundial de Seguros" className="h-20 object-contain" />
           </div>
 
           <div className="mb-10 text-center lg:text-left">
             <h2 className="text-4xl font-display font-bold mb-2" style={{ color: '#0F1A5A' }}>Iniciar sesión</h2>
-            <p className="text-gray-500 text-sm font-medium">Portal Corporativo Exélixi</p>
+            <p className="text-gray-500 text-sm font-medium">Portal La Mundial de Seguros</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">

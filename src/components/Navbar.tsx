@@ -31,7 +31,7 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
             <span className="font-display font-bold text-mundial-gray text-base leading-tight block">
               La Mundial
             </span>
-            <span className="text-xs text-gray-400 leading-tight">Portal Exélixi</span>
+            <span className="text-xs text-gray-400 leading-tight">Portal Corporativo</span>
           </div>
         </div>
 
