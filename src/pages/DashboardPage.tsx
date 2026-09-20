@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Car, Building2, Heart, ArrowRight, Loader2, ExternalLink } from 'lucide-react';
 import { PortalHeader } from '@/components/PortalHeader';
+import axios from 'axios';
 import { getCurrentUser, getToken, ssoDelegate, registerAudit } from '@/lib/nexus-auth';
 import { PRODUCTS } from '@/lib/portal-config';
 import type { ProductConfig, ProductKey } from '@/lib/portal-config';
@@ -53,8 +54,26 @@ export const DashboardPage: React.FC = () => {
           throw new Error('SSO no devolvió URL de acceso.');
         }
         url = response.redirect_url;
-      } catch {
-        url = buildFallbackModuleUrl(product, token);
+      } catch (ssoErr) {
+        const apiMsg =
+          axios.isAxiosError(ssoErr) &&
+          typeof ssoErr.response?.data === 'object' &&
+          ssoErr.response.data &&
+          'message' in ssoErr.response.data
+            ? String((ssoErr.response.data as { message: string }).message)
+            : null;
+        if (apiMsg) {
+          throw new Error(
+            `${apiMsg} Configura submódulos y URLs en Nexus Admin (Exélixi) y actualiza nexus-api en el 120.`,
+          );
+        }
+        if (import.meta.env.VITE_PORTAL_ALLOW_LEGACY_TOKEN === 'true') {
+          url = buildFallbackModuleUrl(product, token);
+        } else {
+          throw new Error(
+            'No se pudo generar SSO. Actualiza nexus-api, revisa submódulos activos para la empresa y vuelve a intentar.',
+          );
+        }
       }
 
       await registerAudit({
