@@ -9,7 +9,7 @@ echo "════════════════════════�
 
 unset PORT
 
-export VITE_APP_BASE=/portal/
+export VITE_APP_BASE=/
 export VITE_NEXUS_API_URL=https://cierrelmds.exelixitech.com/nexus-api
 export VITE_PORTAL_OCR_URL=https://cierrelmds.exelixitech.com/ocr/
 export VITE_PORTAL_EMISION_URL=https://cierrelmds.exelixitech.com/emision/
@@ -37,5 +37,5 @@ pm2 save
 
 echo "═══════════════════════════════════════════"
 echo "  ✅ Deploy completo."
-echo "  URL: https://cierrelmds.exelixitech.com/portal/"
+echo "  URL directa: http://192.168.8.120:5190/"
 echo "═══════════════════════════════════════════"

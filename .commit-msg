@@ -1,4 +1,4 @@
-fix(deploy): renombrar ecosystem.config.js a .cjs
+fix(deploy): VITE_APP_BASE=/ — sin Apache, puerto directo 5190
 
-package.json tiene type:module — PM2 necesita .cjs para CommonJS.
-Actualizar build-deploy.sh para usar ecosystem.config.cjs.
+Portal accesible en http://192.168.8.120:5190/ sin proxy.
+No requiere cambios en Apache.
