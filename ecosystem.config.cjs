@@ -2,8 +2,8 @@ module.exports = {
   apps: [
     {
       name: 'portal-lamundial',
-      script: 'npx',
-      args: 'serve -s dist -l 5190 --no-clipboard',
+      script: 'npm',
+      args: 'run preview -- --port 5190 --host 0.0.0.0',
       cwd: '/home/jsoto/portal',
       instances: 1,
       autorestart: true,
