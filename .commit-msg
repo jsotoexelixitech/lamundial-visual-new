@@ -1,4 +1,3 @@
-fix(ui): usar logo-color.png oficial de La Mundial en sidebar
+fix(ui): usar logo-mundial.png en el sidebar
 
-- Cambiado logo-white.png por logo-color.png (logo oficial del manual de marca)
-- Contenedor blanco con bordes redondeados para mostrar el logo a color sobre el sidebar navy
+El archivo logo-color.png era el equivocado (Exelixi). logo-mundial.png es el correcto de La Mundial.

@@ -136,7 +136,7 @@ export const DashboardPage: React.FC = () => {
         <div className="h-20 flex items-center justify-center px-5 border-b border-white/10">
           <div className="bg-white rounded-xl px-4 py-2 w-full flex justify-center shadow-sm">
             <img
-              src="/logo-color.png"
+              src="/logo-mundial.png"
               alt="La Mundial de Seguros"
               className="h-10 object-contain mix-blend-multiply"
             />
