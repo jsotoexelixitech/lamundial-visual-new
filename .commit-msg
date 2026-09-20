@@ -1,12 +1,4 @@
-feat(portal): scaffold inicial portal La Mundial
+fix(deploy): renombrar ecosystem.config.js a .cjs
 
-- Login con animaciones premium (glassmorphism, particulas, anillos)
-- Dashboard con 3 tarjetas: RCV, Patrimoniales, Funerario
-- Modal SSO: modo credenciales API o token directo
-- Pagina auditoria con historial de acciones
-- Tablas Prisma: portal_session + portal_audit_log en nexus-api
-- Endpoints: POST/GET /api/portal/audit en nexus-services
-- PM2 ecosystem.config.js puerto 5190
-- Script build-deploy.sh para cierre srv001
-- Colores marca La Mundial: rojo #D01229, dorado #C8A94E
-- README deploy completo con Apache snippet
+package.json tiene type:module — PM2 necesita .cjs para CommonJS.
+Actualizar build-deploy.sh para usar ecosystem.config.cjs.

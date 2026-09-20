@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 # scripts/build-deploy.sh — Build para cierre srv001 + reload PM2
-# Uso: bash scripts/build-deploy.sh
-# Ejecutar desde: ~/portal/
-
 set -e
 
 echo "═══════════════════════════════════════════"
@@ -10,10 +7,8 @@ echo "  Portal La Mundial — Build + Deploy"
 echo "  Entorno: cierre (srv001 / cierrelmds)"
 echo "═══════════════════════════════════════════"
 
-# Limpiar vars que podrían contaminar el build
 unset PORT
 
-# Variables de entorno para el build
 export VITE_APP_BASE=/portal/
 export VITE_NEXUS_API_URL=https://cierrelmds.exelixitech.com/nexus-api
 export VITE_PORTAL_OCR_URL=https://cierrelmds.exelixitech.com/ocr/
@@ -36,7 +31,7 @@ echo "▶  Verificando dist/..."
 ls -lah dist/
 
 echo "▶  Recargando PM2 portal-lamundial..."
-pm2 reload ecosystem.config.js --update-env 2>/dev/null || pm2 start ecosystem.config.js
+pm2 reload ecosystem.config.cjs --update-env 2>/dev/null || pm2 start ecosystem.config.cjs
 
 pm2 save
 
