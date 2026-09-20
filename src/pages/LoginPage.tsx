@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Building2 } from 'lucide-react';
-import { login, getCurrentUser } from '@/lib/nexus-auth';
+import { login, getCurrentUser, fetchPortalProducts } from '@/lib/nexus-auth';
 import { MundialBrand, MundialLockup, MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
 import { publicAsset } from '@/lib/public-asset';
+import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
 
 const VALUE_PROPS = [
   { icon: ShieldCheck, text: 'Acceso único (SSO) al ecosistema de suscripción' },
@@ -17,6 +18,7 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loginStep, setLoginStep] = useState(0);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -30,9 +32,15 @@ export const LoginPage: React.FC = () => {
       return;
     }
     setLoading(true);
+    setLoginStep(0);
     setError('');
     try {
       await login({ email: email.trim(), password });
+      setLoginStep(1);
+      await fetchPortalProducts();
+      setLoginStep(2);
+      await new Promise((r) => setTimeout(r, 400));
+      setLoginStep(3);
       navigate('/dashboard');
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -43,7 +51,8 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen flex flex-col lg:flex-row font-sans relative">
+      <LoginLoadingOverlay active={loading} stepIndex={loginStep} />
       {/* ── Panel institucional ─────────────────────────────── */}
       <aside
         className="relative lg:w-[46%] xl:w-[44%] flex flex-col justify-between px-8 py-10 sm:px-14 sm:py-14 text-white overflow-hidden"
@@ -92,8 +101,12 @@ export const LoginPage: React.FC = () => {
           </p>
 
           <ul className="space-y-3.5">
-            {VALUE_PROPS.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3 text-sm text-white/80">
+            {VALUE_PROPS.map(({ icon: Icon, text }, i) => (
+              <li
+                key={text}
+                className={`flex items-start gap-3 text-sm text-white/80 animate-slide-in-left login-panel-float`}
+                style={{ animationDelay: `${i * 0.12}s` }}
+              >
                 <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10 border border-white/15">
                   <Icon size={15} className="text-[#8FB8E8]" />
                 </span>

@@ -77,6 +77,74 @@ body {
   to   { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes login-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes login-orbit-counter {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes login-progress-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes login-step-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-overlay {
+  animation: fade-in 0.35s ease-out both;
+}
+
+.login-orbit-ring {
+  animation: login-orbit-spin 14s linear infinite;
+}
+
+.login-orbit-ring-delay {
+  animation: login-orbit-counter 18s linear infinite;
+}
+
+.login-orbit-core {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.login-orbit-icon {
+  top: 50%;
+  left: 50%;
+  margin: -20px 0 0 -20px;
+  animation: login-orbit-spin 8s linear infinite;
+}
+
+.login-orbit-pos-1 { transform-origin: 58px 0; }
+.login-orbit-pos-2 { transform-origin: -38px 38px; animation-duration: 10s; }
+.login-orbit-pos-3 { transform-origin: 0 -58px; animation-duration: 12s; }
+
+.login-progress-bar {
+  position: relative;
+  overflow: hidden;
+}
+
+.login-progress-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: login-progress-shimmer 1.8s ease-in-out infinite;
+}
+
+.login-step-fade {
+  animation: login-step-in 0.45s ease-out both;
+}
+
+.login-panel-float {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
 .animate-slide-up {
   animation: slide-up 0.6s ease-out forwards;
 }
