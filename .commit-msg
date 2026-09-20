@@ -1,7 +1,6 @@
-style: aplicar Manual de Identidad de La Mundial
+refactor(ui): remover datos falsos (mocks) del dashboard y centrar SSO
 
-- Reemplaza rojo/dorado por Azul Pennsylvania (#0F1A5A), Rojo Imperial (#E84F51) y Plata (#ACACAC) en todo el portal.
-- Importa Poppins y establece Constantia como tipografías de marca.
-- Actualiza gradientes en LoginPage (fondo y botón).
-- Actualiza badges de productos en Dashboard, LaunchModal y AuditPage.
-- Actualiza shadows y elementos UI de la Navbar y ProductCards.
+- Se eliminaron las tablas de 'Actividad Reciente' y tarjetas de 'KPIs' que contenían información simulada y no funcional.
+- Se eliminaron los enlaces de menú inactivos del CRM.
+- Se reestructuró la cuadrícula principal para que los Lanzadores de SSO ocupen el centro de la atención de forma elegante.
+- Se actualizó `nexus-auth.ts` para que el SSO funcione de forma totalmente invisible usando el token en memoria.

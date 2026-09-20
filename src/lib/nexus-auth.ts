@@ -73,15 +73,17 @@ export function getToken(): string | null {
 // ─── SSO Delegate ─────────────────────────────────────────────────────────
 
 /**
- * Llama a POST /api/auth/sso-delegate con x-api-key.
- * La API Key NUNCA se persiste — solo se usa en esta llamada.
+ * Llama a POST /api/auth/sso-delegate
+ * Se usa el token activo de sesión para generar la conexión SSO sin requerir API Key manual.
  */
 export async function ssoDelegate(
-  apiKey: string,
   payload: SsoDelegatePayload,
 ): Promise<SsoDelegateResponse> {
+  const token = getToken();
+  if (!token) throw new Error('No hay sesión activa para el SSO.');
+
   const { data } = await api.post<SsoDelegateResponse>('/api/auth/sso-delegate', payload, {
-    headers: { 'x-api-key': apiKey },
+    headers: { Authorization: `Bearer ${token}` },
   });
   return data;
 }
