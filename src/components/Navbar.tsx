@@ -24,7 +24,7 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
         {/* Logo + nombre */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0"
-               style={{ boxShadow: '0 4px 12px rgba(208,18,41,0.25)' }}>
+               style={{ boxShadow: '0 4px 12px rgba(15,26,90,0.25)' }}>
             <img src="/logo-mundial.png" alt="La Mundial" className="w-full h-full object-cover" />
           </div>
           <div>
@@ -47,7 +47,7 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
                 : 'text-gray-500 hover:text-mundial-gray hover:bg-gray-100',
             )}
             style={activePage === 'dashboard'
-              ? { background: 'linear-gradient(135deg, #D01229, #9B0D1E)' }
+              ? { background: 'linear-gradient(135deg, #E84F51, #b23f44)' }
               : {}}
           >
             <LayoutDashboard size={16} />
@@ -63,7 +63,7 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
                 : 'text-gray-500 hover:text-mundial-gray hover:bg-gray-100',
             )}
             style={activePage === 'audit'
-              ? { background: 'linear-gradient(135deg, #D01229, #9B0D1E)' }
+              ? { background: 'linear-gradient(135deg, #E84F51, #b23f44)' }
               : {}}
           >
             <BarChart2 size={16} />
@@ -79,7 +79,7 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors"
           >
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                 style={{ background: 'linear-gradient(135deg, #D01229, #9B0D1E)' }}>
+                 style={{ background: 'linear-gradient(135deg, #0F1A5A, #091133)' }}>
               {user?.nombre?.charAt(0)?.toUpperCase() ?? 'U'}
             </div>
             <div className="hidden sm:block text-left">
@@ -106,7 +106,7 @@ export const Navbar: React.FC<Props> = ({ activePage = 'dashboard' }) => {
                 id="logout-btn"
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-red-50 transition-colors"
-                style={{ color: '#D01229' }}
+                style={{ color: '#E84F51' }}
               >
                 <LogOut size={15} />
                 Cerrar sesión

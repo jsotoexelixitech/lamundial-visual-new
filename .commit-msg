@@ -1,4 +1,7 @@
-fix(deploy): VITE_APP_BASE=/ — sin Apache, puerto directo 5190
+style: aplicar Manual de Identidad de La Mundial
 
-Portal accesible en http://192.168.8.120:5190/ sin proxy.
-No requiere cambios en Apache.
+- Reemplaza rojo/dorado por Azul Pennsylvania (#0F1A5A), Rojo Imperial (#E84F51) y Plata (#ACACAC) en todo el portal.
+- Importa Poppins y establece Constantia como tipografías de marca.
+- Actualiza gradientes en LoginPage (fondo y botón).
+- Actualiza badges de productos en Dashboard, LaunchModal y AuditPage.
+- Actualiza shadows y elementos UI de la Navbar y ProductCards.

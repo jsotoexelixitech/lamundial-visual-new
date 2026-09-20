@@ -11,18 +11,18 @@ const PARTICLES = Array.from({ length: 18 }, (_, i) => ({
   y: Math.random() * 100,
   duration: Math.random() * 8 + 6,
   delay: Math.random() * 5,
-  color: i % 3 === 0 ? '#D01229' : i % 3 === 1 ? '#C8A94E' : 'rgba(255,255,255,0.4)',
+  color: i % 3 === 0 ? '#E84F51' : i % 3 === 1 ? '#ACACAC' : 'rgba(255,255,255,0.4)',
 }));
 
 // ─── Anillos decorativos ──────────────────────────────────────────────────
 const DecorativeRings: React.FC = () => (
   <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
     <div
-      className="ring-spin absolute rounded-full border border-mundial-red/10"
+      className="ring-spin absolute rounded-full border border-mundial-blue/10"
       style={{ width: 600, height: 600 }}
     />
     <div
-      className="ring-spin-reverse absolute rounded-full border border-mundial-gold/8"
+      className="ring-spin-reverse absolute rounded-full border border-mundial-silver/8"
       style={{ width: 450, height: 450 }}
     />
     <div
@@ -103,17 +103,17 @@ export const LoginPage: React.FC = () => {
         <div className="hidden lg:flex flex-col gap-8 flex-1 animate-slide-in-left">
           {/* Logo */}
           <div className="logo-shine w-24 h-24 rounded-3xl overflow-hidden shadow-2xl"
-               style={{ boxShadow: '0 20px 60px rgba(208,18,41,0.4)' }}>
+               style={{ boxShadow: '0 20px 60px rgba(15,26,90,0.4)' }}>
             <img src="/logo-mundial.png" alt="La Mundial" className="w-full h-full object-cover" />
           </div>
 
           <div>
-            <p className="text-mundial-gold/80 text-sm font-semibold tracking-widest uppercase mb-3">
+            <p className="text-mundial-silver/80 text-sm font-semibold tracking-widest uppercase mb-3">
               Portal Corporativo
             </p>
             <h1 className="text-5xl font-display font-bold text-white leading-tight mb-4">
               La Mundial<br />
-              <span style={{ color: '#D01229' }}>de Seguros</span>
+              <span style={{ color: '#E84F51' }}>de Seguros</span>
             </h1>
             <p className="text-white/60 text-lg leading-relaxed max-w-sm">
               Plataforma centralizada de gestión de flujos de seguros: RCV, Patrimoniales y Funerario.
@@ -140,7 +140,7 @@ export const LoginPage: React.FC = () => {
           {/* Logo mobile */}
           <div className="flex lg:hidden justify-center mb-6">
             <div className="logo-shine w-16 h-16 rounded-2xl overflow-hidden"
-                 style={{ boxShadow: '0 10px 30px rgba(208,18,41,0.4)' }}>
+                 style={{ boxShadow: '0 10px 30px rgba(15,26,90,0.4)' }}>
               <img src="/logo-mundial.png" alt="La Mundial" className="w-full h-full object-cover" />
             </div>
           </div>
@@ -148,8 +148,8 @@ export const LoginPage: React.FC = () => {
           {/* Header form */}
           <div className="mb-8 animate-slide-up-delay-1">
             <div className="flex items-center gap-2 mb-2">
-              <Shield size={16} style={{ color: '#D01229' }} />
-              <span className="text-mundial-gold/80 text-xs font-semibold tracking-widest uppercase">
+              <Shield size={16} style={{ color: '#E84F51' }} />
+              <span className="text-mundial-silver/80 text-xs font-semibold tracking-widest uppercase">
                 Acceso Seguro
               </span>
             </div>

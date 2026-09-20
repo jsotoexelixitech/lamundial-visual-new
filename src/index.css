@@ -6,20 +6,25 @@
    ═══════════════════════════════════════════════════ */
 
 @theme {
-  --color-mundial-red: #D01229;
-  --color-mundial-dark-red: #9B0D1E;
-  --color-mundial-deep-red: #6B0915;
-  --color-mundial-gold: #C8A94E;
-  --color-mundial-gold-light: #E5C97A;
-  --color-mundial-gray: #404040;
-  --color-mundial-gray-light: #6B6B6B;
+  /* Manual de Identidad - La Mundial de Seguros */
+  --color-mundial-blue: #0F1A5A; /* Azul Pennsylvania (Principal) */
+  --color-mundial-dark-blue: #091133;
+  --color-mundial-light-blue: #162a7f;
+  
+  --color-mundial-red: #E84F51; /* Rojo Imperial (Secundario) */
+  --color-mundial-dark-red: #b23f44;
+  --color-mundial-light-red: #ff6675;
+
+  --color-mundial-silver: #ACACAC; /* Plata (Terciario) */
+  --color-mundial-dark-gray: #777777;
+  --color-mundial-light-gray: #dddddd;
+
   --color-mundial-bg: #F7F7F7;
   --color-mundial-dark: #1A1A1A;
-  --color-mundial-dark-card: #212121;
-  --color-mundial-border: #E0E0E0;
+  --color-mundial-border: #dddddd;
 
-  --font-family-sans: 'Inter', system-ui, sans-serif;
-  --font-family-display: 'Outfit', system-ui, sans-serif;
+  --font-family-sans: 'Poppins', system-ui, sans-serif;
+  --font-family-display: 'Constantia', Georgia, serif;
 
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
@@ -40,9 +45,9 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Poppins', system-ui, sans-serif;
   background-color: #F7F7F7;
-  color: #404040;
+  color: #091133;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -65,8 +70,8 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(208, 18, 41, 0.3), 0 0 60px rgba(208, 18, 41, 0.1); }
-  50%       { box-shadow: 0 0 40px rgba(208, 18, 41, 0.6), 0 0 100px rgba(208, 18, 41, 0.2); }
+  0%, 100% { box-shadow: 0 0 20px rgba(232, 79, 81, 0.3), 0 0 60px rgba(232, 79, 81, 0.1); }
+  50%       { box-shadow: 0 0 40px rgba(232, 79, 81, 0.6), 0 0 100px rgba(232, 79, 81, 0.2); }
 }
 
 @keyframes shimmer {
@@ -135,7 +140,7 @@ body {
    ═══════════════════════════════════════════════════ */
 
 .login-bg {
-  background: linear-gradient(135deg, #0D0D0D 0%, #1A0507 30%, #1A1A1A 60%, #0D0507 100%);
+  background: linear-gradient(135deg, #091133 0%, #0F1A5A 50%, #162a7f 100%);
   position: relative;
   overflow: hidden;
 }
@@ -155,8 +160,8 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(ellipse at 30% 40%, rgba(208,18,41,0.15) 0%, transparent 50%),
-              radial-gradient(ellipse at 70% 60%, rgba(200,169,78,0.08) 0%, transparent 50%);
+  background: radial-gradient(ellipse at 30% 40%, rgba(232, 79, 81, 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 60%, rgba(22, 42, 127, 0.15) 0%, transparent 50%);
   animation: float-slow 8s ease-in-out infinite;
 }
 
@@ -192,7 +197,7 @@ body {
 .btn-mundial {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #D01229 0%, #9B0D1E 100%);
+  background: linear-gradient(135deg, #E84F51 0%, #b23f44 100%);
   color: white;
   font-weight: 600;
   border: none;
@@ -202,9 +207,9 @@ body {
 }
 
 .btn-mundial:hover {
-  background: linear-gradient(135deg, #E8152F 0%, #B50F24 100%);
+  background: linear-gradient(135deg, #ff6675 0%, #E84F51 100%);
   transform: translateY(-2px);
-  box-shadow: 0 15px 40px rgba(208, 18, 41, 0.5);
+  box-shadow: 0 15px 40px rgba(232, 79, 81, 0.5);
 }
 
 .btn-mundial:active {
@@ -231,9 +236,9 @@ body {
 }
 
 .input-dark:focus {
-  border-color: #D01229;
+  border-color: #E84F51;
   background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px rgba(208, 18, 41, 0.2);
+  box-shadow: 0 0 0 3px rgba(232, 79, 81, 0.2);
 }
 
 .input-dark::placeholder {
@@ -292,7 +297,7 @@ body {
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   background: white;
-  border: 1px solid #E0E0E0;
+  border: 1px solid #dddddd;
 }
 
 .product-card::before {
@@ -313,49 +318,49 @@ body {
 }
 
 .product-card-rcv::before {
-  background: linear-gradient(135deg, rgba(208,18,41,0.03) 0%, rgba(155,13,30,0.06) 100%);
+  background: linear-gradient(135deg, rgba(232,79,81,0.03) 0%, rgba(178,63,68,0.06) 100%);
 }
 
 .product-card-rcv:hover {
-  border-color: rgba(208,18,41,0.3);
+  border-color: rgba(232,79,81,0.3);
 }
 
 .product-card-patrimonial::before {
-  background: linear-gradient(135deg, rgba(200,169,78,0.03) 0%, rgba(200,169,78,0.06) 100%);
+  background: linear-gradient(135deg, rgba(15,26,90,0.03) 0%, rgba(9,17,51,0.06) 100%);
 }
 
 .product-card-patrimonial:hover {
-  border-color: rgba(200,169,78,0.4);
+  border-color: rgba(15,26,90,0.4);
 }
 
 .product-card-funerario::before {
-  background: linear-gradient(135deg, rgba(64,64,64,0.03) 0%, rgba(64,64,64,0.06) 100%);
+  background: linear-gradient(135deg, rgba(172,172,172,0.03) 0%, rgba(119,119,119,0.06) 100%);
 }
 
 .product-card-funerario:hover {
-  border-color: rgba(64,64,64,0.4);
+  border-color: rgba(172,172,172,0.4);
 }
 
 /* Badge de producto */
 .product-icon-rcv {
-  background: linear-gradient(135deg, #D01229 0%, #9B0D1E 100%);
-  box-shadow: 0 8px 25px rgba(208,18,41,0.35);
+  background: linear-gradient(135deg, #E84F51 0%, #b23f44 100%);
+  box-shadow: 0 8px 25px rgba(232,79,81,0.35);
 }
 
 .product-icon-patrimonial {
-  background: linear-gradient(135deg, #C8A94E 0%, #A88A35 100%);
-  box-shadow: 0 8px 25px rgba(200,169,78,0.35);
+  background: linear-gradient(135deg, #0F1A5A 0%, #091133 100%);
+  box-shadow: 0 8px 25px rgba(15,26,90,0.35);
 }
 
 .product-icon-funerario {
-  background: linear-gradient(135deg, #404040 0%, #1A1A1A 100%);
-  box-shadow: 0 8px 25px rgba(64,64,64,0.35);
+  background: linear-gradient(135deg, #ACACAC 0%, #777777 100%);
+  box-shadow: 0 8px 25px rgba(172,172,172,0.35);
 }
 
 /* Navbar */
 .navbar {
   background: white;
-  border-bottom: 2px solid #D01229;
+  border-bottom: 2px solid #E84F51;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
@@ -385,14 +390,14 @@ body {
 /* Scrollbar personalizado */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #F5F5F5; }
-::-webkit-scrollbar-thumb { background: #D01229; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #9B0D1E; }
+::-webkit-scrollbar-thumb { background: #0F1A5A; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #091133; }
 
 /* Tabla audit */
 .audit-table th {
   background: #F7F7F7;
   font-weight: 600;
-  color: #404040;
+  color: #091133;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -403,7 +408,7 @@ body {
 }
 
 .audit-row:hover {
-  background: #FFF5F6;
+  background: #f0f2f8; /* Azul claro para hover */
 }
 
 /* Status badges */

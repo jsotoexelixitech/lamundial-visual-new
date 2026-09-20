@@ -77,7 +77,7 @@ export const LaunchModal: React.FC<Props> = ({ product, onClose }) => {
         {/* Header */}
         <div
           className="px-8 py-6 flex items-center justify-between"
-          style={{ background: 'linear-gradient(135deg, #D01229 0%, #9B0D1E 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #0F1A5A 0%, #091133 100%)' }}
         >
           <div>
             <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">
@@ -108,7 +108,7 @@ export const LaunchModal: React.FC<Props> = ({ product, onClose }) => {
                     ? 'bg-white shadow-sm text-mundial-red'
                     : 'text-gray-500 hover:text-gray-700',
                 )}
-                style={mode === m ? { color: '#D01229' } : {}}
+                style={mode === m ? { color: '#E84F51' } : {}}
               >
                 {m === 'sso' ? '🔑 Credenciales API' : '🎫 Token directo'}
               </button>
@@ -120,7 +120,7 @@ export const LaunchModal: React.FC<Props> = ({ product, onClose }) => {
             <div className="flex flex-col gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="modal-apikey">
-                  API Key <span style={{ color: '#D01229' }}>*</span>
+                  API Key <span style={{ color: '#E84F51' }}>*</span>
                 </label>
                 <input
                   id="modal-apikey"
@@ -218,7 +218,7 @@ export const LaunchModal: React.FC<Props> = ({ product, onClose }) => {
           {mode === 'token' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5" htmlFor="modal-token">
-                nexus_token <span style={{ color: '#D01229' }}>*</span>
+                nexus_token <span style={{ color: '#E84F51' }}>*</span>
               </label>
               <textarea
                 id="modal-token"
@@ -256,7 +256,7 @@ export const LaunchModal: React.FC<Props> = ({ product, onClose }) => {
               onClick={handleLaunch}
               disabled={loading}
               className="flex-1 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all"
-              style={{ background: loading ? '#ccc' : 'linear-gradient(135deg, #D01229 0%, #9B0D1E 100%)', color: 'white' }}
+              style={{ background: loading ? '#ccc' : 'linear-gradient(135deg, #E84F51 0%, #b23f44 100%)', color: 'white' }}
             >
               {loading ? (
                 <><Loader2 size={16} className="animate-spin" /> Generando...</>

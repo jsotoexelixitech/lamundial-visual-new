@@ -20,10 +20,10 @@ export const DashboardPage: React.FC = () => {
   }
 
   const stats = [
-    { icon: <Zap size={20} />, label: 'Módulos activos', value: '4', color: '#D01229' },
-    { icon: <Shield size={20} />, label: 'SSO seguro', value: '✓', color: '#C8A94E' },
-    { icon: <TrendingUp size={20} />, label: 'Productos', value: '3', color: '#404040' },
-    { icon: <Clock size={20} />, label: 'Sesión activa', value: '1h', color: '#D01229' },
+    { icon: <Zap size={20} />, label: 'Módulos activos', value: '4', color: '#0F1A5A' },
+    { icon: <Shield size={20} />, label: 'SSO seguro', value: '✓', color: '#E84F51' },
+    { icon: <TrendingUp size={20} />, label: 'Productos', value: '3', color: '#ACACAC' },
+    { icon: <Clock size={20} />, label: 'Sesión activa', value: '1h', color: '#091133' },
   ];
 
   return (
@@ -35,13 +35,13 @@ export const DashboardPage: React.FC = () => {
         <div className="mb-10 animate-slide-up">
           <div
             className="rounded-3xl p-10 text-white relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #D01229 0%, #9B0D1E 50%, #6B0915 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #091133 0%, #0F1A5A 50%, #162a7f 100%)' }}
           >
             {/* Decoración */}
             <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10"
                  style={{ background: 'white', transform: 'translate(30%, -40%)' }} />
             <div className="absolute bottom-0 left-20 w-64 h-64 rounded-full opacity-10"
-                 style={{ background: '#C8A94E', transform: 'translate(-30%, 50%)' }} />
+                 style={{ background: '#E84F51', transform: 'translate(-30%, 50%)' }} />
 
             <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
               <div>
@@ -100,11 +100,11 @@ export const DashboardPage: React.FC = () => {
         <div className="mt-10 p-6 bg-white rounded-2xl border border-gray-100 animate-slide-up-delay-4">
           <div className="flex flex-wrap gap-6 text-sm text-gray-500">
             <span className="flex items-center gap-2">
-              <Shield size={14} style={{ color: '#D01229' }} />
+              <Shield size={14} style={{ color: '#0F1A5A' }} />
               SSO mediante <strong className="text-gray-700">nexus-api</strong> — token con metadata canal
             </span>
             <span className="flex items-center gap-2">
-              <Zap size={14} style={{ color: '#C8A94E' }} />
+              <Zap size={14} style={{ color: '#E84F51' }} />
               Empresa: <strong className="text-gray-700">ID {user.empresaId}</strong>
             </span>
             <span className="flex items-center gap-2">

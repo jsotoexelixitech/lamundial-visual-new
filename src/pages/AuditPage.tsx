@@ -12,9 +12,9 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const PRODUCT_BADGES: Record<string, { label: string; color: string }> = {
-  rcv:          { label: 'RCV',          color: '#D01229' },
-  patrimonial:  { label: 'Patrimoniales', color: '#C8A94E' },
-  funerario:    { label: 'Funerario',    color: '#404040' },
+  rcv:          { label: 'RCV',          color: '#E84F51' },
+  patrimonial:  { label: 'Patrimoniales', color: '#0F1A5A' },
+  funerario:    { label: 'Funerario',    color: '#ACACAC' },
 };
 
 export const AuditPage: React.FC = () => {
@@ -55,7 +55,7 @@ export const AuditPage: React.FC = () => {
         <div className="flex items-center justify-between mb-8 animate-slide-up">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <BarChart2 size={20} style={{ color: '#D01229' }} />
+              <BarChart2 size={20} style={{ color: '#E84F51' }} />
               <h1 className="text-2xl font-display font-bold text-mundial-gray">Historial de acciones</h1>
             </div>
             <p className="text-gray-500 text-sm">Registro de actividad de tu sesión en el portal.</p>
@@ -105,7 +105,7 @@ export const AuditPage: React.FC = () => {
           {!error && loading && (
             <div className="px-6 py-12 text-center">
               <div className="inline-block w-8 h-8 border-2 border-gray-200 rounded-full animate-spin"
-                   style={{ borderTopColor: '#D01229' }} />
+                   style={{ borderTopColor: '#E84F51' }} />
               <p className="text-gray-400 text-sm mt-3">Cargando historial...</p>
             </div>
           )}
