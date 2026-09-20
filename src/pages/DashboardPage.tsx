@@ -9,17 +9,22 @@ import {
   Loader2,
   ExternalLink,
   AlertCircle,
-  KeyRound,
   ShieldCheck,
+  Inbox,
 } from 'lucide-react';
 import { PortalHeader } from '@/components/PortalHeader';
 import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
 import { publicAsset } from '@/lib/public-asset';
-import { getCurrentUser, getToken, ssoDelegate, registerAudit } from '@/lib/nexus-auth';
-import { PRODUCTS } from '@/lib/portal-config';
-import type { ProductConfig, ProductKey } from '@/lib/portal-config';
+import {
+  fetchPortalProducts,
+  getCurrentUser,
+  getToken,
+  ssoDelegate,
+  registerAudit,
+  type PortalProductDto,
+} from '@/lib/nexus-auth';
+import type { ProductKey } from '@/lib/portal-config';
 import { buildFallbackModuleUrl, buildSsoPayload, getSsoDefaults } from '@/lib/sso-launch';
-import { getEffectiveApiKey, isPortalAdmin } from '@/lib/portal-sso-config';
 
 const CARD_STYLE: Record<ProductKey, { icon: React.ReactNode; accent: string; tint: string }> = {
   rcv: {
@@ -39,16 +44,12 @@ const CARD_STYLE: Record<ProductKey, { icon: React.ReactNode; accent: string; ti
   },
 };
 
-const MODULE_LABEL: Record<ProductConfig['target'], string> = {
-  ocr: 'OCR · inicio de flujo',
-  emision: 'Emisión',
-  formulario: 'Formulario',
-  pagos: 'Pagos',
-};
-
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const [products, setProducts] = useState<PortalProductDto[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [productsError, setProductsError] = useState('');
   const [launching, setLaunching] = useState<ProductKey | null>(null);
   const [launchError, setLaunchError] = useState('');
 
@@ -56,12 +57,35 @@ export const DashboardPage: React.FC = () => {
     if (!user) navigate('/login');
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingProducts(true);
+      setProductsError('');
+      try {
+        const list = await fetchPortalProducts();
+        if (!cancelled) setProducts(list);
+      } catch {
+        if (!cancelled) {
+          setProductsError(
+            'No se pudieron cargar tus flujos. Revisa submódulos y permisos en Nexus Admin.',
+          );
+        }
+      } finally {
+        if (!cancelled) setLoadingProducts(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   if (!user) return null;
 
   const canal = getSsoDefaults();
-  const admin = isPortalAdmin(user);
 
-  const handleLaunch = async (product: ProductConfig) => {
+  const handleLaunch = async (product: PortalProductDto) => {
     setLaunching(product.key);
     setLaunchError('');
     try {
@@ -72,9 +96,7 @@ export const DashboardPage: React.FC = () => {
       let url: string;
 
       try {
-        const response = await ssoDelegate(payload, {
-          apiKey: getEffectiveApiKey(product.key),
-        });
+        const response = await ssoDelegate(payload);
         if (!response.success || !response.redirect_url) {
           throw new Error('SSO no devolvió URL de acceso.');
         }
@@ -89,14 +111,14 @@ export const DashboardPage: React.FC = () => {
             : null;
         if (apiMsg) {
           throw new Error(
-            `${apiMsg} Revisa la API Key en Configuración SSO y los submódulos activos en Nexus Admin.`,
+            `${apiMsg} Revisa submódulos activos y permisos de tu rol en Nexus Admin.`,
           );
         }
         if (import.meta.env.VITE_PORTAL_ALLOW_LEGACY_TOKEN === 'true') {
           url = buildFallbackModuleUrl(product, token);
         } else {
           throw new Error(
-            'No se pudo generar el acceso SSO. Verifica la API Key y los submódulos de la empresa.',
+            'No se pudo generar el acceso SSO. Contacta a Tecnología La Mundial.',
           );
         }
       }
@@ -173,29 +195,43 @@ export const DashboardPage: React.FC = () => {
             <div className="text-sm text-[#991B1B]">
               <p className="font-semibold">No se pudo abrir el flujo</p>
               <p className="mt-0.5 font-medium text-[#B45356]">{launchError}</p>
-              {admin && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/settings/sso')}
-                  className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#0F1A5A] hover:underline"
-                >
-                  <KeyRound size={13} />
-                  Abrir Configuración SSO
-                </button>
-              )}
             </div>
           </div>
         )}
 
+        {productsError && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {productsError}
+          </div>
+        )}
+
         <div className="flex items-end justify-between gap-4 mb-6">
-          <h2 className="font-display text-xl font-bold text-[#091133]">Ramos disponibles</h2>
+          <h2 className="font-display text-xl font-bold text-[#091133]">Emisiones disponibles</h2>
           <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#ACACAC]">
-            {PRODUCTS.length} flujos activos
+            {loadingProducts ? '…' : `${products.length} flujo${products.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
+        {loadingProducts && (
+          <div className="flex justify-center py-16">
+            <Loader2 size={36} className="animate-spin text-[#0F1A5A]" />
+          </div>
+        )}
+
+        {!loadingProducts && products.length === 0 && (
+          <div className="rounded-2xl border border-[#e4e6ee] bg-white p-12 text-center">
+            <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
+            <p className="font-semibold text-[#091133]">Sin flujos asignados</p>
+            <p className="text-sm text-[#777777] mt-2 max-w-md mx-auto">
+              Tu empresa o rol aún no tiene submódulos activos para RCV, Patrimoniales o Funerario.
+              Un administrador debe configurarlos en Nexus Admin.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {PRODUCTS.map((product) => {
+          {!loadingProducts &&
+            products.map((product) => {
             const style = CARD_STYLE[product.key];
             const busy = launching === product.key;
 
@@ -227,7 +263,7 @@ export const DashboardPage: React.FC = () => {
 
                   <div className="mt-5 pt-4 border-t border-[#eceef4] flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#ACACAC]">
                     <ShieldCheck size={13} style={{ color: style.tint }} />
-                    {MODULE_LABEL[product.target]}
+                    {product.moduleLabel}
                   </div>
 
                   <button

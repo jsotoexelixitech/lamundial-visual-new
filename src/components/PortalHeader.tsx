@@ -1,29 +1,23 @@
-import { LogOut, ClipboardList, LayoutGrid, Settings } from 'lucide-react';
+import { LogOut, ClipboardList, LayoutGrid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { logout, getCurrentUser } from '@/lib/nexus-auth';
-import { isPortalAdmin } from '@/lib/portal-sso-config';
 
 type Props = {
-  active?: 'dashboard' | 'audit' | 'settings';
+  active?: 'dashboard' | 'audit';
 };
 
 export function PortalHeader({ active = 'dashboard' }: Props) {
   const navigate = useNavigate();
   const user = getCurrentUser();
-  const admin = isPortalAdmin(user);
-
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
   const navItems = [
-    { key: 'dashboard' as const, label: 'Ramos', icon: LayoutGrid, to: '/dashboard' },
+    { key: 'dashboard' as const, label: 'Emisiones', icon: LayoutGrid, to: '/dashboard' },
     { key: 'audit' as const, label: 'Bitácora', icon: ClipboardList, to: '/audit' },
-    ...(admin
-      ? [{ key: 'settings' as const, label: 'Configuración SSO', icon: Settings, to: '/settings/sso' }]
-      : []),
   ];
 
   const initials = (user?.nombre ?? 'U')

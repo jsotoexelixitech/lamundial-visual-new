@@ -41,6 +41,19 @@ export interface SsoDelegateResponse {
   modulo: string;
 }
 
+/** Producto lanzable desde GET /api/portal/products */
+export interface PortalProductDto {
+  key: 'rcv' | 'patrimonial' | 'funerario';
+  label: string;
+  description: string;
+  target: 'ocr' | 'emision' | 'formulario' | 'pagos';
+  product: 'rcv' | 'funerario' | 'patrimoniales';
+  defaultCramo: number;
+  moduleLabel: string;
+  submoduloId: number;
+  submoduloNombre: string;
+}
+
 // ─── Auth ──────────────────────────────────────────────────────────────────
 
 /** Login con credenciales Nexus. Guarda token en sessionStorage. */
@@ -75,25 +88,27 @@ export function getToken(): string | null {
  * Llama a POST /api/auth/sso-delegate
  * Se usa el token activo de sesión para generar la conexión SSO sin requerir API Key manual.
  */
-export async function ssoDelegate(
-  payload: SsoDelegatePayload,
-  options?: { apiKey?: string },
-): Promise<SsoDelegateResponse> {
+/** SSO con sesión del usuario (empresa y permisos en Nexus Admin). */
+export async function ssoDelegate(payload: SsoDelegatePayload): Promise<SsoDelegateResponse> {
   const token = getToken();
-  const apiKey = options?.apiKey?.trim();
-
-  if (!apiKey && !token) {
-    throw new Error('Configure la API Key SSO en Configuración o inicie sesión.');
+  if (!token) {
+    throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
   }
 
-  const headers: Record<string, string> = {};
-  if (apiKey) headers['x-api-key'] = apiKey;
-  if (token) headers.Authorization = `Bearer ${token}`;
-
   const { data } = await api.post<SsoDelegateResponse>('/api/auth/sso-delegate', payload, {
-    headers,
+    headers: { Authorization: `Bearer ${token}` },
   });
   return data;
+}
+
+export async function fetchPortalProducts(): Promise<PortalProductDto[]> {
+  const token = getToken();
+  if (!token) return [];
+  const { data } = await api.get<{ success: boolean; data: PortalProductDto[] }>(
+    '/api/portal/products',
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  return data.data ?? [];
 }
 
 // ─── Portal audit (nexus-api endpoint nuevo) ──────────────────────────────

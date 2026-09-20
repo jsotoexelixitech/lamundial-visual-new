@@ -1,7 +1,9 @@
 import type { ProductConfig } from './portal-config';
 import { portalConfig } from './portal-config';
-import type { SsoDelegatePayload } from './nexus-auth';
+import type { PortalProductDto, SsoDelegatePayload } from './nexus-auth';
 import { getFlowMetadataOverrides } from './portal-sso-config';
+
+export type LaunchProduct = ProductConfig | PortalProductDto;
 
 /** Metadata Sis2000 por defecto en cierre (sobrescribir con VITE_SSO_* o panel admin). */
 export function getSsoDefaults(productKey?: ProductConfig['key']) {
@@ -21,13 +23,13 @@ export function getSsoDefaults(productKey?: ProductConfig['key']) {
   };
 }
 
-export function buildSsoPayload(product: ProductConfig): SsoDelegatePayload {
+export function buildSsoPayload(product: LaunchProduct): SsoDelegatePayload {
   const defaults = getSsoDefaults(product.key);
   const flowCramo = getFlowMetadataOverrides(product.key).cramo?.trim();
   const cramo =
     flowCramo && !Number.isNaN(Number(flowCramo))
       ? Number(flowCramo)
-      : product.defaultCramo;
+      : product.defaultCramo ?? 18;
 
   const base: SsoDelegatePayload = {
     target: product.target,
@@ -56,7 +58,7 @@ export function buildSsoPayload(product: ProductConfig): SsoDelegatePayload {
 }
 
 /** Fallback si sso-delegate falla: URL con token plano (legacy). */
-export function buildFallbackModuleUrl(product: ProductConfig, token: string): string {
+export function buildFallbackModuleUrl(product: LaunchProduct, token: string): string {
   const { modules } = portalConfig;
   const q = new URLSearchParams({ nexus_token: token });
 
