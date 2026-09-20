@@ -67,11 +67,13 @@ export const DashboardPage: React.FC = () => {
       try {
         const list = await fetchPortalProducts();
         if (!cancelled) setProducts(list);
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setProductsError(
-            'No se pudieron cargar tus flujos. Revisa submódulos y permisos en Nexus Admin.',
-          );
+          const detail =
+            err instanceof Error && err.message
+              ? err.message
+              : 'No se pudieron cargar tus flujos.';
+          setProductsError(detail);
         }
       } finally {
         if (!cancelled) setLoadingProducts(false);

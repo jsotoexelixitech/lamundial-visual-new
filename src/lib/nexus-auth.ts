@@ -104,11 +104,21 @@ export async function ssoDelegate(payload: SsoDelegatePayload): Promise<SsoDeleg
 export async function fetchPortalProducts(): Promise<PortalProductDto[]> {
   const token = getToken();
   if (!token) return [];
-  const { data } = await api.get<{ success: boolean; data: PortalProductDto[] }>(
-    '/api/portal/products',
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  return data.data ?? [];
+  try {
+    const { data } = await api.get<{ success: boolean; data: PortalProductDto[] }>(
+      '/api/portal/products',
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    return data.data ?? [];
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.data && typeof err.response.data === 'object') {
+      const body = err.response.data as { message?: string };
+      if (body.message) {
+        throw new Error(body.message);
+      }
+    }
+    throw err;
+  }
 }
 
 // ─── Portal audit (nexus-api endpoint nuevo) ──────────────────────────────
