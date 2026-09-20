@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Car, Heart, Building2, ShieldCheck, Loader2 } from 'lucide-react';
-import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
 import { publicAsset } from '@/lib/public-asset';
+import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
 
 const STEPS = [
   { id: 'auth', label: 'Validando credenciales', icon: ShieldCheck },
@@ -16,71 +16,64 @@ type Props = {
 };
 
 export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    if (!active) return;
-    const id = window.setInterval(() => setTick((t) => t + 1), 2400);
-    return () => window.clearInterval(id);
-  }, [active]);
-
   if (!active) return null;
 
-  const idx = Math.min(stepIndex + (tick % STEPS.length), STEPS.length - 1);
+  const idx = Math.min(Math.max(stepIndex, 0), STEPS.length - 1);
   const step = STEPS[idx];
+  const progress = ((idx + 1) / STEPS.length) * 100;
 
   return (
     <div
-      className="login-overlay fixed inset-0 z-50 flex items-center justify-center px-6"
+      className="login-overlay login-overlay-authkit fixed inset-0 z-[200] flex items-center justify-center px-4 sm:px-6"
       role="status"
       aria-live="polite"
       aria-label="Iniciando sesión"
     >
-      <div className="login-overlay-backdrop absolute inset-0 bg-[#091133]/55 backdrop-blur-md" />
+      <div className="login-overlay-backdrop absolute inset-0 bg-[#05060f]/88 backdrop-blur-xl" />
+      <div className="login-spotlight absolute inset-0 pointer-events-none opacity-80" aria-hidden />
 
-      <div className="login-overlay-card relative w-full max-w-md rounded-3xl border border-white/20 bg-white/95 shadow-[0_32px_80px_-24px_rgba(9,17,51,0.55)] overflow-hidden">
-        <div
-          className="h-1.5 w-full login-progress-bar"
-          style={{ background: 'linear-gradient(90deg, #0F1A5A, #2E6DBF 45%, #E84F51)' }}
-        />
+      <div className="login-glass-modal relative w-full max-w-lg rounded-2xl overflow-hidden login-modal-enter login-overlay-card-glow">
+        <div className="h-1.5 bg-white/5">
+          <div
+            className="h-full login-progress-fill transition-all duration-700 ease-out"
+            style={{
+              width: `${progress}%`,
+              background: 'linear-gradient(90deg, #663af3, #2E6DBF 55%, #E84F51)',
+            }}
+          />
+        </div>
 
-        <div className="px-8 py-10 text-center">
-          <div className="login-orbit mx-auto mb-8 relative h-36 w-36">
-            <span className="login-orbit-ring absolute inset-0 rounded-full border border-[#0F1A5A]/15" />
-            <span className="login-orbit-ring-delay absolute inset-2 rounded-full border border-[#E84F51]/25" />
-            <img
-              src={publicAsset(MUNDIAL_ISOTIPO)}
-              alt=""
-              className="absolute inset-0 m-auto h-14 w-14 login-orbit-core"
-              draggable={false}
-            />
-            <span className="login-orbit-icon login-orbit-pos-1 absolute flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #E84F51, #B23F44)' }}>
-              <Car size={18} />
-            </span>
-            <span className="login-orbit-icon login-orbit-pos-2 absolute flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #2E6DBF, #0F1A5A)' }}>
-              <Heart size={18} />
-            </span>
-            <span className="login-orbit-icon login-orbit-pos-3 absolute flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #0F1A5A, #091133)' }}>
-              <Building2 size={18} />
-            </span>
+        <div className="px-8 py-10 sm:px-10 sm:py-12">
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="login-pulse-ring relative mb-6 h-32 w-32">
+              <span className="login-orbit-ring absolute -inset-1 rounded-full border-2 border-dashed border-[#663af3]/60" />
+              <span className="login-orbit-ring-delay absolute inset-1 rounded-full border border-[#98c0ef]/50" />
+              <span className="login-pulse-a absolute inset-2 rounded-full border-2 border-[#bad7f7]/40" />
+              <span className="login-pulse-b absolute inset-5 rounded-full border border-[#663af3]/50" />
+              <img
+                src={publicAsset(MUNDIAL_ISOTIPO)}
+                alt=""
+                className="absolute inset-0 m-auto h-16 w-16 login-logo-glow login-orbit-core"
+                draggable={false}
+              />
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 login-glass-chip">
+              <Loader2 size={18} className="animate-spin text-[#d1e4fa]" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#c7d3ea]">
+                Portal La Mundial
+              </span>
+            </div>
+
+            <p className="text-2xl font-semibold text-[#d8ecf8] mb-2 login-step-fade" key={step.id}>
+              {step.label}
+            </p>
+            <p className="text-sm text-[#9da7ba] max-w-sm">
+              Sincronizando catálogo Sis2000 y permisos de emisión…
+            </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#0F1A5A]/08 px-4 py-2 mb-4">
-            <Loader2 size={16} className="animate-spin text-[#0F1A5A]" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#0F1A5A]">
-              La Mundial · Portal
-            </span>
-          </div>
-
-          <p className="font-display text-xl font-bold text-[#091133] mb-1 login-step-fade" key={step.id}>
-            {step.label}
-          </p>
-          <p className="text-sm text-[#777777] mb-6">Un momento, estamos armando tu catálogo de emisiones.</p>
-
-          <ul className="text-left space-y-2 max-w-xs mx-auto">
+          <ul className="space-y-3">
             {STEPS.map((s, i) => {
               const Icon = s.icon;
               const done = i < idx;
@@ -88,22 +81,28 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
               return (
                 <li
                   key={s.id}
-                  className={`flex items-center gap-3 text-xs transition-all duration-500 ${
-                    current ? 'text-[#091133] font-semibold scale-[1.02]' : done ? 'text-[#2E6DBF]' : 'text-[#ACACAC]'
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-500 ${
+                    current ? 'login-glass-chip scale-[1.02]' : done ? 'opacity-90' : 'opacity-45'
                   }`}
                 >
                   <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                       current
-                        ? 'border-[#E84F51]/40 bg-[#E84F51]/10'
+                        ? 'bg-[#663af3]/25 text-[#d1e4fa]'
                         : done
-                          ? 'border-[#2E6DBF]/30 bg-[#2E6DBF]/10'
-                          : 'border-[#e4e6ee] bg-[#FAFBFD]'
+                          ? 'bg-[#2E6DBF]/20 text-[#98c0ef]'
+                          : 'bg-white/5 text-[#9da7ba]'
                     }`}
                   >
-                    <Icon size={14} className={current ? 'text-[#E84F51]' : done ? 'text-[#2E6DBF]' : ''} />
+                    <Icon size={16} className={current ? 'login-icon-bounce' : ''} />
                   </span>
-                  {s.label}
+                  <span
+                    className={`text-sm ${
+                      current ? 'font-medium text-[#d1e4fa]' : 'text-[#c7d3ea]'
+                    }`}
+                  >
+                    {s.label}
+                  </span>
                 </li>
               );
             })}
