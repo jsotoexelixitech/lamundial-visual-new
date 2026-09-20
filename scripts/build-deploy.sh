@@ -31,7 +31,8 @@ echo "▶  Verificando dist/..."
 ls -lah dist/
 
 echo "▶  Recargando PM2 portal-lamundial..."
-pm2 reload ecosystem.config.cjs --update-env 2>/dev/null || pm2 start ecosystem.config.cjs
+pm2 delete portal-lamundial 2>/dev/null || true
+pm2 start ecosystem.config.cjs
 
 pm2 save
 
