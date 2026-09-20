@@ -1,0 +1,412 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════
+   DESIGN SYSTEM — LA MUNDIAL DE SEGUROS
+   Colores basados en Manual de Identidad Visual
+   ═══════════════════════════════════════════════════ */
+
+@theme {
+  --color-mundial-red: #D01229;
+  --color-mundial-dark-red: #9B0D1E;
+  --color-mundial-deep-red: #6B0915;
+  --color-mundial-gold: #C8A94E;
+  --color-mundial-gold-light: #E5C97A;
+  --color-mundial-gray: #404040;
+  --color-mundial-gray-light: #6B6B6B;
+  --color-mundial-bg: #F7F7F7;
+  --color-mundial-dark: #1A1A1A;
+  --color-mundial-dark-card: #212121;
+  --color-mundial-border: #E0E0E0;
+
+  --font-family-sans: 'Inter', system-ui, sans-serif;
+  --font-family-display: 'Outfit', system-ui, sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+}
+
+/* ═══════════════════════════════════════════════════
+   GLOBAL BASE
+   ═══════════════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #F7F7F7;
+  color: #404040;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ═══════════════════════════════════════════════════
+   LOGIN PAGE — ANIMACIONES PREMIUM
+   ═══════════════════════════════════════════════════ */
+
+/* Partículas flotantes */
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.3; }
+  25%       { transform: translateY(-30px) translateX(15px) rotate(90deg); opacity: 0.6; }
+  50%       { transform: translateY(-15px) translateX(-10px) rotate(180deg); opacity: 0.4; }
+  75%       { transform: translateY(-40px) translateX(20px) rotate(270deg); opacity: 0.7; }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-20px) scale(1.05); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(208, 18, 41, 0.3), 0 0 60px rgba(208, 18, 41, 0.1); }
+  50%       { box-shadow: 0 0 40px rgba(208, 18, 41, 0.6), 0 0 100px rgba(208, 18, 41, 0.2); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+@keyframes border-rotate {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes ripple {
+  0%   { transform: scale(0); opacity: 0.6; }
+  100% { transform: scale(4); opacity: 0; }
+}
+
+@keyframes card-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-8px) rotate(0.5deg); }
+  66%       { transform: translateY(-4px) rotate(-0.3deg); }
+}
+
+@keyframes number-count {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════
+   CLASES UTILITARIAS PERSONALIZADAS
+   ═══════════════════════════════════════════════════ */
+
+.login-bg {
+  background: linear-gradient(135deg, #0D0D0D 0%, #1A0507 30%, #1A1A1A 60%, #0D0507 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/login-bg.png') center center / cover no-repeat;
+  opacity: 0.15;
+}
+
+.login-bg::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 40%, rgba(208,18,41,0.15) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 60%, rgba(200,169,78,0.08) 0%, transparent 50%);
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* Logo shine */
+.logo-shine {
+  position: relative;
+  overflow: hidden;
+}
+.logo-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: skewX(-20deg);
+  animation: shimmer 3s ease-in-out infinite;
+  background-size: 200% auto;
+  background-position: -200% center;
+}
+
+/* Botón primario mundial */
+.btn-mundial {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #D01229 0%, #9B0D1E 100%);
+  color: white;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.btn-mundial:hover {
+  background: linear-gradient(135deg, #E8152F 0%, #B50F24 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(208, 18, 41, 0.5);
+}
+
+.btn-mundial:active {
+  transform: translateY(0);
+}
+
+.btn-mundial .ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  width: 10px;
+  height: 10px;
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+/* Input estilos oscuros para login */
+.input-dark {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.input-dark:focus {
+  border-color: #D01229;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(208, 18, 41, 0.2);
+}
+
+.input-dark::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Partícula decorativa */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Anillo giratorio */
+.ring-spin {
+  animation: spin-slow 8s linear infinite;
+}
+
+.ring-spin-reverse {
+  animation: spin-reverse 12s linear infinite;
+}
+
+/* Animaciones de entrada */
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+.animate-slide-up-delay-1 {
+  animation: slide-up 0.6s ease-out 0.1s both;
+}
+
+.animate-slide-up-delay-2 {
+  animation: slide-up 0.6s ease-out 0.2s both;
+}
+
+.animate-slide-up-delay-3 {
+  animation: slide-up 0.6s ease-out 0.3s both;
+}
+
+.animate-slide-up-delay-4 {
+  animation: slide-up 0.6s ease-out 0.4s both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.7s ease-out forwards;
+}
+
+/* Cards de producto */
+.product-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: white;
+  border: 1px solid #E0E0E0;
+}
+
+.product-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+}
+
+.product-card:hover::before {
+  opacity: 1;
+}
+
+.product-card-rcv::before {
+  background: linear-gradient(135deg, rgba(208,18,41,0.03) 0%, rgba(155,13,30,0.06) 100%);
+}
+
+.product-card-rcv:hover {
+  border-color: rgba(208,18,41,0.3);
+}
+
+.product-card-patrimonial::before {
+  background: linear-gradient(135deg, rgba(200,169,78,0.03) 0%, rgba(200,169,78,0.06) 100%);
+}
+
+.product-card-patrimonial:hover {
+  border-color: rgba(200,169,78,0.4);
+}
+
+.product-card-funerario::before {
+  background: linear-gradient(135deg, rgba(64,64,64,0.03) 0%, rgba(64,64,64,0.06) 100%);
+}
+
+.product-card-funerario:hover {
+  border-color: rgba(64,64,64,0.4);
+}
+
+/* Badge de producto */
+.product-icon-rcv {
+  background: linear-gradient(135deg, #D01229 0%, #9B0D1E 100%);
+  box-shadow: 0 8px 25px rgba(208,18,41,0.35);
+}
+
+.product-icon-patrimonial {
+  background: linear-gradient(135deg, #C8A94E 0%, #A88A35 100%);
+  box-shadow: 0 8px 25px rgba(200,169,78,0.35);
+}
+
+.product-icon-funerario {
+  background: linear-gradient(135deg, #404040 0%, #1A1A1A 100%);
+  box-shadow: 0 8px 25px rgba(64,64,64,0.35);
+}
+
+/* Navbar */
+.navbar {
+  background: white;
+  border-bottom: 2px solid #D01229;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.2s ease-out;
+}
+
+.modal-content {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Stat card */
+.stat-card {
+  background: white;
+  border: 1px solid #E0E0E0;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #F5F5F5; }
+::-webkit-scrollbar-thumb { background: #D01229; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9B0D1E; }
+
+/* Tabla audit */
+.audit-table th {
+  background: #F7F7F7;
+  font-weight: 600;
+  color: #404040;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.audit-row {
+  transition: background 0.2s ease;
+}
+
+.audit-row:hover {
+  background: #FFF5F6;
+}
+
+/* Status badges */
+.badge-success { background: #ECFDF5; color: #065F46; }
+.badge-error   { background: #FEF2F2; color: #991B1B; }
+.badge-pending { background: #FFFBEB; color: #92400E; }
