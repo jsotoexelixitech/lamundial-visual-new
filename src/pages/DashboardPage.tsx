@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, FileText, Activity, Settings,
-  Bell, ChevronDown, Shield, Clock, LogOut,
-  ArrowUpRight, PlayCircle, Car, Building, Heart,
-  ExternalLink, CheckCircle2, Zap, Search
+  LayoutDashboard, Users, FileText, Activity,
+  Bell, Settings, LogOut, Search,
+  PlayCircle, Car, Building, Heart,
+  ExternalLink, CheckCircle2, Zap, ArrowRight
 } from 'lucide-react';
 import { getCurrentUser, logout, getToken, ssoDelegate, registerAudit, getAuditLogs } from '@/lib/nexus-auth';
 import type { AuditLog } from '@/lib/nexus-auth';
@@ -12,44 +12,40 @@ import { PRODUCTS } from '@/lib/portal-config';
 import type { ProductConfig } from '@/lib/portal-config';
 
 /* ═══════════════════════════════════════════════════
-   DASHBOARD — Portal Corporativo La Mundial de Seguros
-   Manual de Marca: Azul Pennsylvania #0F1A5A · Rojo Imperial #E84F51
+   DASHBOARD V2 — BENTO BOX & FLOATING NAV
+   La Mundial de Seguros
    ═══════════════════════════════════════════════════ */
 
 const PRODUCT_META: Record<string, {
   icon: React.ReactNode;
-  cssCard: string;
   cssIcon: string;
   modules: string[];
   gradient: string;
 }> = {
   rcv: {
-    icon: <Car size={24} />,
-    cssCard: 'product-card',
+    icon: <Car size={28} />,
     cssIcon: 'text-[#E84F51]',
     modules: ['OCR', 'Formulario', 'Emisión', 'Pagos'],
-    gradient: '#E84F51',
+    gradient: 'from-[#E84F51] to-[#B23F44]',
   },
   patrimonial: {
-    icon: <Building size={24} />,
-    cssCard: 'product-card',
+    icon: <Building size={28} />,
     cssIcon: 'text-[#0F1A5A]',
     modules: ['Emisión', 'Cotización', 'Póliza'],
-    gradient: '#0F1A5A',
+    gradient: 'from-[#0F1A5A] to-[#091133]',
   },
   funerario: {
-    icon: <Heart size={24} />,
-    cssCard: 'product-card',
-    cssIcon: 'text-[#ACACAC]',
+    icon: <Heart size={28} />,
+    cssIcon: 'text-gray-400',
     modules: ['OCR', 'Formulario', 'Emisión'],
-    gradient: '#ACACAC',
+    gradient: 'from-gray-400 to-gray-500',
   },
 };
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', active: true },
-  { icon: Users, label: 'Gestión de Clientes', active: false },
-  { icon: FileText, label: 'Pólizas Activas', active: false },
+  { icon: Users, label: 'Clientes', active: false },
+  { icon: FileText, label: 'Pólizas', active: false },
   { icon: Activity, label: 'Siniestros', active: false },
 ];
 
@@ -82,14 +78,8 @@ export const DashboardPage: React.FC = () => {
       const token = getToken();
       if (!token) throw new Error('Sin sesión.');
 
-      const response = await ssoDelegate({
-        target: product.target,
-        product: product.product,
-      });
-
-      if (!response.success || !response.redirect_url) {
-        throw new Error('No se pudo generar la URL de acceso.');
-      }
+      const response = await ssoDelegate({ target: product.target, product: product.product });
+      if (!response.success || !response.redirect_url) throw new Error('Error de SSO.');
 
       await registerAudit({
         accion: `launch_${product.key}`,
@@ -101,7 +91,7 @@ export const DashboardPage: React.FC = () => {
       getAuditLogs().then(setRecentActivity).catch(() => {});
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';
-      alert(`No se pudo abrir el módulo: ${msg}`);
+      alert(`No se pudo abrir: ${msg}`);
     } finally {
       setLaunching(null);
     }
@@ -122,245 +112,227 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F4F6F9] font-sans">
+    <div className="min-h-screen bg-[#F0F2F5] font-sans flex flex-col items-center">
 
-      {/* ═══ SIDEBAR CLEAN Y CORPORATIVO ═══ */}
-      <aside className="w-[280px] bg-white border-r border-gray-200 flex flex-col flex-shrink-0 z-20 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative">
-        {/* Línea superior roja (Detalle de marca) */}
-        <div className="h-1 w-full bg-[#E84F51] absolute top-0 left-0 right-0"></div>
-        
-        {/* Logo */}
-        <div className="h-[90px] flex items-center px-8 border-b border-gray-100 mt-1">
-          <img
-            src="/logo-mundial.png"
-            alt="La Mundial de Seguros"
-            className="h-12 object-contain"
-          />
-        </div>
-
-        {/* Navegación */}
-        <nav className="flex-1 px-5 py-8 space-y-2 overflow-y-auto">
-          <p className="px-3 text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400 mb-4">
-            Menú Principal
-          </p>
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.label}
-              className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                item.active
-                  ? 'bg-[#0F1A5A] text-white shadow-md shadow-[#0F1A5A]/20'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-[#0F1A5A]'
-              }`}
-            >
-              <item.icon size={20} className={item.active ? 'text-white' : 'text-gray-400'} />
-              {item.label}
-            </button>
-          ))}
-
-          <p className="px-3 text-[11px] font-bold uppercase tracking-[0.15em] text-gray-400 mt-10 mb-4">
-            Configuración
-          </p>
-          <button className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-gray-50 hover:text-[#0F1A5A] transition-all duration-200">
-            <Settings size={20} className="text-gray-400" />
-            Ajustes del Sistema
-          </button>
-        </nav>
-
-        {/* Perfil del usuario al fondo */}
-        <div className="p-5 border-t border-gray-100 bg-gray-50/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#E84F51] flex items-center justify-center text-white font-bold text-sm shadow-md">
-                {user.nombre.charAt(0).toUpperCase()}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-bold text-[#091133] truncate">{user.nombre}</p>
-                <p className="text-[11px] font-medium text-gray-500 truncate">{user.email}</p>
-              </div>
+      {/* ─── FLOATING NAV (ISLA) ─── */}
+      <div className="w-full max-w-7xl px-4 sm:px-8 pt-6 pb-2 sticky top-0 z-50">
+        <header className="bg-white/80 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)] rounded-[32px] px-4 py-3 flex items-center justify-between">
+          
+          {/* Logo y Nombre */}
+          <div className="flex items-center gap-4 pl-2">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <img src="/logo-mundial.png" alt="Logo" className="h-6 object-contain" />
             </div>
-            <button
-              onClick={handleLogout}
-              className="p-2 text-gray-400 hover:text-[#E84F51] hover:bg-red-50 rounded-lg transition-colors"
-              title="Cerrar sesión"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* ═══ CONTENIDO PRINCIPAL ═══ */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-
-        {/* Header Superior Limpio */}
-        <header className="h-[90px] flex-shrink-0 bg-[#F4F6F9]/80 backdrop-blur-md flex items-center justify-between px-10 z-10 sticky top-0">
-          <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold text-[#091133] font-display">
-              Resumen Corporativo
-            </h1>
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white text-[#059669] shadow-sm border border-gray-100">
-              <span className="w-2 h-2 rounded-full bg-[#059669] animate-pulse"></span>
-              Sistema Conectado
+            <span className="hidden md:block font-display font-bold text-[#0F1A5A] text-lg tracking-tight">
+              Portal Corporativo
             </span>
           </div>
 
-          <div className="flex items-center gap-5">
-            {/* Buscador Global (Visual) */}
-            <div className="hidden lg:flex items-center relative">
-              <Search size={18} className="absolute left-4 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Buscar pólizas, clientes..." 
-                className="pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-[#0F1A5A]/20 focus:border-[#0F1A5A] transition-all"
-              />
-            </div>
-            
-            <button className="relative p-3 rounded-full bg-white border border-gray-200 hover:shadow-md transition-all text-gray-500 hover:text-[#0F1A5A]">
-              <Bell size={20} />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#E84F51] border-2 border-white" />
+          {/* Menú Flotante Central */}
+          <nav className="hidden lg:flex items-center gap-1 bg-gray-100/50 p-1.5 rounded-full border border-gray-200/50">
+            {NAV_ITEMS.map(item => (
+              <button key={item.label} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${item.active ? 'bg-white text-[#0F1A5A] shadow-sm' : 'text-gray-500 hover:text-[#091133] hover:bg-gray-200/50'}`}>
+                <item.icon size={16} />
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Acciones e Info de Usuario */}
+          <div className="flex items-center gap-3 pr-2">
+            <button className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors">
+              <Search size={18} />
             </button>
+            <button className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors relative">
+              <Bell size={18} />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-[#E84F51] border-2 border-white"></span>
+            </button>
+            <div className="h-8 w-px bg-gray-200 mx-1"></div>
+            
+            <div className="group relative cursor-pointer flex items-center gap-3 pl-1">
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-bold text-[#091133] leading-none">{user.nombre}</p>
+                <p className="text-[11px] font-semibold text-gray-400 mt-1 uppercase tracking-wider">Admin</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0F1A5A] to-[#162A7F] flex items-center justify-center text-white font-bold text-sm shadow-md">
+                {user.nombre.charAt(0).toUpperCase()}
+              </div>
+              {/* Dropdown Logout */}
+              <div className="absolute top-full mt-2 right-0 bg-white shadow-xl rounded-2xl p-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all border border-gray-100">
+                <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                  <Settings size={16} /> Configuración
+                </button>
+                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                  <LogOut size={16} /> Cerrar Sesión
+                </button>
+              </div>
+            </div>
           </div>
         </header>
+      </div>
 
-        {/* Área scrollable principal */}
-        <main className="flex-1 overflow-auto px-10 pb-10">
+      {/* ─── CONTENIDO BENTO GRID ─── */}
+      <main className="w-full max-w-7xl px-4 sm:px-8 pt-4 pb-12 flex-1">
+        
+        {/* Header de Sección */}
+        <div className="flex items-end justify-between mb-8 px-2">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-display font-bold text-[#091133] mb-2 tracking-tight">
+              Buenos días, {user.nombre.split(' ')[0]}
+            </h1>
+            <p className="text-gray-500 font-medium">
+              Aquí tienes el estado actual de la operación.
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full border border-green-100 font-bold text-xs uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            Sistemas Óptimos
+          </div>
+        </div>
 
-          {/* ─── TARJETAS FLOTANTES DE KPIs ─── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            {[
-              { label: 'Accesos Hoy', value: todayCount, icon: <Zap size={22} />, color: '#E84F51', bg: 'bg-red-50' },
-              { label: 'Productos Activos', value: PRODUCTS.length, icon: <Shield size={22} />, color: '#0F1A5A', bg: 'bg-blue-50' },
-              { label: 'Total Operaciones', value: recentActivity.length, icon: <Activity size={22} />, color: '#091133', bg: 'bg-gray-100' },
-              { label: 'Estado', value: 'Óptimo', icon: <CheckCircle2 size={22} />, color: '#059669', bg: 'bg-green-50' },
-            ].map((kpi, i) => (
-              <div key={i} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative overflow-hidden group">
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center ${kpi.bg} group-hover:scale-110 transition-transform duration-300`} style={{ color: kpi.color }}>
-                    {kpi.icon}
-                  </div>
-                  <ArrowUpRight size={20} className="text-gray-300 group-hover:text-gray-500 transition-colors" />
-                </div>
-                <p className="text-[13px] font-bold uppercase tracking-wider text-gray-400 mb-1">
-                  {kpi.label}
-                </p>
-                <h3 className="text-3xl font-display font-bold text-[#091133]">
-                  {kpi.value}
-                </h3>
-              </div>
-            ))}
+        {/* GRID BENTO (Asimétrico) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-[160px]">
+
+          {/* WIDGET 1: KPI Principal (Ocupa 2x1) */}
+          <div className="md:col-span-2 row-span-1 bg-white rounded-[32px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-400 mb-2">Total Operaciones</p>
+              <h2 className="text-5xl font-display font-bold text-[#091133]">{recentActivity.length}</h2>
+            </div>
+            <div className="w-20 h-20 rounded-[24px] bg-blue-50 flex items-center justify-center text-[#0F1A5A] group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
+              <Activity size={36} />
+            </div>
           </div>
 
-          {/* ─── DOS COLUMNAS: PORTAFOLIO Y ACTIVIDAD ─── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* Columna Izquierda: Lanzadores (2/3) */}
-            <div className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-[#091133] font-display flex items-center gap-2">
-                  <PlayCircle size={22} className="text-[#E84F51]" />
-                  Portafolio de Productos
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {PRODUCTS.map((product) => {
-                  const meta = PRODUCT_META[product.key] || PRODUCT_META.funerario;
-                  const isLaunching = launching === product.key;
-
-                  return (
-                    <div
-                      key={product.key}
-                      onClick={() => !isLaunching && handleLaunch(product)}
-                      className="bg-white rounded-[24px] p-7 shadow-sm border border-gray-100 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative overflow-hidden group"
-                    >
-                      {/* Línea lateral de color */}
-                      <div className="absolute top-0 bottom-0 left-0 w-1.5" style={{ backgroundColor: meta.gradient }}></div>
-                      
-                      <div className="flex items-center justify-between mb-5">
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center bg-gray-50 group-hover:bg-white group-hover:shadow-md transition-all ${meta.cssIcon}`}>
-                          {meta.icon}
-                        </div>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-500 border border-gray-100">
-                          <ExternalLink size={12} /> SSO
-                        </span>
-                      </div>
-
-                      <h3 className="text-xl font-bold text-[#091133] mb-2">{product.label}</h3>
-                      <p className="text-sm text-gray-500 leading-relaxed mb-6 flex-1">
-                        {product.description}
-                      </p>
-
-                      <div className="flex flex-wrap gap-2 mt-auto pt-5 border-t border-gray-50">
-                        {meta.modules.map((mod) => (
-                          <span
-                            key={mod}
-                            className="text-xs font-semibold px-2.5 py-1 rounded-md bg-gray-50 text-gray-600 border border-gray-100"
-                          >
-                            {mod}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Overlay Carga */}
-                      {isLaunching && (
-                        <div className="absolute inset-0 bg-white/90 backdrop-blur-md flex items-center justify-center z-20">
-                          <div className="flex flex-col items-center gap-3 font-bold text-[#0F1A5A]">
-                            <div className="w-10 h-10 border-4 border-[#0F1A5A]/20 border-t-[#E84F51] rounded-full animate-spin"></div>
-                            Conectando...
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+          {/* WIDGET 2: KPI Secundario (1x1) */}
+          <div className="bg-white rounded-[32px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col justify-between hover:-translate-y-1 transition-transform">
+            <div className="flex justify-between items-start">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-[#E84F51]">
+                <Zap size={20} />
               </div>
             </div>
+            <div>
+              <h3 className="text-3xl font-bold text-[#091133]">{todayCount}</h3>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mt-1">Accesos Hoy</p>
+            </div>
+          </div>
 
-            {/* Columna Derecha: Timeline Actividad (1/3) */}
-            <div className="lg:col-span-1">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-[#091133] font-display flex items-center gap-2">
-                  <Clock size={22} className="text-[#0F1A5A]" />
-                  Bitácora Reciente
-                </h2>
+          {/* WIDGET 3: Lanzador RCV (Ocupa 1x2 - Vertical Grande) */}
+          {PRODUCTS.filter(p => p.key === 'rcv').map(product => (
+            <div 
+              key={product.key}
+              onClick={() => !launching && handleLaunch(product)}
+              className="md:col-span-1 row-span-2 bg-gradient-to-br from-[#0F1A5A] to-[#091133] rounded-[32px] p-8 shadow-[0_12px_40px_rgba(15,26,90,0.2)] text-white cursor-pointer relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 flex flex-col"
+            >
+              {/* Brillo de fondo */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full blur-[60px] group-hover:opacity-10 transition-opacity"></div>
+              
+              <div className="flex justify-between items-start mb-auto relative z-10">
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-[24px] border border-white/20 flex items-center justify-center text-white">
+                  <Car size={32} />
+                </div>
+                <div className="px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/20">
+                  Popular
+                </div>
               </div>
 
-              <div className="bg-white rounded-[24px] border border-gray-100 p-6 shadow-sm">
-                <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-gray-200 before:to-transparent">
-                  
-                  {recentActivity.slice(0, 6).map((log, index) => (
-                    <div key={log.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-gray-50 text-gray-400 group-hover:text-[#E84F51] group-hover:bg-red-50 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 transition-colors z-10">
-                        {log.accion.includes('rcv') ? <Car size={16} /> : log.accion.includes('patrimonial') ? <Building size={16} /> : <Zap size={16} />}
-                      </div>
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-2xl bg-gray-50 border border-gray-100 group-hover:bg-white group-hover:shadow-md transition-all">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-[#091133] text-sm">
-                            {log.producto || 'Sistema'}
-                          </span>
-                          <time className="text-[11px] font-bold text-gray-400">{formatTimeAgo(log.createdAt)}</time>
+              <div className="relative z-10 mt-6">
+                <h3 className="text-3xl font-display font-bold mb-3">{product.label}</h3>
+                <p className="text-white/60 text-sm leading-relaxed mb-6">
+                  {product.description}
+                </p>
+                <div className="flex items-center justify-between text-sm font-bold text-[#E84F51]">
+                  <span>Lanzar Módulo</span>
+                  <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                </div>
+              </div>
+              
+              {launching === product.key && (
+                <div className="absolute inset-0 bg-[#0F1A5A]/90 backdrop-blur-md z-20 flex flex-col items-center justify-center gap-4">
+                  <div className="w-10 h-10 border-4 border-white/20 border-t-[#E84F51] rounded-full animate-spin"></div>
+                  <span className="font-bold text-white tracking-widest text-xs uppercase">Conectando...</span>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* WIDGET 4: Lanzadores Secundarios (Ocupan 2x1 cada uno si hay espacio, o 1x1) */}
+          {PRODUCTS.filter(p => p.key !== 'rcv').map(product => {
+            const meta = PRODUCT_META[product.key] || PRODUCT_META.funerario;
+            return (
+              <div 
+                key={product.key}
+                onClick={() => !launching && handleLaunch(product)}
+                className="bg-white rounded-[32px] p-6 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col cursor-pointer group hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all relative overflow-hidden"
+              >
+                <div className="flex items-start gap-5">
+                  <div className={`w-14 h-14 rounded-[20px] bg-gray-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform ${meta.cssIcon}`}>
+                    {meta.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-[#091133] mb-1 group-hover:text-[#E84F51] transition-colors">{product.label}</h3>
+                    <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>
+                  </div>
+                </div>
+                <div className="mt-auto pt-5 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Abrir SSO</span>
+                  <ArrowRight size={18} className="text-[#E84F51]" />
+                </div>
+
+                {launching === product.key && (
+                  <div className="absolute inset-0 bg-white/90 backdrop-blur-md z-20 flex items-center justify-center">
+                    <div className="w-8 h-8 border-4 border-gray-200 border-t-[#E84F51] rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* WIDGET 5: Actividad Reciente (Ocupa 2x2 o lo que reste) */}
+          <div className="md:col-span-2 lg:col-span-2 row-span-2 bg-white rounded-[32px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col overflow-hidden">
+            <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-[#091133]">Bitácora de Eventos</h3>
+                <p className="text-sm text-gray-400">Últimos accesos del sistema</p>
+              </div>
+              <button className="text-[#E84F51] text-sm font-bold bg-red-50 px-4 py-2 rounded-full hover:bg-red-100 transition-colors">
+                Ver todo
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4">
+              {recentActivity.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                  <Clock size={32} className="text-gray-200 mb-3" />
+                  <p className="text-sm font-bold text-gray-400">Sin registros</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {recentActivity.slice(0, 5).map(log => (
+                    <div key={log.id} className="flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors group">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 group-hover:bg-white group-hover:shadow-sm transition-all">
+                          {log.accion.includes('rcv') ? <Car size={16} /> : <PlayCircle size={16} />}
                         </div>
-                        <p className="text-xs text-gray-500 leading-tight">
-                          {log.accion.replace('launch_', 'Lanzamiento de ')}
-                        </p>
+                        <div>
+                          <p className="text-sm font-bold text-[#091133]">
+                            {log.accion.replace('launch_', 'Lanzamiento ')}
+                          </p>
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-0.5">
+                            {log.producto || 'Módulo'}
+                          </p>
+                        </div>
                       </div>
+                      <span className="text-xs font-bold text-gray-300">{formatTimeAgo(log.createdAt)}</span>
                     </div>
                   ))}
-
-                  {recentActivity.length === 0 && (
-                    <div className="text-center py-10 relative z-10">
-                      <Activity size={32} className="mx-auto text-gray-300 mb-3" />
-                      <p className="text-sm font-bold text-gray-500">Sin movimientos</p>
-                      <p className="text-xs text-gray-400 mt-1">Tu actividad reciente aparecerá aquí.</p>
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
-
           </div>
-        </main>
-      </div>
+
+        </div>
+      </main>
     </div>
   );
 };

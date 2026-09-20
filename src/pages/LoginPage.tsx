@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 import { login } from '@/lib/nexus-auth';
 
 export const LoginPage: React.FC = () => {
@@ -32,76 +32,50 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-white font-sans overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center bg-[#091133] font-sans">
       
-      {/* ─── MITAD IZQUIERDA: IMAGEN CORPORATIVA (Azul Pennsylvania) ─── */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden flex-col justify-between"
-           style={{ background: 'linear-gradient(145deg, #091133 0%, #0F1A5A 100%)' }}>
+      {/* ─── FONDOS INMERSIVOS (AURORA GLOW) ─── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[10%] left-[20%] w-[50vw] h-[50vw] rounded-full blur-[140px] opacity-20 mix-blend-screen"
+             style={{ background: '#E84F51', animation: 'float-slow 25s ease-in-out infinite' }} />
+        <div className="absolute bottom-[0%] right-[10%] w-[60vw] h-[60vw] rounded-full blur-[150px] opacity-30 mix-blend-screen"
+             style={{ background: '#162A7F', animation: 'float-slow 20s ease-in-out infinite reverse' }} />
         
-        {/* Luces y brillos sutiles estilo aurora */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-[20%] -left-[10%] w-[50vw] h-[50vw] rounded-full blur-[120px] opacity-20 mix-blend-screen"
-               style={{ background: '#162A7F', animation: 'float-slow 20s ease-in-out infinite' }} />
-          <div className="absolute top-[40%] right-[-20%] w-[40vw] h-[40vw] rounded-full blur-[100px] opacity-10 mix-blend-screen"
-               style={{ background: '#E84F51', animation: 'float-slow 15s ease-in-out infinite reverse' }} />
-        </div>
-
-        {/* Marca de agua tipográfica abstracta */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03]">
-          <h1 className="text-[15vw] font-display font-bold text-white leading-none tracking-tighter whitespace-nowrap select-none -rotate-12">
-            MUNDIAL
-          </h1>
-        </div>
-
-        {/* Contenido Izquierdo */}
-        <div className="relative z-10 p-12 lg:p-16 flex flex-col h-full justify-center text-white">
-          <div className="mb-8">
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs font-semibold tracking-widest uppercase backdrop-blur-md shadow-lg">
-              <ShieldCheck size={16} className="text-[#E84F51]" />
-              Acceso Seguro
-            </span>
-          </div>
-          <h1 className="text-5xl xl:text-6xl 2xl:text-7xl font-display font-bold leading-[1.1] mb-6">
-            El respaldo <br />
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #fff, #ACACAC)' }}>
-              que mereces.
-            </span>
-          </h1>
-          <p className="text-white/70 text-lg xl:text-xl font-light max-w-lg leading-relaxed">
-            Plataforma centralizada para la gestión inteligente de productos RCV, Patrimoniales y Funerarios de La Mundial de Seguros.
-          </p>
-
-          <div className="mt-auto pt-16">
-            <p className="text-white/40 text-xs uppercase tracking-widest font-semibold">
-              © {new Date().getFullYear()} La Mundial de Seguros
-            </p>
-          </div>
-        </div>
+        {/* Malla de puntos para darle textura premium */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
       </div>
 
-      {/* ─── MITAD DERECHA: FORMULARIO BLANCO ─── */}
-      <div className="flex-1 flex items-center justify-center p-8 sm:p-12 lg:p-16 relative bg-[#FAFAFA]">
-        <div className="w-full max-w-[420px] animate-slide-up bg-white p-8 sm:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 relative">
-          
-          {/* Logo en la parte superior del formulario */}
-          <div className="mb-10 flex justify-center lg:justify-start">
+      {/* ─── CONTENIDO CENTRAL (GLASSMORPHISM) ─── */}
+      <div className="relative z-10 w-full max-w-md px-6 sm:px-0 animate-slide-up">
+        
+        {/* LOGO FLOTANTE */}
+        <div className="flex justify-center mb-10">
+          <div className="bg-white/5 p-4 rounded-3xl backdrop-blur-md border border-white/10 shadow-2xl">
             <img 
               src="/logo-mundial.png" 
               alt="La Mundial de Seguros" 
-              className="h-16 object-contain"
+              className="h-14 sm:h-16 object-contain"
+              style={{ filter: 'drop-shadow(0px 4px 12px rgba(0,0,0,0.5)) brightness(1.2)' }}
             />
           </div>
+        </div>
 
-          <div className="mb-8 text-center lg:text-left">
-            <h2 className="text-2xl font-bold mb-2" style={{ color: '#091133' }}>Bienvenido de nuevo</h2>
-            <p className="text-gray-500 text-sm">Ingresa tus credenciales para acceder al portal corporativo.</p>
+        {/* TARJETA DE LOGIN */}
+        <div className="bg-white/10 backdrop-blur-2xl rounded-[32px] p-8 sm:p-10 shadow-[0_32px_64px_rgba(0,0,0,0.4)] border border-white/20 relative overflow-hidden">
+          {/* Brillo interno en la tarjeta */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight mb-2">
+              Acceso Exclusivo
+            </h2>
+            <p className="text-white/50 text-sm font-light">
+              Portal Corporativo · La Mundial de Seguros
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="group">
-              <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-gray-500 transition-colors" style={{ color: '#ACACAC' }}>
-                Correo electrónico
-              </label>
               <div className="relative">
                 <input
                   id="login-email"
@@ -109,17 +83,14 @@ export const LoginPage: React.FC = () => {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ej. admin@lamundial.com"
-                  className="w-full px-4 py-3.5 rounded-xl text-sm border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0F1A5A] focus:ring-4 focus:ring-[#0F1A5A]/10 outline-none transition-all text-[#091133] font-medium placeholder:text-gray-400"
+                  placeholder="Correo electrónico"
+                  className="w-full px-5 py-4 rounded-2xl text-sm border border-white/10 bg-white/5 focus:bg-white/10 focus:border-white/30 focus:ring-4 focus:ring-white/5 outline-none transition-all text-white font-medium placeholder:text-white/40"
                   disabled={loading}
                 />
               </div>
             </div>
 
             <div className="group">
-              <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-gray-500 transition-colors" style={{ color: '#ACACAC' }}>
-                Contraseña
-              </label>
               <div className="relative">
                 <input
                   id="login-password"
@@ -127,14 +98,14 @@ export const LoginPage: React.FC = () => {
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3.5 pr-12 rounded-xl text-sm border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#0F1A5A] focus:ring-4 focus:ring-[#0F1A5A]/10 outline-none transition-all text-[#091133] font-medium placeholder:text-gray-400"
+                  placeholder="Contraseña"
+                  className="w-full px-5 py-4 pr-12 rounded-2xl text-sm border border-white/10 bg-white/5 focus:bg-white/10 focus:border-white/30 focus:ring-4 focus:ring-white/5 outline-none transition-all text-white font-medium placeholder:text-white/40"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#0F1A5A] transition-colors p-2"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors p-2"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -142,17 +113,17 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {error && (
-              <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 animate-fade-in mt-1">
+              <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3 animate-fade-in mt-1 backdrop-blur-md">
                 <AlertCircle size={18} className="text-[#E84F51] flex-shrink-0 mt-0.5" />
-                <p className="text-red-700 text-sm font-medium">{error}</p>
+                <p className="text-white/90 text-sm font-medium">{error}</p>
               </div>
             )}
 
             <button
               ref={btnRef}
               type="submit"
-              className="w-full py-3.5 mt-4 rounded-xl text-white text-sm font-bold transition-all hover:-translate-y-0.5 shadow-md hover:shadow-xl relative overflow-hidden group"
-              style={{ background: '#E84F51' }}
+              className="w-full py-4 mt-4 rounded-2xl text-white text-base font-bold transition-all hover:scale-[1.02] shadow-[0_0_20px_rgba(232,79,81,0.3)] hover:shadow-[0_0_30px_rgba(232,79,81,0.5)] relative overflow-hidden group flex items-center justify-center gap-2"
+              style={{ background: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)' }}
               disabled={loading}
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
@@ -160,13 +131,22 @@ export const LoginPage: React.FC = () => {
                 {loading ? (
                   <span className="animate-pulse">Autenticando...</span>
                 ) : (
-                  'Ingresar al Portal'
+                  <>
+                    Ingresar
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </>
                 )}
               </span>
             </button>
           </form>
-          
         </div>
+      </div>
+
+      {/* FOOTER INVISIBLE/SUTIL */}
+      <div className="absolute bottom-6 w-full text-center pointer-events-none opacity-30">
+        <p className="text-white text-xs tracking-widest uppercase font-semibold">
+          © {new Date().getFullYear()} La Mundial de Seguros
+        </p>
       </div>
     </div>
   );

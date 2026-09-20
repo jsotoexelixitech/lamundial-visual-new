@@ -1,5 +1,6 @@
-feat(portal): rediseño premium de dashboard y login
+feat(ui): rediseño radical V2 (bento grid y floating nav)
 
-- Login: Diseño Split-Screen corporativo de alta conversión.
-- Dashboard: Sidebar minimalista blanco y floating cards modernas.
-- Paleta alineada estricta a Azul Pennsylvania (#0F1A5A) y Rojo Imperial (#E84F51).
+- Eliminado el sidebar tradicional en favor de una "Isla Flotante" superior.
+- Dashboard migrado a una estructura "Bento Box" asimétrica de widgets.
+- Login migrado de split-screen a Full Immersive Glassmorphism.
+- Aplicado el brand oficial de La Mundial de Seguros en todos los acentos.
