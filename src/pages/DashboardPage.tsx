@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -46,7 +46,8 @@ const CARD_STYLE: Record<ProductKey, { icon: React.ReactNode; accent: string; ti
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const user = getCurrentUser();
+  const user = useMemo(() => getCurrentUser(), []);
+  const userId = user?.id;
   const [products, setProducts] = useState<PortalProductDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [productsError, setProductsError] = useState('');
@@ -54,11 +55,11 @@ export const DashboardPage: React.FC = () => {
   const [launchError, setLaunchError] = useState('');
 
   useEffect(() => {
-    if (!user) navigate('/login');
-  }, [user, navigate]);
+    if (!userId) navigate('/login');
+  }, [userId, navigate]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     let cancelled = false;
     (async () => {
       setLoadingProducts(true);
@@ -79,7 +80,7 @@ export const DashboardPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
   if (!user) return null;
 
