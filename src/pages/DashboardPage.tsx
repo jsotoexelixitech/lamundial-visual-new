@@ -210,6 +210,40 @@ export const DashboardPage: React.FC = () => {
                       {product.description}
                     </p>
 
+                    {(product.mmontoInicial || product.xfraccionamiento) && (
+                      <div className="mt-3 space-y-1">
+                        {product.mmontoInicial && (
+                          <p className="text-sm font-semibold text-[#091133]">
+                            Desde {product.mmontoInicial}
+                          </p>
+                        )}
+                        {product.xfraccionamiento && (
+                          <p className="text-xs text-[#777777]">{product.xfraccionamiento}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {product.xurlPresentacion && (
+                      <a
+                        href={product.xurlPresentacion.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2E6DBF] hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Ver presentación
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+
+                    {product.marketplaceQr && (
+                      <img
+                        src={product.marketplaceQr}
+                        alt=""
+                        className="mt-3 h-20 w-20 rounded-lg border border-[#eceef4] object-contain bg-white"
+                      />
+                    )}
+
                     <div className="mt-4 pt-3 border-t border-[#eceef4] flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ACACAC]">
                       <ShieldCheck size={13} style={{ color: style.tint }} />
                       {product.moduleLabel}

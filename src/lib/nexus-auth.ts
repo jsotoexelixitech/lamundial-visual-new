@@ -64,6 +64,11 @@ export interface PortalProductDto {
   citem?: string;
   ccanalaltIn?: string;
   cscanalaltIn?: string;
+  mmontoInicial?: string;
+  xfraccionamiento?: string;
+  xurlPresentacion?: string;
+  marketplaceUrl?: string;
+  marketplaceQr?: string;
 }
 
 export interface PortalCanalDto {
