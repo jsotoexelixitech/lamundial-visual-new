@@ -2,7 +2,7 @@ import React from 'react';
 import { publicAsset } from '@/lib/public-asset';
 import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
 
-type Variant = 'hero' | 'overlay';
+type Variant = 'hero' | 'overlay' | 'compact';
 type ShowcaseTheme = 'authkit' | 'mundial-light';
 
 const layout: Record<
@@ -13,6 +13,11 @@ const layout: Record<
     ring: 'h-[min(68vw,260px)] w-[min(68vw,260px)] sm:h-[280px] sm:w-[280px]',
     medallion: 'login-logo-medallion login-logo-medallion--hero',
     img: 'h-[6.25rem] w-[6.25rem] sm:h-[7rem] sm:w-[7rem]',
+  },
+  compact: {
+    ring: 'h-[11rem] w-[11rem] sm:h-[12.5rem] sm:w-[12.5rem]',
+    medallion: 'login-logo-medallion login-logo-medallion--compact',
+    img: 'h-[4.5rem] w-[4.5rem] sm:h-20 sm:w-20',
   },
   overlay: {
     ring: 'h-[13.5rem] w-[13.5rem] sm:h-[14.5rem] sm:w-[14.5rem]',

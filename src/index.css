@@ -485,14 +485,52 @@ body.portal-login-auros {
 
 /* ── Login Apple × La Mundial (claro + órbitas isotipo) ── */
 body.portal-login-apple-mundial {
-  background-color: #f7f7f7 !important;
-  color: #091133;
-  font-family: 'Inter', 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  background-color: #f5f5f7 !important;
+  color: #1d1d1f;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .login-apple-m {
-  background: #f7f7f7;
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.login-apple-m-global-nav {
+  background: rgba(245, 245, 247, 0.82);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid #d2d2d7;
+}
+
+.login-apple-m-ghost-nav span {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: #707070;
+  text-transform: none;
+}
+
+.login-apple-m-ghost-nav span.is-active {
+  color: #1d1d1f;
+}
+
+.login-apple-m-display-lg {
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  line-height: 1.07;
+  letter-spacing: -0.005em;
+  font-weight: 600;
   color: #091133;
+}
+
+.login-apple-m-tagline {
+  font-size: 1.3125rem;
+  line-height: 1.24;
+  font-weight: 300;
+  letter-spacing: 0.004em;
+  color: #1d1d1f;
+}
+
+.login-apple-m-form-band {
+  background: #f4f8fb;
 }
 
 .login-apple-m-aurora {
@@ -583,8 +621,37 @@ body.portal-login-apple-mundial {
 
 .login-apple-m-panel {
   background: #ffffff;
-  border: 1px solid #dddddd;
+  border: 1px solid #d2d2d7;
   border-radius: 8px;
+}
+
+.login-apple-m-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 980px;
+  padding: 11px 22px;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.016em;
+  color: #0f1a5a;
+  background: transparent;
+  border: 1px solid #162a7f;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.login-apple-m-btn-outline:hover {
+  background: rgba(15, 26, 90, 0.06);
+}
+
+.login-apple-m-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: login-btn-spin 0.7s linear infinite;
 }
 
 .login-apple-m-input {
@@ -593,9 +660,9 @@ body.portal-login-apple-mundial {
   letter-spacing: -0.016em;
   padding: 11px 14px;
   border-radius: 8px;
-  border: 1px solid #dddddd;
-  background: #f7f7f7;
-  color: #091133;
+  border: 1px solid #d2d2d7;
+  background: #f5f5f7;
+  color: #1d1d1f;
   outline: none;
   width: 100%;
 }
@@ -701,7 +768,97 @@ body.portal-login-apple-mundial {
 }
 
 .login-apple-m-overlay-card {
-  box-shadow: rgba(0, 0, 0, 0.12) 3px 8px 40px 0;
+  box-shadow: none;
+}
+
+.login-apple-m-promo-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.login-apple-m-promo-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.login-apple-m-promo-card {
+  position: relative;
+  flex: 0 0 min(280px, 78vw);
+  min-height: 320px;
+  border-radius: 8px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.login-apple-m-wash-blue {
+  background: linear-gradient(165deg, #0f1a5a 0%, #162a7f 48%, #2e6dbf 100%);
+}
+
+.login-apple-m-wash-ice {
+  background: linear-gradient(165deg, #162a7f 0%, #4d6bb3 55%, #d1dff5 100%);
+  color: #091133;
+}
+
+.login-apple-m-wash-red {
+  background: linear-gradient(165deg, #091133 0%, #b23f44 42%, #e84f51 100%);
+}
+
+.login-apple-m-promo-kicker {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+  margin-bottom: 8px;
+}
+
+.login-apple-m-promo-title {
+  font-size: 1.75rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+.login-apple-m-wash-ice .login-apple-m-promo-title {
+  color: #091133;
+}
+
+.login-apple-m-promo-pill {
+  align-self: flex-start;
+  border-radius: 980px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  background: #0f1a5a;
+  color: #fff;
+}
+
+.login-apple-m-wash-ice .login-apple-m-promo-pill {
+  background: #ffffff;
+  color: #0f1a5a;
+  border: 1px solid #d2d2d7;
+}
+
+.login-apple-m-footer-text {
+  font-size: 12px;
+  line-height: 1.33;
+  color: #707070;
+  font-weight: 400;
+}
+
+.login-logo-medallion--compact {
+  width: 6.5rem;
+  height: 6.5rem;
+}
+
+@media (min-width: 640px) {
+  .login-logo-medallion--compact {
+    width: 7.25rem;
+    height: 7.25rem;
+  }
 }
 
 .login-logo-medallion--mundial-light {

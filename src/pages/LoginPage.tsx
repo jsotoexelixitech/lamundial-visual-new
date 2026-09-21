@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, Lock, Car, Heart, Building2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Lock } from 'lucide-react';
 import { login, getCurrentUser } from '@/lib/nexus-auth';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
@@ -9,17 +9,11 @@ import { LoginAppleMundialAmbient } from '@/components/login/LoginAppleMundialAm
 
 const MIN_LOADING_MS = 2200;
 
-const RAMOS = [
-  { Icon: Car, label: 'RCV', tone: 'blue' as const },
-  { Icon: Heart, label: 'Funerario', tone: 'red' as const },
-  { Icon: Building2, label: 'Personas', tone: 'blue' as const },
-];
-
-const FLOAT = [
-  { Icon: Car, className: 'login-apple-m-float login-apple-m-float-1', label: 'RCV' },
-  { Icon: Heart, className: 'login-apple-m-float login-apple-m-float-2', label: 'Funerario' },
-  { Icon: Building2, className: 'login-apple-m-float login-apple-m-float-3', label: 'Patrimonial' },
-];
+const PROMO = [
+  { title: 'RCV', kicker: 'Vehículos', wash: 'login-apple-m-wash-blue' },
+  { title: 'Personas', kicker: 'Salud y vida', wash: 'login-apple-m-wash-ice' },
+  { title: 'Patrimonial', kicker: 'Bienes', wash: 'login-apple-m-wash-red' },
+] as const;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -74,129 +68,137 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="login-apple-m relative min-h-screen overflow-hidden" data-login-theme="apple-mundial-v1" style={{ minHeight: '100dvh' }}>
+    <div className="login-apple-m relative min-h-screen" data-login-theme="apple-mundial-v2" style={{ minHeight: '100dvh' }}>
       <LoginAppleMundialAmbient intense={loading} />
       <LoginLoadingOverlay active={loading} stepIndex={loginStep} />
 
-      {FLOAT.map(({ Icon, className, label }) => (
-        <div key={label} className={`${className} hidden lg:flex`} aria-hidden>
-          <Icon size={20} className="text-mundial-blue" />
-          <span className="login-apple-m-caption mt-2">{label}</span>
+      <header className="login-apple-m-global-nav relative z-10">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-6 px-6 py-3 sm:px-10">
+          <MundialBrand variant="dark" isotipoClassName="h-9 w-9" subtitle="" showWordmark />
+          <nav className="login-apple-m-ghost-nav hidden md:flex items-center gap-8" aria-label="Portal">
+            <span className="is-active">Acceso</span>
+            <span>Emisión</span>
+            <span>Canales</span>
+          </nav>
+          <span className="login-apple-m-caption hidden lg:inline">Portal corporativo</span>
         </div>
-      ))}
+      </header>
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col px-6 pb-12 pt-6 sm:px-10">
-        <header className="login-apple-m-nav flex flex-wrap items-center justify-between gap-4 border-b border-[#dddddd] pb-4">
-          <MundialBrand variant="dark" isotipoClassName="h-10 w-10" subtitle="Portal corporativo" />
-          <p className="login-apple-m-caption hidden sm:block">Suscripción digital · La Mundial de Seguros</p>
-        </header>
+      {/* Hero tipográfico centrado (patrón Apple) */}
+      <section className="relative z-10 mx-auto max-w-[680px] px-6 pt-12 pb-4 text-center sm:pt-16 login-hero-enter">
+        <p className="login-apple-m-caption mb-5">La Mundial de Seguros</p>
+        <h1 className="login-apple-m-display-lg mb-4">
+          Emisión de pólizas.
+        </h1>
+        <p className="login-apple-m-tagline mx-auto max-w-[28rem]">
+          Cotiza y emite RCV, personas y patrimoniales con un solo acceso corporativo.
+        </p>
+      </section>
 
-        <main className="flex flex-1 flex-col items-center justify-center gap-12 py-10 lg:grid lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-16">
-          <section className="w-full text-center lg:text-left login-hero-enter">
-            <p className="login-apple-m-caption mb-4">Portal corporativo</p>
-            <h1 className="login-apple-m-display mb-4">
-              Emisión de pólizas
-              <span className="text-mundial-red italic font-normal"> en minutos.</span>
-            </h1>
-            <p className="login-apple-m-lead mx-auto max-w-md lg:mx-0 mb-10">
-              Un solo acceso para cotizar y emitir con el canal comercial que La Mundial asignó a tu equipo.
-            </p>
+      {/* Producto = isotipo + órbitas (momento visual, no columna lateral) */}
+      <section className="relative z-10 flex justify-center py-6 sm:py-10">
+        <LoginBrandShowcase variant="compact" theme="mundial-light" />
+      </section>
 
-            <div className="flex justify-center lg:justify-start mb-10">
-              <LoginBrandShowcase variant="hero" theme="mundial-light" />
+      {/* Formulario en franja elevada full-bleed — sin card flotante tipo AuthKit */}
+      <section className="login-apple-m-form-band relative z-10 w-full border-y border-[#d2d2d7] py-12 sm:py-14">
+        <div className="mx-auto w-full max-w-[420px] px-6 login-form-enter">
+          <h2 className="login-apple-m-subtitle text-center text-[21px] font-semibold mb-1">Iniciar sesión</h2>
+          <p className="login-apple-m-body text-center mb-8">Credenciales corporativas</p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="login-email" className="login-apple-m-label sr-only">
+                Correo corporativo
+              </label>
+              <input
+                id="login-email"
+                type="email"
+                autoComplete="email"
+                placeholder="Correo corporativo"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="login-apple-m-input w-full"
+                disabled={loading}
+              />
             </div>
 
-            <div className="grid grid-cols-3 gap-3 max-w-md mx-auto lg:mx-0">
-              {RAMOS.map(({ Icon, label, tone }) => (
-                <div key={label} className="login-apple-m-service-tile">
-                  <Icon size={18} className={tone === 'red' ? 'text-mundial-red' : 'text-mundial-blue'} />
-                  <span className="login-apple-m-caption mt-2 block">{label}</span>
-                </div>
-              ))}
+            <div className="relative">
+              <label htmlFor="login-password" className="login-apple-m-label sr-only">
+                Contraseña
+              </label>
+              <input
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="login-apple-m-input w-full pr-12"
+                disabled={loading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#707070] hover:text-mundial-blue"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
-          </section>
 
-          <section className="w-full max-w-md login-form-enter lg:justify-self-end">
-            <div className="login-apple-m-panel px-8 py-8 sm:px-10 sm:py-10">
-              <h2 className="login-apple-m-subtitle text-xl font-semibold mb-1">Iniciar sesión</h2>
-              <p className="login-apple-m-body mb-7">Credenciales corporativas La Mundial</p>
+            {error && (
+              <div className="flex gap-3 items-start rounded-lg border border-mundial-red/35 bg-[#fff5f5] px-4 py-3">
+                <AlertCircle size={18} className="text-mundial-red shrink-0 mt-0.5" />
+                <p className="text-sm text-[#b23f44]">{error}</p>
+              </div>
+            )}
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label htmlFor="login-email" className="login-apple-m-label">
-                    Correo corporativo
-                  </label>
-                  <input
-                    id="login-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="nombre@lamundialdeseguros.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="login-apple-m-input w-full"
-                    disabled={loading}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="login-password" className="login-apple-m-label">
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="login-password"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="login-apple-m-input w-full pr-12"
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#707070] hover:text-mundial-blue"
-                      tabIndex={-1}
-                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                {error && (
-                  <div className="flex gap-3 items-start rounded-lg border border-mundial-red/35 bg-[#fdecec] px-4 py-3">
-                    <AlertCircle size={18} className="text-mundial-red shrink-0 mt-0.5" />
-                    <p className="text-sm text-[#b23f44] font-normal">{error}</p>
-                  </div>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button type="submit" disabled={loading} className="login-apple-m-btn-primary flex-1">
+                {loading ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <span className="login-apple-m-spinner" />
+                    Conectando…
+                  </span>
+                ) : (
+                  'Entrar al portal'
                 )}
-
-                <button type="submit" disabled={loading} className="login-apple-m-btn-primary w-full">
-                  {loading ? (
-                    <span className="inline-flex items-center justify-center gap-2">
-                      <span className="login-btn-spinner" />
-                      Conectando…
-                    </span>
-                  ) : (
-                    'Entrar al portal'
-                  )}
-                </button>
-              </form>
-
-              <div className="login-apple-m-hairline my-8" />
-              <p className="login-apple-m-body flex items-center gap-2 text-xs">
-                <Lock size={13} className="text-mundial-blue" />
-                Conexión cifrada · acceso auditado
-              </p>
+              </button>
+              <a href="mailto:soporte@lamundialdeseguros.com" className="login-apple-m-btn-outline flex-1 text-center">
+                Ayuda
+              </a>
             </div>
+          </form>
 
-            <p className="login-apple-m-body mt-6 text-center text-xs">
-              ¿Problemas de acceso? Contacta a Tecnología La Mundial.
-            </p>
-          </section>
-        </main>
-      </div>
+          <p className="login-apple-m-body mt-8 flex items-center justify-center gap-2 text-xs">
+            <Lock size={13} className="text-mundial-blue" />
+            Conexión cifrada · acceso auditado
+          </p>
+        </div>
+      </section>
+
+      {/* Fila promocional tipo Apple TV+ / servicios */}
+      <section className="relative z-10 mx-auto max-w-[1440px] px-6 py-14 sm:px-10 sm:py-16">
+        <p className="login-apple-m-caption mb-6 text-center">Explore</p>
+        <div className="login-apple-m-promo-scroll flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+          {PROMO.map(({ title, kicker, wash }) => (
+            <article key={title} className={`login-apple-m-promo-card snap-start ${wash}`}>
+              <p className="login-apple-m-promo-kicker">{kicker}</p>
+              <h3 className="login-apple-m-promo-title">{title}</h3>
+              <span className="login-apple-m-promo-pill">Emitir ahora</span>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer className="login-apple-m-footer relative z-10 border-t border-[#d2d2d7] px-6 py-10 text-center sm:px-10">
+        <p className="login-apple-m-footer-text">
+          ¿Problemas de acceso? Contacta a Tecnología La Mundial.
+        </p>
+        <p className="login-apple-m-footer-text mt-3">© La Mundial de Seguros</p>
+      </footer>
     </div>
   );
 };

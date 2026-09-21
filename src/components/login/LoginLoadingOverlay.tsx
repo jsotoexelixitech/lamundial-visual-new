@@ -30,7 +30,7 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
     >
       <div className="absolute inset-0 bg-[#f7f7f7]/82 backdrop-blur-xl" />
 
-      <div className="login-apple-m-panel login-apple-m-overlay-card relative w-full max-w-lg overflow-hidden login-modal-enter">
+      <div className="login-apple-m-overlay-card relative w-full max-w-lg overflow-hidden rounded-lg border border-[#d2d2d7] bg-white login-modal-enter">
         <div className="h-1 bg-[#e2e2e5]">
           <div
             className="h-full login-progress-fill transition-all duration-700 ease-out"
@@ -44,7 +44,7 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
         <div className="px-8 py-10 sm:px-10 sm:py-12">
           <div className="flex flex-col items-center text-center mb-8">
             <div className="mb-6">
-              <LoginBrandShowcase variant="overlay" theme="mundial-light" />
+              <LoginBrandShowcase variant="compact" theme="mundial-light" />
             </div>
 
             <div className="login-apple-m-chip inline-flex items-center gap-2 px-4 py-2 mb-4">
