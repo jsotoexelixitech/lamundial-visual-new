@@ -121,16 +121,29 @@ export async function ssoDelegate(payload: SsoDelegatePayload): Promise<SsoDeleg
   return data;
 }
 
-export async function fetchPortalMe(): Promise<{
+export interface PortalMeData {
+  user: {
+    id: number;
+    nombre: string;
+    email: string;
+    role: string;
+  };
+  empresa: {
+    id: number;
+    nombre: string;
+  };
   canal?: PortalCanalDto;
-} | null> {
+  portalPerfil?: Record<string, unknown> | null;
+  empresaPortalConfig?: Record<string, unknown> | null;
+}
+
+export async function fetchPortalMe(): Promise<PortalMeData | null> {
   const token = getToken();
   if (!token) return null;
   try {
-    const { data } = await api.get<{
-      success: boolean;
-      data: { canal?: PortalCanalDto };
-    }>('/api/portal/me', { headers: { Authorization: `Bearer ${token}` } });
+    const { data } = await api.get<{ success: boolean; data: PortalMeData }>('/api/portal/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return data.data ?? null;
   } catch {
     return null;

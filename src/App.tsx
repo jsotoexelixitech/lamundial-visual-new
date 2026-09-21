@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AuditPage } from '@/pages/AuditPage';
+import { PortalShell } from '@/layouts/PortalShell';
+import { PortalSessionProvider } from '@/context/PortalSessionContext';
 import { getCurrentUser } from '@/lib/nexus-auth';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -16,12 +18,18 @@ function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={
-          <RequireAuth><DashboardPage /></RequireAuth>
-        } />
-        <Route path="/audit" element={
-          <RequireAuth><AuditPage /></RequireAuth>
-        } />
+        <Route
+          element={
+            <RequireAuth>
+              <PortalSessionProvider>
+                <PortalShell />
+              </PortalSessionProvider>
+            </RequireAuth>
+          }
+        >
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/audit" element={<AuditPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

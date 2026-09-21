@@ -515,31 +515,100 @@ body.portal-login-route {
   height: 8.25rem;
 }
 
-/* ── Portal dashboard (coherente con login AuthKit) ── */
-.portal-dashboard {
-  background-color: #05060f;
-  color: #d1e4fa;
+/* ── Portal app (cliente) — blanco + La Mundial ── */
+.portal-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e8eaf0;
+  box-shadow: 4px 0 24px rgba(9, 17, 51, 0.04);
 }
 
-.portal-dashboard-grid {
-  opacity: 0.35;
+.portal-sidebar-inner::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #0f1a5a, #2e6dbf 55%, #e84f51);
 }
 
-.portal-glass-card {
-  background: rgba(12, 16, 32, 0.72);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(186, 215, 247, 0.12);
-  box-shadow:
-    inset 0 1px 1px rgba(216, 236, 248, 0.12),
-    0 12px 32px rgba(0, 0, 0, 0.35);
+.portal-user-card {
+  background: linear-gradient(180deg, #f8f9fc 0%, #ffffff 100%);
+  border: 1px solid #eceef4;
 }
 
-.portal-header-dark {
-  background: rgba(5, 6, 15, 0.92);
-  border-bottom: 1px solid rgba(186, 215, 247, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.portal-nav-item-active {
+  background: linear-gradient(90deg, rgba(15, 26, 90, 0.08), rgba(46, 109, 191, 0.06));
+  color: #0f1a5a;
+  box-shadow: inset 3px 0 0 #e84f51;
+}
+
+.portal-nav-item-active .portal-nav-icon {
+  background: #0f1a5a;
+  color: #fff;
+}
+
+.portal-nav-icon {
+  background: #f0f2f8;
+  color: #0f1a5a;
+}
+
+.portal-page-header {
+  background: linear-gradient(120deg, #091133 0%, #0f1a5a 58%, #162a7f 100%);
+  color: #fff;
+  padding: 1.75rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .portal-page-header {
+    padding: 2rem 2rem;
+  }
+}
+
+.portal-page-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 0.5rem;
+}
+
+.portal-page-title {
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+@media (min-width: 640px) {
+  .portal-page-title {
+    font-size: 1.875rem;
+  }
+}
+
+.portal-page-subtitle {
+  margin-top: 0.65rem;
+  max-width: 42rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.portal-page-body {
+  padding: 1.25rem 1.5rem 2rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .portal-page-body {
+    padding: 1.5rem 2rem 2.5rem;
+  }
+}
+
+.portal-panel {
+  background: #ffffff;
+  border: 1px solid #e4e6ee;
+  box-shadow: 0 2px 8px rgba(9, 17, 51, 0.04);
 }
 
 .login-icon-bounce {
