@@ -181,18 +181,10 @@ body.portal-login-route {
 }
 
 .login-spotlight {
-  background: conic-gradient(
-    at 50% -5%,
-    transparent 42%,
-    rgba(124, 145, 182, 0.35) 49%,
-    rgba(102, 58, 243, 0.55) 50%,
-    rgba(124, 145, 182, 0.35) 51%,
-    transparent 58%
-  );
-}
-
-.login-spotlight-spin {
-  animation: login-spotlight-rotate 18s linear infinite;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(124, 145, 182, 0.22), transparent 62%),
+    radial-gradient(ellipse 70% 45% at 80% 20%, rgba(102, 58, 243, 0.12), transparent 58%),
+    radial-gradient(ellipse 60% 40% at 15% 85%, rgba(46, 109, 191, 0.1), transparent 55%);
 }
 
 @keyframes login-grid-pan {
@@ -201,15 +193,6 @@ body.portal-login-route {
   }
   100% {
     background-position: 64px 64px, 64px 64px;
-  }
-}
-
-@keyframes login-spotlight-rotate {
-  from {
-    transform: rotate(0deg) scale(1.05);
-  }
-  to {
-    transform: rotate(360deg) scale(1.05);
   }
 }
 
@@ -667,7 +650,6 @@ body.portal-login-route {
 @media (prefers-reduced-motion: reduce) {
   .login-aurora,
   .login-grid-animate,
-  .login-spotlight-spin,
   .login-scan-beam,
   .login-orbit-ring,
   .login-orbit-ring-delay,

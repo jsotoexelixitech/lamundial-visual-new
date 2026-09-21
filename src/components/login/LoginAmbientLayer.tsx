@@ -47,8 +47,7 @@ export function LoginAmbientLayer({ intense = false }: { intense?: boolean }) {
         }}
       />
       <div className="login-grid-bg login-grid-animate absolute inset-0" />
-      <div className="login-spotlight login-spotlight-spin absolute inset-0 opacity-90" />
-      <div className="login-scan-beam absolute inset-0" />
+      <div className="login-spotlight absolute inset-0 opacity-80" />
     </div>
   );
 }
