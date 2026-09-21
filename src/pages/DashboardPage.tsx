@@ -55,15 +55,16 @@ function cardVisual(product: PortalProductDto) {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const userId = user?.id;
   const { profile, products, productsLoading, productsError } = usePortalSession();
   const [launching, setLaunching] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState('');
 
   useEffect(() => {
-    if (!user) navigate('/login');
-  }, [user, navigate]);
+    if (!userId) navigate('/login');
+  }, [userId, navigate]);
 
-  if (!user) return null;
+  if (!userId || !user) return null;
 
   const firstName = (profile?.user.nombre ?? user.nombre).split(' ')[0];
 

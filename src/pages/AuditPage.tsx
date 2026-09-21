@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart2, RefreshCw } from 'lucide-react';
 import { getCurrentUser, getAuditLogs, type AuditLog } from '@/lib/nexus-auth';
@@ -19,30 +19,32 @@ const PRODUCT_BADGES: Record<string, { label: string; color: string }> = {
 export const AuditPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
+  const userId = user?.id;
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const data = await getAuditLogs();
-      setLogs(data);
+      setLogs(Array.isArray(data) ? data : []);
     } catch {
       setError('No se pudo cargar el historial. Intenta de nuevo en unos minutos.');
+      setLogs([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!user) {
+    if (!userId) {
       navigate('/login');
       return;
     }
     void load();
-  }, [user, navigate]);
+  }, [userId, navigate, load]);
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);

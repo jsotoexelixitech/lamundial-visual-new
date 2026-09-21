@@ -193,10 +193,15 @@ export async function registerAudit(payload: AuditPayload): Promise<void> {
 export async function getAuditLogs(): Promise<AuditLog[]> {
   const token = getToken();
   if (!token) return [];
-  const { data } = await api.get<AuditLog[]>('/api/portal/audit', {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return data;
+  const { data } = await api.get<AuditLog[] | { success?: boolean; data?: AuditLog[] }>(
+    '/api/portal/audit',
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object' && Array.isArray(data.data)) return data.data;
+  return [];
 }
 
 export interface AuditLog {
