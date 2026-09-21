@@ -11,9 +11,9 @@ Copia congelada del login **oscuro AuthKit** (commit ~ac1af2e, sep-2026).
 
 ## Variante activa (por defecto)
 
-**Apple × La Mundial** — `src/pages/LoginPage.tsx` · `data-login-theme="apple-mundial-v1"`.
+**AuthKit** — `src/pages/LoginPage.tsx` · `data-login-theme="authkit-v1"`.
 
-## Restaurar AuthKit oscuro
+## Restaurar AuthKit desde archivo
 
 1. Copiar `LoginPage.authkit.tsx` → `src/pages/LoginPage.tsx` (ajustar imports a `@/components/login/LoginLoadingOverlay.authkit` o copiar overlay archivado).
 2. Copiar `LoginLoadingOverlay.authkit.tsx` → `src/components/login/LoginLoadingOverlay.tsx`
