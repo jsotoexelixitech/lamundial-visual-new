@@ -369,6 +369,336 @@ body.portal-login-organic {
   box-shadow: 0 32px 64px rgba(34, 47, 48, 0.12);
 }
 
+/* ── Login orgánico v2: split oscuro + motion visible ── */
+.login-organic-v2 {
+  background: #f7f7f5;
+}
+
+.login-organic-panel-dark {
+  background: #222f30;
+  color: #f7f7f5;
+  min-height: min(48vh, 520px);
+}
+
+@media (min-width: 1024px) {
+  .login-organic-panel-dark {
+    min-height: 100vh;
+  }
+}
+
+.login-organic-panel-light {
+  background: #f7f7f5;
+  min-height: min(52vh, 100vh);
+}
+
+.login-organic-mesh {
+  position: absolute;
+  inset: -40%;
+  opacity: 0.9;
+  animation: login-organic-mesh-shift 16s ease-in-out infinite;
+}
+
+.login-organic-mesh-dark {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(206, 247, 158, 0.35), transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(206, 247, 158, 0.2), transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04), transparent 60%);
+}
+
+.login-organic-mesh-light {
+  background:
+    radial-gradient(circle at 70% 20%, rgba(206, 247, 158, 0.45), transparent 50%),
+    radial-gradient(circle at 10% 80%, rgba(201, 203, 190, 0.5), transparent 55%);
+}
+
+@keyframes login-organic-mesh-shift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(3%, -2%) scale(1.05);
+  }
+  66% {
+    transform: translate(-2%, 3%) scale(0.98);
+  }
+}
+
+.login-organic-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(32px);
+  animation: login-organic-orb-float 8s ease-in-out infinite;
+}
+
+.login-organic-glow-1 {
+  width: 200px;
+  height: 200px;
+  top: 8%;
+  right: 5%;
+  background: rgba(206, 247, 158, 0.55);
+}
+
+.login-organic-glow-2 {
+  width: 160px;
+  height: 160px;
+  bottom: 22%;
+  left: -4%;
+  background: rgba(206, 247, 158, 0.35);
+  animation-delay: 1.2s;
+}
+
+.login-organic-glow-3 {
+  width: 120px;
+  height: 120px;
+  top: 42%;
+  left: 35%;
+  background: rgba(255, 255, 255, 0.08);
+  animation-delay: 0.6s;
+}
+
+@keyframes login-organic-orb-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(12px, -18px) scale(1.15);
+  }
+}
+
+.login-organic-pill {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  font-family: var(--font-roboto-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #cef79e;
+  background: rgba(206, 247, 158, 0.08);
+  border: 1px solid rgba(206, 247, 158, 0.35);
+  box-shadow: 0 0 24px rgba(206, 247, 158, 0.15);
+  animation: login-organic-pill-float 7s ease-in-out infinite;
+}
+
+.login-organic-pill-1 {
+  top: 14%;
+  left: 8%;
+}
+
+.login-organic-pill-2 {
+  top: 55%;
+  right: 10%;
+  animation-delay: 1s;
+}
+
+.login-organic-pill-3 {
+  bottom: 28%;
+  left: 18%;
+  animation-delay: 2s;
+}
+
+@keyframes login-organic-pill-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(-2deg);
+  }
+}
+
+.login-organic-wave-path {
+  animation: login-organic-wave-slide 9s linear infinite;
+}
+
+@keyframes login-organic-wave-slide {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.login-organic-hero-title {
+  color: #f7f7f5;
+  text-shadow: 0 0 40px rgba(206, 247, 158, 0.25);
+  animation: login-organic-title-glow 4s ease-in-out infinite;
+}
+
+@keyframes login-organic-title-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 24px rgba(206, 247, 158, 0.15);
+  }
+  50% {
+    text-shadow: 0 0 48px rgba(206, 247, 158, 0.45);
+  }
+}
+
+.login-organic-eyebrow-light {
+  font-family: var(--font-roboto-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(206, 247, 158, 0.85);
+}
+
+.login-organic-chip-dark {
+  font-family: var(--font-roboto-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #cef79e;
+  background: rgba(206, 247, 158, 0.1);
+  border-radius: 999px;
+  border: 1px solid rgba(206, 247, 158, 0.45);
+}
+
+.login-organic-icon-pulse {
+  animation: login-icon-bounce 1.4s ease-in-out infinite;
+}
+
+.login-organic-stagger {
+  opacity: 0;
+  animation: login-organic-rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.login-organic-stagger-1 {
+  animation-delay: 0.05s;
+}
+.login-organic-stagger-2 {
+  animation-delay: 0.12s;
+}
+.login-organic-stagger-3 {
+  animation-delay: 0.2s;
+}
+.login-organic-stagger-4 {
+  animation-delay: 0.28s;
+}
+.login-organic-stagger-5 {
+  animation-delay: 0.38s;
+}
+
+@keyframes login-organic-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-organic-card-enter {
+  animation: login-organic-card-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@keyframes login-organic-card-in {
+  from {
+    opacity: 0;
+    transform: translateX(32px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.login-organic-card-float {
+  animation: login-organic-card-bob 5s ease-in-out infinite;
+}
+
+@keyframes login-organic-card-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.login-organic-cta-arrow {
+  transition: transform 0.25s ease;
+}
+
+.login-organic-cta:hover .login-organic-cta-arrow {
+  transform: translateX(4px);
+}
+
+.login-logo-medallion--organic-dark {
+  background: rgba(34, 47, 48, 0.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(206, 247, 158, 0.35),
+    0 0 40px rgba(206, 247, 158, 0.2);
+}
+
+.login-organic-ring-pulse {
+  border: 2px solid rgba(206, 247, 158, 0.25);
+  animation: login-organic-ring-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes login-organic-ring-pulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+.login-logo-lime-pulse {
+  animation: login-logo-lime-pulse 3s ease-in-out infinite;
+}
+
+@keyframes login-logo-lime-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 8px rgba(206, 247, 158, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 22px rgba(206, 247, 158, 0.75));
+  }
+}
+
+.login-organic-fast.login-organic-mesh,
+.login-organic-fast.login-organic-glow-orb,
+.login-organic-fast.login-organic-pill {
+  animation-duration: 4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-organic-mesh,
+  .login-organic-glow-orb,
+  .login-organic-pill,
+  .login-organic-wave-path,
+  .login-organic-hero-title,
+  .login-organic-card-float,
+  .login-organic-ring-pulse,
+  .login-logo-lime-pulse {
+    animation: none !important;
+  }
+  .login-organic-stagger,
+  .login-organic-card-enter {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+}
+
 .login-grid-bg {
   background-color: transparent;
   background-image:

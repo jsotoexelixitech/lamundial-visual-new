@@ -43,7 +43,7 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
         <div className="px-8 py-10 sm:px-10 sm:py-12">
           <div className="flex flex-col items-center text-center mb-8">
             <div className="mb-6">
-              <LoginBrandShowcase variant="overlay" theme="organic" />
+              <LoginBrandShowcase variant="overlay" theme="organic-dark" />
             </div>
 
             <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 bg-tissue border border-lichen">

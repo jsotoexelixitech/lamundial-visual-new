@@ -63,122 +63,132 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div
-      className="login-organic-page min-h-screen relative overflow-hidden bg-bone-white text-abyssal-ink"
-      style={{ backgroundColor: '#f7f7f5', minHeight: '100dvh' }}
+      className="login-organic-page login-organic-v2 min-h-screen relative overflow-hidden"
+      data-login-theme="organic-v2"
+      style={{ minHeight: '100dvh' }}
     >
-      <LoginOrganicAmbient intense={loading} />
       <LoginLoadingOverlay active={loading} stepIndex={loginStep} />
 
-      <div className="relative z-10 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 px-6 py-12 max-w-6xl mx-auto">
-        <section className="flex-1 max-w-xl text-center lg:text-left login-hero-enter">
-          <header className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-10">
-            <MundialBrand isotipoClassName="h-11 w-11" subtitle="Portal corporativo" />
-            <span className="login-organic-chip inline-flex items-center gap-2 px-3 py-1.5">
-              <ShieldCheck size={12} />
-              Acceso seguro
-            </span>
-          </header>
+      <div className="login-organic-split min-h-screen lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <aside className="login-organic-panel-dark relative flex flex-col justify-center px-8 py-14 sm:px-12 lg:px-16 overflow-hidden">
+          <LoginOrganicAmbient intense={loading} variant="hero-dark" />
 
-          <p className="login-organic-eyebrow mb-4">Suscripción digital</p>
-          <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold leading-[1.08] mb-5 text-abyssal-ink tracking-tight">
-            Emisión de pólizas en minutos
-          </h1>
-          <p className="text-graphite text-base sm:text-lg leading-relaxed max-w-md mx-auto lg:mx-0">
-            Un solo acceso para cotizar y emitir: RCV, planes de personas y seguros patrimoniales,
-            con el canal comercial que La Mundial de Seguros asignó a tu equipo.
-          </p>
+          <div className="relative z-10 max-w-lg mx-auto lg:mx-0 w-full">
+            <header className="login-organic-stagger login-organic-stagger-1 flex flex-wrap items-center gap-3 mb-10">
+              <MundialBrand variant="light" isotipoClassName="h-11 w-11" subtitle="Portal corporativo" />
+              <span className="login-organic-chip-dark inline-flex items-center gap-2 px-3 py-1.5">
+                <ShieldCheck size={12} className="login-organic-icon-pulse" />
+                Acceso seguro
+              </span>
+            </header>
 
-          <div className="mt-12 flex justify-center lg:justify-start">
-            <LoginBrandShowcase variant="hero" theme="organic" />
-          </div>
-        </section>
+            <p className="login-organic-stagger login-organic-stagger-2 login-organic-eyebrow-light mb-4">
+              Suscripción digital
+            </p>
+            <h1 className="login-organic-stagger login-organic-stagger-3 login-organic-hero-title text-4xl sm:text-5xl lg:text-[3.5rem] font-semibold leading-[1.05] mb-5 tracking-tight">
+              Emisión de pólizas en minutos
+            </h1>
+            <p className="login-organic-stagger login-organic-stagger-4 text-bone-white/75 text-base sm:text-lg leading-relaxed">
+              Un solo acceso para cotizar y emitir: RCV, planes de personas y seguros patrimoniales,
+              con el canal comercial que La Mundial de Seguros asignó a tu equipo.
+            </p>
 
-        <main className="w-full max-w-md login-form-enter">
-          <div className="login-organic-card rounded-[20px] overflow-hidden">
-            <div className="h-1 bg-tissue overflow-hidden">
-              <div className="h-full w-[40%] login-organic-shimmer" />
+            <div className="login-organic-stagger login-organic-stagger-5 mt-12 flex justify-center lg:justify-start">
+              <LoginBrandShowcase variant="hero" theme="organic-dark" />
             </div>
-            <div className="px-8 pt-8 pb-2 sm:px-10 sm:pt-10">
-              <h2 className="text-xl font-semibold text-abyssal-ink mb-1">Iniciar sesión</h2>
-              <p className="text-sm text-graphite mb-7">Credenciales corporativas La Mundial</p>
+          </div>
+        </aside>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label htmlFor="login-email" className="login-organic-label">
-                    Correo corporativo
-                  </label>
-                  <input
-                    id="login-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="nombre@lamundialdeseguros.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="login-organic-input w-full"
-                    disabled={loading}
-                  />
-                </div>
+        <section className="login-organic-panel-light relative flex items-center justify-center px-6 py-12 sm:px-10">
+          <LoginOrganicAmbient intense={loading} variant="page-light" />
 
-                <div>
-                  <label htmlFor="login-password" className="login-organic-label">
-                    Contraseña
-                  </label>
-                  <div className="relative">
+          <main className="relative z-10 w-full max-w-md login-organic-card-enter">
+            <div className="login-organic-card login-organic-card-float rounded-[20px] overflow-hidden">
+              <div className="h-1.5 bg-tissue overflow-hidden relative">
+                <div className="absolute inset-y-0 left-0 w-1/3 login-organic-shimmer" />
+              </div>
+              <div className="px-8 pt-8 pb-2 sm:px-10 sm:pt-10">
+                <h2 className="text-xl font-semibold text-abyssal-ink mb-1">Iniciar sesión</h2>
+                <p className="text-sm text-graphite mb-7">Credenciales corporativas La Mundial</p>
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label htmlFor="login-email" className="login-organic-label">
+                      Correo corporativo
+                    </label>
                     <input
-                      id="login-password"
-                      type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="login-organic-input w-full pr-12"
+                      id="login-email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="nombre@lamundialdeseguros.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="login-organic-input w-full"
                       disabled={loading}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-graphite hover:text-abyssal-ink"
-                      tabIndex={-1}
-                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
-                </div>
 
-                {error && (
-                  <div className="flex gap-3 items-start rounded-lg border border-mundial-red/25 bg-[#fdecec] px-4 py-3">
-                    <AlertCircle size={18} className="text-mundial-red shrink-0 mt-0.5" />
-                    <p className="text-sm text-[#991B1B] font-medium">{error}</p>
+                  <div>
+                    <label htmlFor="login-password" className="login-organic-label">
+                      Contraseña
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="login-organic-input w-full pr-12"
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-graphite hover:text-abyssal-ink"
+                        tabIndex={-1}
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
-                )}
 
-                <button type="submit" disabled={loading} className="login-organic-cta w-full">
-                  {loading ? (
-                    <span className="inline-flex items-center gap-2">
-                      <span className="login-btn-spinner login-btn-spinner-dark" />
-                      Conectando…
-                    </span>
-                  ) : (
-                    <>
-                      Entrar al portal
-                      <ArrowRight size={18} />
-                    </>
+                  {error && (
+                    <div className="flex gap-3 items-start rounded-lg border border-mundial-red/25 bg-[#fdecec] px-4 py-3">
+                      <AlertCircle size={18} className="text-mundial-red shrink-0 mt-0.5" />
+                      <p className="text-sm text-[#991B1B] font-medium">{error}</p>
+                    </div>
                   )}
-                </button>
-              </form>
+
+                  <button type="submit" disabled={loading} className="login-organic-cta w-full">
+                    {loading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="login-btn-spinner login-btn-spinner-dark" />
+                        Conectando…
+                      </span>
+                    ) : (
+                      <>
+                        Entrar al portal
+                        <ArrowRight size={18} className="login-organic-cta-arrow" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+
+              <div className="mt-6 border-t border-tissue px-8 sm:px-10 py-4 flex items-center gap-2 text-[11px] text-graphite">
+                <Lock size={13} className="text-mundial-blue" />
+                Conexión cifrada · acceso auditado
+              </div>
             </div>
 
-            <div className="mt-6 border-t border-tissue px-8 sm:px-10 py-4 flex items-center gap-2 text-[11px] text-graphite">
-              <Lock size={13} className="text-mundial-blue" />
-              Conexión cifrada · acceso auditado
-            </div>
-          </div>
-
-          <p className="mt-6 text-center text-xs text-graphite">
-            ¿Problemas de acceso? Contacta a Tecnología La Mundial.
-          </p>
-        </main>
+            <p className="mt-6 text-center text-xs text-graphite">
+              ¿Problemas de acceso? Contacta a Tecnología La Mundial.
+            </p>
+          </main>
+        </section>
       </div>
     </div>
   );

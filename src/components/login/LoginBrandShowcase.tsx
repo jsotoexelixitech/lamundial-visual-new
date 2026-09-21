@@ -3,7 +3,7 @@ import { publicAsset } from '@/lib/public-asset';
 import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
 
 type Variant = 'hero' | 'overlay';
-type Theme = 'organic' | 'authkit';
+type Theme = 'organic' | 'organic-dark' | 'authkit';
 
 const layout: Record<Variant, { ring: string; medallion: string; img: string }> = {
   hero: {
@@ -25,33 +25,43 @@ type Props = {
 
 export function LoginBrandShowcase({ variant = 'hero', theme = 'organic' }: Props) {
   const cfg = layout[variant];
-  const ringOrganic = theme === 'organic';
+  const isDark = theme === 'organic-dark';
+  const isAuthkit = theme === 'authkit';
 
   return (
     <div
-      className={`login-pulse-ring relative mx-auto flex items-center justify-center ${cfg.ring}`}
+      className={`login-pulse-ring relative mx-auto flex items-center justify-center ${cfg.ring} ${
+        isDark ? 'login-showcase-dark' : ''
+      }`}
     >
       <span
         className={`login-orbit-ring absolute -inset-1 sm:-inset-2 rounded-full border-2 border-dashed ${
-          ringOrganic ? 'border-bioluminescent-lime/70' : 'border-void-violet/40'
+          isDark
+            ? 'border-bioluminescent-lime/80'
+            : isAuthkit
+              ? 'border-void-violet/40'
+              : 'border-bioluminescent-lime/70'
         }`}
       />
       <span
         className={`login-orbit-ring-delay absolute inset-2 sm:inset-3 rounded-full border ${
-          ringOrganic ? 'border-lichen' : 'border-blueprint-blue/30'
+          isDark ? 'border-bioluminescent-lime/35' : isAuthkit ? 'border-blueprint-blue/30' : 'border-lichen'
         }`}
       />
-      {!ringOrganic && (
+      {isAuthkit && (
         <span className="login-pulse-a absolute inset-5 sm:inset-6 rounded-full border border-[#bad7f7]/30" />
       )}
+      {isDark && <span className="login-organic-ring-pulse absolute inset-4 rounded-full" />}
 
       <div
-        className={`${cfg.medallion} ${ringOrganic ? 'login-logo-medallion--organic' : ''} relative z-10`}
+        className={`${cfg.medallion} ${
+          isDark ? 'login-logo-medallion--organic-dark' : isAuthkit ? '' : 'login-logo-medallion--organic'
+        } relative z-10`}
       >
         <img
           src={publicAsset(MUNDIAL_ISOTIPO)}
           alt="La Mundial de Seguros"
-          className={`${cfg.img} ${ringOrganic ? '' : 'login-logo-glow'} login-orbit-core object-contain`}
+          className={`${cfg.img} ${isAuthkit ? 'login-logo-glow' : isDark ? 'login-logo-lime-pulse' : ''} login-orbit-core object-contain`}
           draggable={false}
         />
       </div>
