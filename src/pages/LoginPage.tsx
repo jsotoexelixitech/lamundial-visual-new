@@ -62,7 +62,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="login-auros relative min-h-screen overflow-hidden" data-login-theme="auros-v1" style={{ minHeight: '100dvh' }}>
+    <div className="login-auros relative min-h-screen overflow-hidden" data-login-theme="auros-mundial-v1" style={{ minHeight: '100dvh' }}>
       <div className="login-auros-aurora-wash pointer-events-none absolute inset-0" aria-hidden />
       <LoginLoadingOverlay active={loading} stepIndex={loginStep} />
 
@@ -85,7 +85,7 @@ export const LoginPage: React.FC = () => {
             <p className="login-auros-eyebrow mb-6">La Mundial · Suscripción digital</p>
             <h1 className="login-auros-hero mb-8">
               Terminal de emisión
-              <span className="text-lavender-phosphor">.</span>
+              <span className="text-mundial-red">.</span>
             </h1>
             <p className="login-auros-lead mb-12 max-w-md">
               Cotiza y emite RCV, planes de personas y patrimoniales con el canal comercial que La Mundial
@@ -113,7 +113,7 @@ export const LoginPage: React.FC = () => {
           <section className="login-auros-card w-full max-w-md lg:max-w-none lg:justify-self-end">
             <div className="flex items-start justify-between gap-4 mb-8">
               <div>
-                <p className="login-auros-eyebrow mb-3 text-liquid-mist">Explore</p>
+                <p className="login-auros-eyebrow mb-3 text-liquid-mist">Acceso seguro</p>
                 <h2 className="login-auros-card-title">Iniciar sesión</h2>
                 <p className="login-auros-body mt-2">Credenciales corporativas La Mundial</p>
               </div>

@@ -44,10 +44,10 @@ export function LoginParticleSphere({ className = '', particleCount = 360, radiu
     let t = 0;
 
     const palette = [
-      { r: 0, g: 130, b: 124 },
-      { r: 203, g: 255, b: 252 },
+      { r: 15, g: 26, b: 90 },
+      { r: 22, g: 42, b: 127 },
       { r: 255, g: 255, b: 255 },
-      { r: 250, g: 209, b: 255 },
+      { r: 232, g: 79, b: 81 },
     ];
 
     const drawFrame = () => {
@@ -117,8 +117,8 @@ export function LoginParticleSphere({ className = '', particleCount = 360, radiu
 
       const glowR = radius * scale * 0.55;
       const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-      grad.addColorStop(0, 'rgba(203,255,252,0.14)');
-      grad.addColorStop(0.45, 'rgba(0,130,124,0.06)');
+      grad.addColorStop(0, 'rgba(22,42,127,0.2)');
+      grad.addColorStop(0.45, 'rgba(232,79,81,0.08)');
       grad.addColorStop(1, 'transparent');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);

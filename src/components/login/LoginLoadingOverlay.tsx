@@ -50,7 +50,7 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
                   className={`login-auros-step-row ${activeStep ? 'is-active' : ''} ${done ? 'is-done' : ''}`}
                 >
                   <span className="login-auros-step-label">{label}</span>
-                  {done && <span className="text-lavender-phosphor text-xs">●</span>}
+                  {done && <span className="text-mundial-red text-xs">●</span>}
                   {activeStep && <span className="login-auros-pulse-dot" aria-hidden />}
                 </li>
               );

@@ -31,16 +31,16 @@
   --font-roboto-mono: 'Roboto Mono', ui-monospace, monospace;
   --color-void: #000000;
 
-  /* Login Auros (abyssal terminal) */
-  --color-liquid-abyss: #012624;
-  --color-liquid-deep: #011d1c;
-  --color-liquid-kelp: #003734;
-  --color-liquid-mist: #edfffe;
+  /* Login Auros × La Mundial (terminal oscuro + acentos marca) */
+  --color-liquid-abyss: #091133;
+  --color-liquid-deep: #060c28;
+  --color-liquid-kelp: #0f1a5a;
+  --color-liquid-mist: #d1dff5;
   --color-platinum: #ffffff;
-  --color-silver-mist: #bbc7c6;
+  --color-silver-mist: #acacac;
   --color-ash: #f2f2f2;
-  --color-slate-deep: #707777;
-  --color-lavender-phosphor: #fde9ff;
+  --color-slate-deep: #777777;
+  --color-lavender-phosphor: #e84f51;
   --font-matter: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   --font-arial-fallback: Arial, ui-sans-serif, system-ui, sans-serif;
 
@@ -208,25 +208,26 @@ body.portal-login-ib {
 }
 
 body.portal-login-auros {
-  background-color: #012624 !important;
-  color: #bbc7c6;
+  background-color: #091133 !important;
+  color: #acacac;
   font-family: var(--font-matter);
   font-weight: 400;
 }
 
-/* ── Login Auros (partículas + gradiente aurora) ── */
+/* ── Login Auros × La Mundial (partículas + gradiente marca) ── */
 .login-auros {
-  background: #012624;
-  color: #bbc7c6;
+  background: #091133;
+  color: #acacac;
   font-family: var(--font-matter);
 }
 
 .login-auros-aurora-wash {
   background: linear-gradient(
     180deg,
-    rgba(203, 255, 252, 0.06) 0%,
-    transparent 35%,
-    rgba(1, 29, 28, 0.4) 100%
+    rgba(22, 42, 127, 0.35) 0%,
+    transparent 40%,
+    rgba(232, 79, 81, 0.06) 85%,
+    rgba(6, 12, 40, 0.5) 100%
   );
 }
 
@@ -254,7 +255,7 @@ body.portal-login-auros {
   line-height: 1.4;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #bbc7c6;
+  color: #acacac;
 }
 
 .login-auros-hero {
@@ -269,7 +270,7 @@ body.portal-login-auros {
   font-size: 1rem;
   line-height: 1.4;
   font-weight: 400;
-  color: #bbc7c6;
+  color: #acacac;
 }
 
 .login-auros-stat {
@@ -277,7 +278,7 @@ body.portal-login-auros {
   line-height: 1;
   letter-spacing: -0.04em;
   font-weight: 500;
-  color: #fde9ff;
+  color: #e84f51;
 }
 
 .login-auros-metric-label {
@@ -286,7 +287,7 @@ body.portal-login-auros {
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #edfffe;
+  color: #d1dff5;
 }
 
 .login-auros-nav-link {
@@ -294,7 +295,7 @@ body.portal-login-auros {
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #707777;
+  color: #777777;
 }
 
 .login-auros-nav-link.is-active {
@@ -302,7 +303,8 @@ body.portal-login-auros {
 }
 
 .login-auros-card {
-  background: #003734;
+  background: #0f1a5a;
+  border: 1px solid rgba(22, 42, 127, 0.65);
   border-radius: 16px;
   padding: 2.25rem 2rem;
 }
@@ -324,7 +326,7 @@ body.portal-login-auros {
   font-size: 14px;
   line-height: 1.43;
   font-weight: 400;
-  color: #bbc7c6;
+  color: #acacac;
 }
 
 .login-auros-label {
@@ -332,7 +334,7 @@ body.portal-login-auros {
   font-family: var(--font-arial-fallback);
   font-size: 14px;
   line-height: 1.43;
-  color: #edfffe;
+  color: #d1dff5;
   margin-bottom: 8px;
 }
 
@@ -343,18 +345,18 @@ body.portal-login-auros {
   line-height: 1.4;
   padding: 12px 14px;
   border-radius: 6px;
-  border: 1px solid rgba(112, 119, 119, 0.65);
-  background: #011d1c;
-  color: #edfffe;
+  border: 1px solid rgba(172, 172, 172, 0.35);
+  background: #091133;
+  color: #ffffff;
   outline: none;
 }
 
 .login-auros-input:focus {
-  border-color: rgba(203, 255, 252, 0.45);
+  border-color: rgba(232, 79, 81, 0.55);
 }
 
 .login-auros-input::placeholder {
-  color: #707777;
+  color: #777777;
 }
 
 .login-auros-cta {
@@ -366,14 +368,14 @@ body.portal-login-auros {
   font-weight: 400;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #222222;
+  color: #ffffff;
   cursor: pointer;
   background: linear-gradient(
     90deg,
-    rgb(203, 255, 252) 0%,
-    rgb(237, 255, 254) 26%,
-    rgb(255, 253, 250) 48%,
-    rgb(250, 209, 255) 89%
+    #091133 0%,
+    #0f1a5a 35%,
+    #162a7f 65%,
+    #e84f51 100%
   );
 }
 
@@ -389,18 +391,18 @@ body.portal-login-auros {
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  background: rgba(3, 81, 75, 0.5);
+  background: rgba(22, 42, 127, 0.75);
   color: #ffffff;
 }
 
 .login-auros-hairline {
   height: 1px;
-  background: rgba(112, 119, 119, 0.55);
+  background: rgba(172, 172, 172, 0.35);
   width: 100%;
 }
 
 .login-auros-footer {
-  border-top: 1px solid rgba(112, 119, 119, 0.35);
+  border-top: 1px solid rgba(119, 119, 119, 0.35);
 }
 
 .login-auros-overlay {
@@ -408,19 +410,21 @@ body.portal-login-auros {
 }
 
 .login-auros-panel {
-  background: #003734;
+  background: #0f1a5a;
+  border: 1px solid rgba(22, 42, 127, 0.8);
   border-radius: 16px;
 }
 
 .login-auros-aurora-bar {
-  background: #011d1c;
+  background: #060c28;
 }
 
 .login-auros-aurora-fill {
   background: linear-gradient(
     90deg,
-    rgb(0, 130, 124) 0%,
-    rgb(203, 255, 252) 100%
+    #162a7f 0%,
+    #0f1a5a 45%,
+    #e84f51 100%
   );
 }
 
@@ -430,7 +434,7 @@ body.portal-login-auros {
   padding: 0;
   border-radius: 6px;
   overflow: hidden;
-  border: 1px solid rgba(112, 119, 119, 0.5);
+  border: 1px solid rgba(172, 172, 172, 0.3);
 }
 
 .login-auros-step-row {
@@ -441,9 +445,9 @@ body.portal-login-auros {
   font-size: 13px;
   letter-spacing: 0.055em;
   text-transform: uppercase;
-  color: #707777;
-  border-bottom: 1px solid rgba(112, 119, 119, 0.35);
-  background: #011d1c;
+  color: #777777;
+  border-bottom: 1px solid rgba(172, 172, 172, 0.25);
+  background: #060c28;
 }
 
 .login-auros-step-row:last-child {
@@ -451,19 +455,19 @@ body.portal-login-auros {
 }
 
 .login-auros-step-row.is-active {
-  color: #edfffe;
-  background: rgba(0, 55, 52, 0.85);
+  color: #d1dff5;
+  background: rgba(15, 26, 90, 0.92);
 }
 
 .login-auros-step-row.is-done {
-  color: #bbc7c6;
+  color: #acacac;
 }
 
 .login-auros-pulse-dot {
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  background: #cbfffc;
+  background: #e84f51;
   animation: login-auros-pulse 1.4s ease-in-out infinite;
 }
 
