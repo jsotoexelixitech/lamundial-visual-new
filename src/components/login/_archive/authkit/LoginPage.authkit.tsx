@@ -4,7 +4,7 @@ import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Car, Heart, Bu
 import { login, getCurrentUser } from '@/lib/nexus-auth';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
-import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
+import { LoginLoadingOverlay } from '@/components/login/_archive/authkit/LoginLoadingOverlay.authkit';
 import { LoginAmbientLayer } from '@/components/login/LoginAmbientLayer';
 
 const MIN_LOADING_MS = 2200;
@@ -22,7 +22,8 @@ async function waitMin(totalMs: number, started: number) {
   if (remain > 0) await sleep(remain);
 }
 
-export const LoginPage: React.FC = () => {
+/** Copia congelada AuthKit — restaurar imports a `@/components/login/...` al activar. */
+export const LoginPageAuthkit: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +34,7 @@ export const LoginPage: React.FC = () => {
 
   useLayoutEffect(() => {
     document.body.classList.add('portal-login-route');
+    document.body.classList.remove('portal-login-organic', 'portal-login-ib', 'portal-login-auros', 'portal-login-apple-mundial');
     return () => document.body.classList.remove('portal-login-route');
   }, []);
 
@@ -51,7 +53,6 @@ export const LoginPage: React.FC = () => {
     setLoginStep(0);
     setError('');
     try {
-      setLoginStep(0);
       await sleep(400);
       await login({ email: email.trim(), password });
       setLoginStep(1);
@@ -70,6 +71,7 @@ export const LoginPage: React.FC = () => {
   return (
     <div
       className="login-authkit-page bg-midnight-canvas min-h-screen relative overflow-hidden text-frost-glow"
+      data-login-theme="authkit-v1"
       style={{ backgroundColor: '#05060f', minHeight: '100dvh' }}
     >
       <LoginAmbientLayer intense={loading} />
@@ -106,7 +108,7 @@ export const LoginPage: React.FC = () => {
           </p>
 
           <div className="mt-12 flex justify-center lg:justify-start">
-            <LoginBrandShowcase variant="hero" />
+            <LoginBrandShowcase variant="hero" theme="authkit" />
           </div>
         </section>
 
@@ -201,4 +203,4 @@ export const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default LoginPageAuthkit;

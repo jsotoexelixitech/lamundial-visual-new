@@ -483,6 +483,256 @@ body.portal-login-auros {
   }
 }
 
+/* ── Login Apple × La Mundial (claro + órbitas isotipo) ── */
+body.portal-login-apple-mundial {
+  background-color: #f7f7f7 !important;
+  color: #091133;
+  font-family: 'Inter', 'Poppins', ui-sans-serif, system-ui, sans-serif;
+}
+
+.login-apple-m {
+  background: #f7f7f7;
+  color: #091133;
+}
+
+.login-apple-m-aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.55;
+}
+
+.login-apple-m-aurora-a {
+  width: min(88vw, 480px);
+  height: min(88vw, 480px);
+  left: -10%;
+  top: 6%;
+  background: radial-gradient(circle, rgba(15, 26, 90, 0.14) 0%, transparent 70%);
+  animation: float-slow 16s ease-in-out infinite;
+}
+
+.login-apple-m-aurora-b {
+  width: min(80vw, 420px);
+  height: min(80vw, 420px);
+  right: -6%;
+  bottom: 8%;
+  background: radial-gradient(circle, rgba(22, 42, 127, 0.12) 0%, transparent 72%);
+  animation: float-slow 13s ease-in-out infinite 0.8s;
+}
+
+.login-apple-m-aurora-c {
+  width: 260px;
+  height: 260px;
+  left: 40%;
+  top: 42%;
+  background: radial-gradient(circle, rgba(232, 79, 81, 0.1) 0%, transparent 72%);
+  animation: float-slow 11s ease-in-out infinite 0.4s;
+}
+
+.login-apple-m-aurora-fast.login-apple-m-aurora-a,
+.login-apple-m-aurora-fast.login-apple-m-aurora-b,
+.login-apple-m-aurora-fast.login-apple-m-aurora-c {
+  animation-duration: 8s;
+  opacity: 0.72;
+}
+
+.login-apple-m-display {
+  font-family: 'Inter', 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  line-height: 1.07;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: #091133;
+}
+
+.login-apple-m-lead {
+  font-size: 1.0625rem;
+  line-height: 1.47;
+  font-weight: 300;
+  color: #707070;
+}
+
+.login-apple-m-caption {
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #707070;
+  font-weight: 600;
+}
+
+.login-apple-m-subtitle {
+  color: #091133;
+}
+
+.login-apple-m-body {
+  font-size: 14px;
+  line-height: 1.43;
+  color: #707070;
+  font-weight: 400;
+}
+
+.login-apple-m-label {
+  display: block;
+  font-size: 14px;
+  line-height: 1.29;
+  color: #091133;
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.login-apple-m-panel {
+  background: #ffffff;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+}
+
+.login-apple-m-input {
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.016em;
+  padding: 11px 14px;
+  border-radius: 8px;
+  border: 1px solid #dddddd;
+  background: #f7f7f7;
+  color: #091133;
+  outline: none;
+  width: 100%;
+}
+
+.login-apple-m-input:focus {
+  border-color: #0f1a5a;
+  box-shadow: 0 0 0 2px rgba(15, 26, 90, 0.15);
+}
+
+.login-apple-m-input::placeholder {
+  color: #858585;
+}
+
+.login-apple-m-btn-primary {
+  border: none;
+  border-radius: 980px;
+  padding: 11px 22px;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: -0.016em;
+  color: #ffffff;
+  background: #0f1a5a;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.login-apple-m-btn-primary:hover:not(:disabled) {
+  background: #162a7f;
+}
+
+.login-apple-m-btn-primary:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.login-apple-m-hairline {
+  height: 1px;
+  background: #dddddd;
+  width: 100%;
+}
+
+.login-apple-m-chip {
+  border-radius: 980px;
+  border: 1px solid #dddddd;
+  background: #f7f7f7;
+}
+
+.login-apple-m-service-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 8px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e8eaf0;
+  animation: login-apple-m-tile-float 6s ease-in-out infinite;
+}
+
+.login-apple-m-service-tile:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.login-apple-m-service-tile:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+@keyframes login-apple-m-tile-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.login-apple-m-float {
+  position: absolute;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #e2e2e5;
+  box-shadow: rgba(0, 0, 0, 0.08) 3px 5px 24px 0;
+  pointer-events: none;
+}
+
+.login-apple-m-float-1 {
+  top: 16%;
+  left: 6%;
+  animation: float-slow 9s ease-in-out infinite;
+}
+
+.login-apple-m-float-2 {
+  top: 48%;
+  right: 5%;
+  animation: float-slow 11s ease-in-out infinite 1s;
+}
+
+.login-apple-m-float-3 {
+  bottom: 12%;
+  left: 10%;
+  animation: float-slow 10s ease-in-out infinite 0.5s;
+}
+
+.login-apple-m-overlay-card {
+  box-shadow: rgba(0, 0, 0, 0.12) 3px 8px 40px 0;
+}
+
+.login-logo-medallion--mundial-light {
+  background:
+    radial-gradient(circle at 32% 28%, rgba(22, 42, 127, 0.08), transparent 52%),
+    radial-gradient(circle at 68% 72%, rgba(232, 79, 81, 0.08), transparent 55%),
+    #ffffff;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 1px rgba(221, 221, 221, 0.8),
+    rgba(0, 0, 0, 0.12) 3px 5px 30px 0;
+}
+
+.login-logo-glow-mundial {
+  animation: login-logo-glow-mundial 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(22, 42, 127, 0.35));
+}
+
+@keyframes login-logo-glow-mundial {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(22, 42, 127, 0.3)); }
+  50% { filter: drop-shadow(0 0 16px rgba(232, 79, 81, 0.35)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-apple-m-service-tile,
+  .login-apple-m-aurora,
+  .login-apple-m-float {
+    animation: none !important;
+  }
+}
+
 /* ── Login IB lab (plano, sin órbitas — referencia bioluminescent) ── */
 .login-ib {
   font-family: var(--font-aspekta);
