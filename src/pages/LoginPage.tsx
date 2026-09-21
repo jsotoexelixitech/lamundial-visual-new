@@ -209,7 +209,7 @@ export const LoginPage: React.FC = () => {
             </div>
             
             <div className="pt-4 flex justify-center">
-              <LoginBrandShowcase variant="footer" />
+              <LoginBrandShowcase />
             </div>
             
           </form>
