@@ -95,9 +95,12 @@ export const LoginPage: React.FC = () => {
         </p>
       </section>
 
-      {/* Producto = isotipo + órbitas (momento visual, no columna lateral) */}
-      <section className="relative z-10 flex justify-center py-6 sm:py-10">
-        <LoginBrandShowcase variant="compact" theme="mundial-light" />
+      {/* Hero visual: mismas animaciones que AuthKit (variant hero — órbitas + pulse + glow) */}
+      <section
+        className="login-apple-m-hero-visual relative z-10 flex justify-center items-center py-4 sm:py-8"
+        aria-label="La Mundial de Seguros"
+      >
+        <LoginBrandShowcase variant="hero" theme="mundial-light" />
       </section>
 
       {/* Formulario en franja elevada full-bleed — sin card flotante tipo AuthKit */}

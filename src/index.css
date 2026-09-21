@@ -529,6 +529,12 @@ body.portal-login-apple-mundial {
   color: #1d1d1f;
 }
 
+/* Entrada del bloque hero + animaciones orbit/pulse en LoginBrandShowcase variant="hero" */
+.login-apple-m-hero-visual {
+  min-height: min(72vw, 320px);
+  animation: login-hero-in 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+}
+
 .login-apple-m-form-band {
   background: #f4f8fb;
 }
