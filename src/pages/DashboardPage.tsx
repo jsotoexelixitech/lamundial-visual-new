@@ -123,14 +123,14 @@ export const DashboardPage: React.FC = () => {
             : null;
         if (apiMsg) {
           throw new Error(
-            `${apiMsg} Revisa submódulos activos y permisos de tu rol en Nexus Admin.`,
+            `${apiMsg} Solicita a tu administrador corporativo que revise tus permisos de emisión.`,
           );
         }
         if (import.meta.env.VITE_PORTAL_ALLOW_LEGACY_TOKEN === 'true') {
           url = buildFallbackModuleUrl(product, token);
         } else {
           throw new Error(
-            'No se pudo generar el acceso SSO. Contacta a Tecnología La Mundial.',
+            'No se pudo abrir el módulo de emisión. Contacta a Tecnología La Mundial.',
           );
         }
       }
@@ -153,11 +153,11 @@ export const DashboardPage: React.FC = () => {
     <div className="portal-page">
       <div className="portal-page-header">
         <div>
-          <p className="portal-page-eyebrow">Marketplace Sis2000</p>
+          <p className="portal-page-eyebrow">Suscripción digital</p>
           <h1 className="portal-page-title">Hola, {firstName}</h1>
           <p className="portal-page-subtitle">
-            Elige un producto para abrir su flujo con SSO. Los datos de canal y productor vienen de
-            tu perfil en Nexus.
+            Elige el ramo que deseas emitir. Solo verás los productos habilitados para tu perfil y
+            tu canal comercial.
           </p>
         </div>
       </div>
@@ -197,8 +197,8 @@ export const DashboardPage: React.FC = () => {
             <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
             <p className="font-semibold text-[#091133]">Sin productos asignados</p>
             <p className="text-sm text-[#777777] mt-2 max-w-md mx-auto">
-              No hay productos para tu canal o faltan permisos. Un administrador debe configurar
-              canal en Admin y activar submódulos.
+              No hay productos asignados a tu canal o tu perfil aún no tiene permisos. Contacta al
+              administrador de usuarios de tu empresa.
             </p>
           </div>
         )}
@@ -276,7 +276,7 @@ export const DashboardPage: React.FC = () => {
         <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e4e6ee] pt-5 text-xs text-[#ACACAC]">
           <span className="flex items-center gap-1.5">
             <ExternalLink size={12} />
-            Los módulos se abren en una pestaña nueva con Nexus SSO
+            Cada emisión se abre en una ventana nueva para continuar el proceso
           </span>
         </footer>
       </div>

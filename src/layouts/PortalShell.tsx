@@ -20,7 +20,7 @@ const NAV = [
     id: 'dashboard',
     to: '/dashboard',
     label: 'Emisiones',
-    hint: 'Marketplace y flujos',
+    hint: 'Catálogo de emisión',
     icon: LayoutGrid,
   },
   {

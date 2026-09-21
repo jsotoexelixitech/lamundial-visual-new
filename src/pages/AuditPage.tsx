@@ -30,7 +30,7 @@ export const AuditPage: React.FC = () => {
       const data = await getAuditLogs();
       setLogs(data);
     } catch {
-      setError('No se pudo cargar el historial. Asegúrate de tener el endpoint /api/portal/audit activo en nexus-api.');
+      setError('No se pudo cargar el historial. Intenta de nuevo en unos minutos.');
     } finally {
       setLoading(false);
     }

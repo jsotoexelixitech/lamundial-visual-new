@@ -4,8 +4,8 @@ import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 
 const STEPS = [
   { id: 'auth', label: 'Validando credenciales', icon: ShieldCheck },
-  { id: 'catalog', label: 'Consultando productos del canal', icon: Building2 },
-  { id: 'sso', label: 'Preparando acceso SSO', icon: Heart },
+  { id: 'catalog', label: 'Cargando productos disponibles', icon: Building2 },
+  { id: 'sso', label: 'Preparando tu sesión de emisión', icon: Heart },
   { id: 'ready', label: 'Abriendo tu portal', icon: Car },
 ] as const;
 
@@ -59,7 +59,7 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
               {step.label}
             </p>
             <p className="text-sm text-[#9da7ba] max-w-sm">
-              Sincronizando catálogo Sis2000 y permisos de emisión…
+              Preparando tus productos y permisos de emisión…
             </p>
           </div>
 

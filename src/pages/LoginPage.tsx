@@ -94,7 +94,7 @@ export const LoginPage: React.FC = () => {
             <MundialBrand variant="light" isotipoClassName="h-11 w-11" subtitle="Portal corporativo" />
             <span className="login-glass-chip inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-moon-mist">
               <ShieldCheck size={12} className="login-icon-bounce" />
-              Nexus SSO
+              Acceso seguro
             </span>
           </header>
 
@@ -105,8 +105,8 @@ export const LoginPage: React.FC = () => {
             Emisión de pólizas en minutos
           </h1>
           <p className="text-fog-veil text-sm sm:text-base leading-relaxed max-w-md mx-auto lg:mx-0">
-            Un acceso único al marketplace Sis2000: RCV, personas y patrimoniales con canal
-            y SSO La Mundial.
+            Un solo acceso para cotizar y emitir: RCV, planes de personas y seguros patrimoniales,
+            con el canal comercial que La Mundial de Seguros asignó a tu equipo.
           </p>
 
           <div className="mt-12 flex justify-center lg:justify-start">
@@ -121,7 +121,7 @@ export const LoginPage: React.FC = () => {
             </div>
             <div className="px-8 pt-8 pb-2 sm:px-10 sm:pt-10">
               <h2 className="text-xl font-semibold text-ice-highlight mb-1">Iniciar sesión</h2>
-              <p className="text-sm text-fog-veil mb-7">Usuario corporativo Nexus</p>
+              <p className="text-sm text-fog-veil mb-7">Credenciales corporativas La Mundial</p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
