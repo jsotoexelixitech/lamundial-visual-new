@@ -499,18 +499,64 @@ body.portal-login-route {
   filter: drop-shadow(0 0 14px rgba(152, 192, 239, 0.45));
 }
 
-.login-hero-mark-plinth {
-  padding: 1.25rem 1.5rem;
-  border-radius: 20px;
-  background: rgba(186, 214, 247, 0.05);
+.login-logo-medallion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(216, 236, 248, 0.14), transparent 52%),
+    radial-gradient(circle at 68% 72%, rgba(102, 58, 243, 0.12), transparent 55%),
+    rgba(8, 10, 22, 0.65);
   box-shadow:
-    inset 0 1px 1px rgba(216, 236, 248, 0.22),
-    inset 0 0 0 1px rgba(186, 215, 247, 0.12),
-    0 12px 40px rgba(0, 0, 0, 0.35);
+    inset 0 1px 1px rgba(216, 236, 248, 0.32),
+    inset 0 0 0 1px rgba(186, 215, 247, 0.14),
+    0 0 48px rgba(102, 58, 243, 0.18),
+    0 16px 40px rgba(0, 0, 0, 0.45);
 }
 
-.login-hero-mark-plinth img {
-  max-height: none;
+.login-logo-medallion--hero {
+  width: 9.25rem;
+  height: 9.25rem;
+}
+
+@media (min-width: 640px) {
+  .login-logo-medallion--hero {
+    width: 10.25rem;
+    height: 10.25rem;
+  }
+}
+
+.login-logo-medallion--overlay {
+  width: 8.25rem;
+  height: 8.25rem;
+}
+
+/* ── Portal dashboard (coherente con login AuthKit) ── */
+.portal-dashboard {
+  background-color: #05060f;
+  color: #d1e4fa;
+}
+
+.portal-dashboard-grid {
+  opacity: 0.35;
+}
+
+.portal-glass-card {
+  background: rgba(12, 16, 32, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(186, 215, 247, 0.12);
+  box-shadow:
+    inset 0 1px 1px rgba(216, 236, 248, 0.12),
+    0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.portal-header-dark {
+  background: rgba(5, 6, 15, 0.92);
+  border-bottom: 1px solid rgba(186, 215, 247, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .login-icon-bounce {

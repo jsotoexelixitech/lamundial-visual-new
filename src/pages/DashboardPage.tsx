@@ -39,20 +39,20 @@ function cardVisual(product: PortalProductDto) {
     return {
       icon: <Heart size={26} strokeWidth={1.75} />,
       accent: 'linear-gradient(135deg, #2E6DBF 0%, #0F1A5A 100%)',
-      tint: '#2E6DBF',
+      tint: '#98c0ef',
     };
   }
   if (product.product === 'patrimoniales') {
     return {
       icon: <Building2 size={26} strokeWidth={1.75} />,
       accent: 'linear-gradient(135deg, #0F1A5A 0%, #091133 100%)',
-      tint: '#0F1A5A',
+      tint: '#b6d9fc',
     };
   }
   return {
     icon: <Package size={26} strokeWidth={1.75} />,
-    accent: 'linear-gradient(135deg, #162A7F 0%, #0F1A5A 100%)',
-    tint: '#162A7F',
+    accent: 'linear-gradient(135deg, #663af3 0%, #0F1A5A 100%)',
+    tint: '#d1e4fa',
   };
 }
 
@@ -164,30 +164,30 @@ export const DashboardPage: React.FC = () => {
   const firstName = user.nombre.split(' ')[0];
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] flex flex-col">
-      <PortalHeader active="dashboard" />
+    <div className="portal-dashboard min-h-screen flex flex-col relative overflow-hidden">
+      <div className="login-grid-bg portal-dashboard-grid absolute inset-0 pointer-events-none" aria-hidden />
+      <div className="login-spotlight absolute inset-0 pointer-events-none opacity-50" aria-hidden />
 
-      <section
-        className="relative overflow-hidden text-white"
-        style={{ background: 'linear-gradient(120deg, #091133 0%, #0F1A5A 58%, #162A7F 100%)' }}
-      >
+      <PortalHeader active="dashboard" theme="dark" />
+
+      <section className="relative border-b border-white/5">
         <img
           aria-hidden
           src={publicAsset(MUNDIAL_ISOTIPO)}
           alt=""
-          className="absolute -right-16 -top-10 w-80 max-w-none opacity-[0.08] select-none pointer-events-none"
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-48 sm:w-56 opacity-[0.06] select-none pointer-events-none login-logo-glow"
           draggable={false}
         />
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-[#F0A9A9] mb-3">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-11">
+          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-fog-veil mb-3">
             Portal de suscripción
           </p>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold leading-tight">
+          <h1 className="login-headline-gradient text-3xl sm:text-4xl font-semibold leading-tight">
             Hola, {firstName}
           </h1>
-          <p className="text-white/70 mt-3 max-w-2xl text-sm sm:text-base leading-relaxed">
-            Productos del marketplace Sis2000 según tu canal. Cada tarjeta abre su flujo con SSO y
-            el <span className="text-white/90">cproducto</span> correspondiente.
+          <p className="text-moon-mist mt-3 max-w-2xl text-sm sm:text-base leading-relaxed">
+            Productos del marketplace Sis2000 según tu canal. Cada tarjeta abre su flujo con SSO y el{' '}
+            <span className="text-frost-glow">cproducto</span> correspondiente.
           </p>
 
           <dl className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl">
@@ -197,55 +197,54 @@ export const DashboardPage: React.FC = () => {
               { label: 'Productor', value: canalBanner.cproductor },
               { label: 'Canal', value: `${canalBanner.centidad} · ${canalBanner.citem}` },
             ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-xl border border-white/15 bg-white/[0.07] px-4 py-3 backdrop-blur-sm"
-              >
-                <dt className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/50">
+              <div key={item.label} className="portal-glass-card rounded-xl px-4 py-3">
+                <dt className="text-[9px] font-bold uppercase tracking-[0.18em] text-fog-veil">
                   {item.label}
                 </dt>
-                <dd className="text-sm font-semibold text-white mt-1 leading-snug">{item.value}</dd>
+                <dd className="text-sm font-semibold text-ice-highlight mt-1 leading-snug">
+                  {item.value}
+                </dd>
               </div>
             ))}
           </dl>
         </div>
       </section>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-10 relative z-10">
         {launchError && (
-          <div className="mb-8 flex gap-3 items-start rounded-xl border border-red-200 bg-red-50 px-4 py-3.5">
+          <div className="mb-8 flex gap-3 items-start rounded-xl border border-[#E84F51]/35 bg-[#E84F51]/10 px-4 py-3.5">
             <AlertCircle size={18} className="text-[#E84F51] shrink-0 mt-0.5" />
-            <div className="text-sm text-[#991B1B]">
-              <p className="font-semibold">No se pudo abrir el flujo</p>
-              <p className="mt-0.5 font-medium text-[#B45356]">{launchError}</p>
+            <div className="text-sm text-[#f0a9a9]">
+              <p className="font-semibold text-ice-highlight">No se pudo abrir el flujo</p>
+              <p className="mt-0.5 font-medium">{launchError}</p>
             </div>
           </div>
         )}
 
         {productsError && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="mb-6 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
             {productsError}
           </div>
         )}
 
         <div className="flex items-end justify-between gap-4 mb-6">
-          <h2 className="font-display text-xl font-bold text-[#091133]">Productos disponibles</h2>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#ACACAC]">
+          <h2 className="text-xl font-semibold text-ice-highlight">Productos disponibles</h2>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-fog-veil">
             {loadingProducts ? '…' : `${products.length} producto${products.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
         {loadingProducts && (
           <div className="flex justify-center py-16">
-            <Loader2 size={36} className="animate-spin text-[#0F1A5A]" />
+            <Loader2 size={36} className="animate-spin text-void-violet" />
           </div>
         )}
 
         {!loadingProducts && products.length === 0 && (
-          <div className="rounded-2xl border border-[#e4e6ee] bg-white p-12 text-center">
-            <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
-            <p className="font-semibold text-[#091133]">Sin productos asignados</p>
-            <p className="text-sm text-[#777777] mt-2 max-w-md mx-auto">
+          <div className="portal-glass-card rounded-2xl p-12 text-center">
+            <Inbox size={40} className="mx-auto text-fog-veil mb-4" />
+            <p className="font-semibold text-ice-highlight">Sin productos asignados</p>
+            <p className="text-sm text-moon-mist mt-2 max-w-md mx-auto">
               No hay productos Sis2000 para tu canal o faltan submódulos/permisos. Un administrador
               debe configurar canal en Admin y activar OCR/Emisión.
             </p>
@@ -261,7 +260,7 @@ export const DashboardPage: React.FC = () => {
               return (
                 <article
                   key={product.key}
-                  className="group relative bg-white rounded-2xl border border-[#e4e6ee] overflow-hidden flex flex-col shadow-[0_2px_10px_rgba(9,17,51,0.04)] hover:shadow-[0_16px_40px_-16px_rgba(9,17,51,0.28)] hover:-translate-y-0.5 transition-all duration-200"
+                  className="portal-glass-card group relative rounded-2xl overflow-hidden flex flex-col hover:-translate-y-0.5 transition-all duration-200 hover:border-[#bad7f7]/25"
                 >
                   <div className="h-1.5 w-full" style={{ background: style.accent }} />
 
@@ -274,17 +273,17 @@ export const DashboardPage: React.FC = () => {
                         {style.icon}
                       </div>
                       <span
-                        className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em]"
-                        style={{ color: style.tint, background: `${style.tint}14` }}
+                        className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.14em] login-glass-chip"
+                        style={{ color: style.tint }}
                       >
                         {product.cproducto} · ramo {product.cramo}
                       </span>
                     </div>
 
-                    <h3 className="font-display text-xl font-bold text-[#091133] mb-2">{product.label}</h3>
-                    <p className="text-sm text-[#777777] leading-relaxed flex-1">{product.description}</p>
+                    <h3 className="text-xl font-semibold text-ice-highlight mb-2">{product.label}</h3>
+                    <p className="text-sm text-moon-mist leading-relaxed flex-1">{product.description}</p>
 
-                    <div className="mt-5 pt-4 border-t border-[#eceef4] flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#ACACAC]">
+                    <div className="mt-5 pt-4 border-t border-white/5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-fog-veil">
                       <ShieldCheck size={13} style={{ color: style.tint }} />
                       {product.moduleLabel}
                     </div>
@@ -293,7 +292,7 @@ export const DashboardPage: React.FC = () => {
                       type="button"
                       disabled={busy || launching !== null}
                       onClick={() => handleLaunch(product)}
-                      className="mt-5 inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
+                      className="mt-5 inline-flex items-center justify-center gap-2 w-full py-3 rounded-full text-sm font-bold text-white transition-all hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
                       style={{ background: style.accent }}
                     >
                       {busy ? (
@@ -311,14 +310,14 @@ export const DashboardPage: React.FC = () => {
                   </div>
 
                   {busy && (
-                    <div className="absolute inset-0 bg-white/55 backdrop-blur-[2px] pointer-events-none" />
+                    <div className="absolute inset-0 bg-midnight-canvas/55 backdrop-blur-[2px] pointer-events-none" />
                   )}
                 </article>
               );
             })}
         </div>
 
-        <footer className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e4e6ee] pt-6 text-xs text-[#ACACAC]">
+        <footer className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-white/10 pt-6 text-xs text-fog-veil">
           <span className="flex items-center gap-1.5">
             <ExternalLink size={12} />
             Los módulos se abren en una pestaña nueva con acceso Nexus SSO

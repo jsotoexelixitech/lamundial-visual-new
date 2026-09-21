@@ -5,9 +5,10 @@ import { logout, getCurrentUser } from '@/lib/nexus-auth';
 
 type Props = {
   active?: 'dashboard' | 'audit';
+  theme?: 'light' | 'dark';
 };
 
-export function PortalHeader({ active = 'dashboard' }: Props) {
+export function PortalHeader({ active = 'dashboard', theme = 'light' }: Props) {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const handleLogout = () => {
@@ -27,13 +28,18 @@ export function PortalHeader({ active = 'dashboard' }: Props) {
     .map((p) => p[0]?.toUpperCase())
     .join('');
 
+  const isDark = theme === 'dark';
+
   return (
-    <header className="bg-white shadow-[0_1px_0_rgba(9,17,51,0.06)]">
-      <div className="h-1 w-full" style={{ background: 'linear-gradient(90deg, #0F1A5A, #2E6DBF 55%, #E84F51)' }} />
+    <header className={isDark ? 'portal-header-dark' : 'bg-white shadow-[0_1px_0_rgba(9,17,51,0.06)]'}>
+      <div
+        className="h-1 w-full"
+        style={{ background: 'linear-gradient(90deg, #663af3, #2E6DBF 45%, #E84F51)' }}
+      />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
         <button type="button" onClick={() => navigate('/dashboard')} className="text-left">
-          <MundialBrand isotipoClassName="h-10 w-10" />
+          <MundialBrand variant={isDark ? 'light' : 'dark'} isotipoClassName="h-10 w-10" />
         </button>
 
         <nav className="flex items-center gap-1 sm:gap-1.5">
@@ -44,8 +50,12 @@ export function PortalHeader({ active = 'dashboard' }: Props) {
               onClick={() => navigate(to)}
               className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
                 active === key
-                  ? 'bg-[#0F1A5A] text-white shadow-sm'
-                  : 'text-[#0F1A5A] hover:bg-[#F0F2F8]'
+                  ? isDark
+                    ? 'bg-void-violet text-white shadow-sm'
+                    : 'bg-[#0F1A5A] text-white shadow-sm'
+                  : isDark
+                    ? 'text-moon-mist hover:bg-white/5'
+                    : 'text-[#0F1A5A] hover:bg-[#F0F2F8]'
               }`}
             >
               <Icon size={16} />
@@ -54,16 +64,26 @@ export function PortalHeader({ active = 'dashboard' }: Props) {
           ))}
 
           {user && (
-            <div className="hidden md:flex items-center gap-3 ml-3 pl-4 border-l border-[#e4e6ee]">
+            <div
+              className={`hidden md:flex items-center gap-3 ml-3 pl-4 border-l ${
+                isDark ? 'border-white/10' : 'border-[#e4e6ee]'
+              }`}
+            >
               <div
                 className="h-9 w-9 rounded-full grid place-items-center text-[11px] font-bold text-white"
-                style={{ background: 'linear-gradient(135deg, #0F1A5A, #162A7F)' }}
+                style={{ background: 'linear-gradient(135deg, #663af3, #0F1A5A)' }}
               >
                 {initials}
               </div>
               <div className="leading-tight">
-                <p className="text-sm font-bold text-[#091133]">{user.nombre}</p>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#ACACAC]">
+                <p className={`text-sm font-bold ${isDark ? 'text-ice-highlight' : 'text-[#091133]'}`}>
+                  {user.nombre}
+                </p>
+                <p
+                  className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                    isDark ? 'text-fog-veil' : 'text-[#ACACAC]'
+                  }`}
+                >
                   {user.empresa ?? 'La Mundial'}
                 </p>
               </div>
@@ -73,7 +93,9 @@ export function PortalHeader({ active = 'dashboard' }: Props) {
           <button
             type="button"
             onClick={handleLogout}
-            className="ml-1 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-[#E84F51] hover:bg-red-50 transition-colors"
+            className={`ml-1 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              isDark ? 'text-[#f0a9a9] hover:bg-white/5' : 'text-[#E84F51] hover:bg-red-50'
+            }`}
             title="Cerrar sesión"
           >
             <LogOut size={17} />
