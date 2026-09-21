@@ -1,7 +1,6 @@
 import React from 'react';
 import { Car, Heart, Building2, ShieldCheck, Loader2 } from 'lucide-react';
-import { publicAsset } from '@/lib/public-asset';
-import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
+import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 
 const STEPS = [
   { id: 'auth', label: 'Validando credenciales', icon: ShieldCheck },
@@ -45,17 +44,8 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
 
         <div className="px-8 py-10 sm:px-10 sm:py-12">
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="login-pulse-ring relative mb-6 h-32 w-32">
-              <span className="login-orbit-ring absolute -inset-1 rounded-full border-2 border-dashed border-[#663af3]/60" />
-              <span className="login-orbit-ring-delay absolute inset-1 rounded-full border border-[#98c0ef]/50" />
-              <span className="login-pulse-a absolute inset-2 rounded-full border-2 border-[#bad7f7]/40" />
-              <span className="login-pulse-b absolute inset-5 rounded-full border border-[#663af3]/50" />
-              <img
-                src={publicAsset(MUNDIAL_ISOTIPO)}
-                alt=""
-                className="absolute inset-0 m-auto h-16 w-16 login-logo-glow login-orbit-core"
-                draggable={false}
-              />
+            <div className="mb-6">
+              <LoginBrandShowcase variant="overlay" />
             </div>
 
             <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 mb-4 login-glass-chip">

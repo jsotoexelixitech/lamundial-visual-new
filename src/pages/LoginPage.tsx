@@ -2,8 +2,8 @@ import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Car, Heart, Building2 } from 'lucide-react';
 import { login, getCurrentUser, fetchPortalProducts } from '@/lib/nexus-auth';
-import { MundialBrand, MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
-import { publicAsset } from '@/lib/public-asset';
+import { MundialBrand } from '@/components/brand/MundialBrand';
+import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
 import { LoginAmbientLayer } from '@/components/login/LoginAmbientLayer';
 
@@ -109,17 +109,8 @@ export const LoginPage: React.FC = () => {
             y SSO La Mundial.
           </p>
 
-          <div className="mt-10 flex justify-center lg:justify-start">
-            <div className="login-pulse-ring relative h-24 w-24">
-              <span className="login-orbit-ring absolute inset-0 rounded-full border border-dashed border-void-violet/50" />
-              <span className="login-orbit-ring-delay absolute inset-2 rounded-full border border-blueprint-blue/40" />
-              <img
-                src={publicAsset(MUNDIAL_ISOTIPO)}
-                alt=""
-                className="absolute inset-0 m-auto h-14 w-14 login-logo-glow"
-                draggable={false}
-              />
-            </div>
+          <div className="mt-12 flex justify-center lg:justify-start">
+            <LoginBrandShowcase variant="hero" />
           </div>
         </section>
 

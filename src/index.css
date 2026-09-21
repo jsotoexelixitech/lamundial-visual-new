@@ -496,6 +496,21 @@ body.portal-login-route {
 
 .login-logo-glow {
   animation: login-logo-glow 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(152, 192, 239, 0.45));
+}
+
+.login-hero-mark-plinth {
+  padding: 1.25rem 1.5rem;
+  border-radius: 20px;
+  background: rgba(186, 214, 247, 0.05);
+  box-shadow:
+    inset 0 1px 1px rgba(216, 236, 248, 0.22),
+    inset 0 0 0 1px rgba(186, 215, 247, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.login-hero-mark-plinth img {
+  max-height: none;
 }
 
 .login-icon-bounce {
