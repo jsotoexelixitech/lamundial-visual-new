@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Loader2, Plus, RefreshCw, UserCog, X } from 'lucide-react';
@@ -37,6 +37,9 @@ type Mode = 'list' | 'create' | 'edit';
 export function UsersAdminPage() {
   const navigate = useNavigate();
   const me = getCurrentUser();
+  const userId = me?.id;
+  const canAdmin = Boolean(me && isPortalAdmin(me));
+  const loadSeq = useRef(0);
   const [users, setUsers] = useState<PortalManagedUser[]>([]);
   const [roles, setRoles] = useState<PortalRoleOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,26 +60,29 @@ export function UsersAdminPage() {
   );
 
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     setLoading(true);
     setError('');
     try {
       const [u, r] = await Promise.all([fetchPortalUsers(), fetchPortalRoles()]);
+      if (seq !== loadSeq.current) return;
       setUsers(u);
       setRoles(r);
     } catch (e) {
+      if (seq !== loadSeq.current) return;
       setError(apiMessage(e, 'No se pudo cargar usuarios.'));
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (!me || !isPortalAdmin(me)) {
+    if (!canAdmin) {
       navigate('/dashboard', { replace: true });
       return;
     }
     void load();
-  }, [me, navigate, load]);
+  }, [userId, canAdmin, navigate, load]);
 
   const resetForm = () => {
     setForm({ nombre: '', email: '', password: '', roleId: '' });
@@ -160,7 +166,7 @@ export function UsersAdminPage() {
     }
   };
 
-  if (!me || !isPortalAdmin(me)) return null;
+  if (!canAdmin || !me) return null;
 
   return (
     <div className="portal-page">
