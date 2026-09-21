@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Car, Heart, Building2 } from 'lucide-react';
-import { login, getCurrentUser, fetchPortalProducts } from '@/lib/nexus-auth';
+import { login, getCurrentUser } from '@/lib/nexus-auth';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
 import { LoginAmbientLayer } from '@/components/login/LoginAmbientLayer';
 
-const MIN_LOADING_MS = 4200;
+const MIN_LOADING_MS = 2200;
 
 const FLOAT_ICONS = [
   { Icon: Car, className: 'login-float-card login-float-1', label: 'RCV' },
@@ -55,14 +55,10 @@ export const LoginPage: React.FC = () => {
       await sleep(400);
       await login({ email: email.trim(), password });
       setLoginStep(1);
-      await sleep(900);
-      await fetchPortalProducts();
+      await sleep(500);
       setLoginStep(2);
-      await sleep(900);
-      setLoginStep(3);
-      await sleep(900);
       await waitMin(MIN_LOADING_MS, started);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg || 'Credenciales incorrectas.');

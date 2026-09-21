@@ -43,7 +43,7 @@ function userInitials(nombre: string) {
 
 export function PortalShell() {
   const navigate = useNavigate();
-  const { profile, loading, error, storageUser } = usePortalSession();
+  const { profile, profileLoading, profileError, storageUser } = usePortalSession();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const displayName = profile?.user.nombre ?? storageUser?.nombre ?? 'Usuario';
@@ -64,7 +64,7 @@ export function PortalShell() {
       </div>
 
       <div className="px-4 py-5 border-b border-[#e8eaf0]">
-        {loading ? (
+        {profileLoading ? (
           <div className="flex items-center gap-3 px-2 py-2 text-[#777777]">
             <Loader2 size={20} className="animate-spin text-[#0F1A5A]" />
             <span className="text-sm">Cargando sesión…</span>
@@ -105,8 +105,10 @@ export function PortalShell() {
                 </div>
               )}
             </div>
-            {error && (
-              <p className="mt-2 text-[11px] text-amber-700 bg-amber-50 rounded-lg px-2 py-1.5">{error}</p>
+            {profileError && (
+              <p className="mt-2 text-[11px] text-amber-700 bg-amber-50 rounded-lg px-2 py-1.5">
+                {profileError}
+              </p>
             )}
           </div>
         )}

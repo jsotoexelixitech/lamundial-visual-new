@@ -1,12 +1,11 @@
 import React from 'react';
-import { Car, Heart, Building2, ShieldCheck, Loader2 } from 'lucide-react';
+import { ShieldCheck, Loader2, LogIn } from 'lucide-react';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 
 const STEPS = [
   { id: 'auth', label: 'Validando credenciales', icon: ShieldCheck },
-  { id: 'catalog', label: 'Cargando productos disponibles', icon: Building2 },
-  { id: 'sso', label: 'Preparando tu sesión de emisión', icon: Heart },
-  { id: 'ready', label: 'Abriendo tu portal', icon: Car },
+  { id: 'session', label: 'Iniciando tu sesión segura', icon: LogIn },
+  { id: 'ready', label: 'Entrando al portal', icon: ShieldCheck },
 ] as const;
 
 type Props = {
@@ -59,7 +58,7 @@ export function LoginLoadingOverlay({ active, stepIndex = 0 }: Props) {
               {step.label}
             </p>
             <p className="text-sm text-[#9da7ba] max-w-sm">
-              Preparando tus productos y permisos de emisión…
+              Un momento: estamos verificando tu acceso corporativo.
             </p>
           </div>
 

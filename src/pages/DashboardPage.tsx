@@ -14,7 +14,6 @@ import {
   Inbox,
 } from 'lucide-react';
 import {
-  fetchPortalProducts,
   getCurrentUser,
   getToken,
   ssoDelegate,
@@ -56,42 +55,13 @@ function cardVisual(product: PortalProductDto) {
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
-  const { profile } = usePortalSession();
-  const [products, setProducts] = useState<PortalProductDto[]>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [productsError, setProductsError] = useState('');
+  const { profile, products, productsLoading, productsError } = usePortalSession();
   const [launching, setLaunching] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState('');
 
   useEffect(() => {
     if (!user) navigate('/login');
   }, [user, navigate]);
-
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    (async () => {
-      setLoadingProducts(true);
-      setProductsError('');
-      try {
-        const list = await fetchPortalProducts();
-        if (!cancelled) setProducts(list);
-      } catch (err) {
-        if (!cancelled) {
-          const detail =
-            err instanceof Error && err.message
-              ? err.message
-              : 'No se pudieron cargar tus flujos.';
-          setProductsError(detail);
-        }
-      } finally {
-        if (!cancelled) setLoadingProducts(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   if (!user) return null;
 
@@ -182,17 +152,17 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-end justify-between gap-4 mb-5">
           <h2 className="font-display text-lg font-bold text-[#091133]">Productos disponibles</h2>
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ACACAC]">
-            {loadingProducts ? '…' : `${products.length} producto${products.length === 1 ? '' : 's'}`}
+            {productsLoading ? '…' : `${products.length} producto${products.length === 1 ? '' : 's'}`}
           </span>
         </div>
 
-        {loadingProducts && (
+        {productsLoading && (
           <div className="flex justify-center py-20">
             <Loader2 size={36} className="animate-spin text-[#0F1A5A]" />
           </div>
         )}
 
-        {!loadingProducts && products.length === 0 && (
+        {!productsLoading && products.length === 0 && !productsError && (
           <div className="portal-panel rounded-2xl p-12 text-center">
             <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
             <p className="font-semibold text-[#091133]">Sin productos asignados</p>
@@ -204,7 +174,7 @@ export const DashboardPage: React.FC = () => {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
-          {!loadingProducts &&
+          {!productsLoading &&
             products.map((product) => {
               const style = cardVisual(product);
               const busy = launching === product.key;

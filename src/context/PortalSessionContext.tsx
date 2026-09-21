@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import {
   fetchPortalMe,
+  fetchPortalProducts,
   getCurrentUser,
   type PortalCanalDto,
+  type PortalProductDto,
   type LoginResponse,
 } from '@/lib/nexus-auth';
 
@@ -23,9 +25,13 @@ export type PortalSessionProfile = {
 type PortalSessionContextValue = {
   storageUser: LoginResponse['user'] | null;
   profile: PortalSessionProfile | null;
-  loading: boolean;
-  error: string;
+  profileLoading: boolean;
+  profileError: string;
+  products: PortalProductDto[];
+  productsLoading: boolean;
+  productsError: string;
   refresh: () => Promise<void>;
+  refreshProducts: () => Promise<void>;
 };
 
 const PortalSessionContext = createContext<PortalSessionContextValue | null>(null);
@@ -33,12 +39,33 @@ const PortalSessionContext = createContext<PortalSessionContextValue | null>(nul
 export function PortalSessionProvider({ children }: { children: React.ReactNode }) {
   const storageUser = getCurrentUser();
   const [profile, setProfile] = useState<PortalSessionProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState('');
+  const [products, setProducts] = useState<PortalProductDto[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState('');
+
+  const refreshProducts = useCallback(async () => {
+    setProductsLoading(true);
+    setProductsError('');
+    try {
+      const list = await fetchPortalProducts();
+      setProducts(list);
+    } catch (err) {
+      const detail =
+        err instanceof Error && err.message
+          ? err.message
+          : 'No se pudieron cargar tus productos.';
+      setProductsError(detail);
+      setProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  }, []);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
-    setError('');
+    setProfileLoading(true);
+    setProfileError('');
     try {
       const me = await fetchPortalMe();
       if (me?.user && me?.empresa) {
@@ -51,19 +78,32 @@ export function PortalSessionProvider({ children }: { children: React.ReactNode 
         setProfile(null);
       }
     } catch {
-      setError('No se pudo cargar tu perfil de portal.');
+      setProfileError('No se pudo cargar tu perfil de portal.');
       setProfile(null);
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    void refreshProducts();
+  }, [refresh, refreshProducts]);
 
   return (
-    <PortalSessionContext.Provider value={{ storageUser, profile, loading, error, refresh }}>
+    <PortalSessionContext.Provider
+      value={{
+        storageUser,
+        profile,
+        profileLoading,
+        profileError,
+        products,
+        productsLoading,
+        productsError,
+        refresh,
+        refreshProducts,
+      }}
+    >
       {children}
     </PortalSessionContext.Provider>
   );
