@@ -8,8 +8,8 @@ npm run build
 if grep -q 'login-orbit-ring' dist/assets/*.js 2>/dev/null; then
   echo "AVISO: bundle aún referencia login-orbit-ring (legacy)."
 fi
-if ! grep -q 'login-auros' dist/assets/*.css 2>/dev/null; then
-  echo "ERROR: CSS login-auros no encontrado en dist."
+if ! grep -q 'login-glass-modal' dist/assets/*.css 2>/dev/null; then
+  echo "ERROR: CSS login AuthKit (login-glass-modal) no encontrado en dist."
   exit 1
 fi
 echo "OK: dist listo ($(git log -1 --oneline))"

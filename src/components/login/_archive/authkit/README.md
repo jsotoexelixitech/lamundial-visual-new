@@ -9,6 +9,8 @@ Copia congelada del login **oscuro AuthKit** (commit ~ac1af2e, sep-2026).
 3. En `LoginPage`, imports desde `@/components/login/...` como hoy.
 4. `body.portal-login-route` en CSS (fondo `#05060f`).
 
-## Variante activa
+## Variante activa (por defecto)
 
-La variante **orgánica / bioluminescent** vive en los mismos paths fuera de `_archive/`.
+**AuthKit** — `src/pages/LoginPage.tsx` · `data-login-theme="authkit-v1"`.
+
+Otras variantes archivadas: `organic-v2/`, `ib-lab/`, `auros-mundial/`.
