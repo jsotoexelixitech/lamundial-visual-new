@@ -71,12 +71,12 @@ export function PortalShell() {
   };
 
   const sidebar = (
-    <div className="portal-sidebar-inner flex flex-col h-full">
-      <div className="px-5 pt-6 pb-5 border-b border-[#e8eaf0]">
+    <div className="portal-sidebar-inner flex flex-col h-full min-h-0">
+      <div className="px-4 sm:px-5 pt-6 pb-5 border-b border-[#e8eaf0] shrink-0">
         <MundialBrand subtitle="Portal corporativo" isotipoClassName="h-10 w-10" />
       </div>
 
-      <div className="px-4 py-5 border-b border-[#e8eaf0]">
+      <div className="px-3 sm:px-4 py-4 border-b border-[#e8eaf0] shrink-0 min-w-0">
         {profileLoading ? (
           <div className="flex items-center gap-3 px-2 py-2 text-[#777777]">
             <Loader2 size={20} className="animate-spin text-[#0F1A5A]" />
@@ -137,7 +137,7 @@ export function PortalShell() {
             to={to}
             onClick={() => setMobileOpen(false)}
             className={({ isActive }) =>
-              `portal-nav-item flex items-center gap-3 rounded-xl px-3 py-3 transition-colors ${
+              `portal-nav-item flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
                 isActive ? 'portal-nav-item-active' : 'text-[#0F1A5A] hover:bg-[#F0F2F8]'
               }`
             }
@@ -153,7 +153,7 @@ export function PortalShell() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-[#e8eaf0] mt-auto">
+      <div className="p-3 sm:p-4 border-t border-[#e8eaf0] mt-auto shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <button
           type="button"
           onClick={handleLogout}
@@ -213,7 +213,7 @@ export function PortalShell() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto">
           <Outlet />
         </main>
       </div>
