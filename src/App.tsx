@@ -3,9 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AuditPage } from '@/pages/AuditPage';
+import { UsersAdminPage } from '@/pages/UsersAdminPage';
 import { PortalShell } from '@/layouts/PortalShell';
 import { PortalSessionProvider } from '@/context/PortalSessionContext';
 import { getCurrentUser } from '@/lib/nexus-auth';
+import { isPortalAdmin } from '@/lib/portal-sso-config';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = getCurrentUser();
@@ -29,6 +31,16 @@ function App() {
         >
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/audit" element={<AuditPage />} />
+          <Route
+            path="/usuarios"
+            element={
+              isPortalAdmin(getCurrentUser()) ? (
+                <UsersAdminPage />
+              ) : (
+                <Navigate to="/dashboard" replace />
+              )
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

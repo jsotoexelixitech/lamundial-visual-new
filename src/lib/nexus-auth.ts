@@ -211,3 +211,88 @@ export interface AuditLog {
   detalle: Record<string, unknown> | null;
   createdAt: string;
 }
+
+// ─── Administración de usuarios (portal corporativo) ───────────────────────
+
+export interface PortalManagedUser {
+  id: number;
+  nombre: string;
+  email: string;
+  role: string;
+  roleId: number;
+  activo: boolean;
+  portalPerfil?: Record<string, unknown> | null;
+}
+
+export interface PortalRoleOption {
+  id: number;
+  nombre: string;
+}
+
+function authHeaders() {
+  const token = getToken();
+  if (!token) throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function fetchPortalRoles(): Promise<PortalRoleOption[]> {
+  const { data } = await api.get<{ success: boolean; data: PortalRoleOption[] }>(
+    '/api/portal/roles',
+    { headers: authHeaders() },
+  );
+  return data.data ?? [];
+}
+
+export async function fetchPortalUsers(): Promise<PortalManagedUser[]> {
+  const { data } = await api.get<{
+    success: boolean;
+    data: { users: PortalManagedUser[] };
+  }>('/api/portal/users', { headers: authHeaders() });
+  return data.data?.users ?? [];
+}
+
+export type CreatePortalUserPayload = {
+  nombre: string;
+  email: string;
+  password?: string;
+  roleId: number;
+  portalPerfil?: Record<string, unknown>;
+};
+
+export async function createPortalUser(
+  payload: CreatePortalUserPayload,
+): Promise<{ user: PortalManagedUser; temporaryPassword: string | null }> {
+  const { data } = await api.post<{
+    success: boolean;
+    data: {
+      id: number;
+      nombre: string;
+      email: string;
+      roleId: number;
+      temporaryPassword: string | null;
+    };
+  }>('/api/portal/users', payload, { headers: authHeaders() });
+  const u = data.data;
+  return {
+    user: {
+      id: u.id,
+      nombre: u.nombre,
+      email: u.email,
+      roleId: u.roleId,
+      role: '',
+      activo: true,
+    },
+    temporaryPassword: u.temporaryPassword,
+  };
+}
+
+export async function updatePortalUser(
+  id: number,
+  payload: Partial<CreatePortalUserPayload> & { activo?: boolean },
+): Promise<void> {
+  await api.put(`/api/portal/users/${id}`, payload, { headers: authHeaders() });
+}
+
+export async function togglePortalUserStatus(id: number): Promise<void> {
+  await api.patch(`/api/portal/users/${id}/status`, {}, { headers: authHeaders() });
+}

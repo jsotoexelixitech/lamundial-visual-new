@@ -10,10 +10,12 @@ import {
   Building2,
   UserCircle,
   Loader2,
+  Users,
 } from 'lucide-react';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { logout } from '@/lib/nexus-auth';
 import { usePortalSession } from '@/context/PortalSessionContext';
+import { isPortalAdmin } from '@/lib/portal-sso-config';
 
 const NAV = [
   {
@@ -31,6 +33,14 @@ const NAV = [
     icon: ClipboardList,
   },
 ] as const;
+
+const ADMIN_NAV = {
+  id: 'usuarios',
+  to: '/usuarios',
+  label: 'Usuarios',
+  hint: 'Operadores del portal',
+  icon: Users,
+} as const;
 
 function userInitials(nombre: string) {
   return nombre
@@ -51,6 +61,9 @@ export function PortalShell() {
   const displayRole = profile?.user.role ?? storageUser?.role ?? 'Operador';
   const displayEmpresa = profile?.empresa.nombre ?? storageUser?.empresa ?? 'La Mundial de Seguros';
   const canal = profile?.canal;
+  const navItems = isPortalAdmin(storageUser ?? profile?.user ?? null)
+    ? [...NAV, ADMIN_NAV]
+    : [...NAV];
 
   const handleLogout = () => {
     logout();
@@ -118,7 +131,7 @@ export function PortalShell() {
         <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#ACACAC]">
           Menú
         </p>
-        {NAV.map(({ id, to, label, hint, icon: Icon }) => (
+        {navItems.map(({ id, to, label, hint, icon: Icon }) => (
           <NavLink
             key={id}
             to={to}
