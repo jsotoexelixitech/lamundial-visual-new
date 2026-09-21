@@ -31,6 +31,19 @@
   --font-roboto-mono: 'Roboto Mono', ui-monospace, monospace;
   --color-void: #000000;
 
+  /* Login Auros (abyssal terminal) */
+  --color-liquid-abyss: #012624;
+  --color-liquid-deep: #011d1c;
+  --color-liquid-kelp: #003734;
+  --color-liquid-mist: #edfffe;
+  --color-platinum: #ffffff;
+  --color-silver-mist: #bbc7c6;
+  --color-ash: #f2f2f2;
+  --color-slate-deep: #707777;
+  --color-lavender-phosphor: #fde9ff;
+  --font-matter: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-arial-fallback: Arial, ui-sans-serif, system-ui, sans-serif;
+
   /* Manual de Identidad - La Mundial de Seguros */
   --color-mundial-blue: #0F1A5A; /* Azul Pennsylvania (Principal) */
   --color-mundial-dark-blue: #091133;
@@ -192,6 +205,278 @@ body.portal-login-ib {
   color: #222f30;
   font-family: var(--font-aspekta);
   font-weight: 400;
+}
+
+body.portal-login-auros {
+  background-color: #012624 !important;
+  color: #bbc7c6;
+  font-family: var(--font-matter);
+  font-weight: 400;
+}
+
+/* ── Login Auros (partículas + gradiente aurora) ── */
+.login-auros {
+  background: #012624;
+  color: #bbc7c6;
+  font-family: var(--font-matter);
+}
+
+.login-auros-aurora-wash {
+  background: linear-gradient(
+    180deg,
+    rgba(203, 255, 252, 0.06) 0%,
+    transparent 35%,
+    rgba(1, 29, 28, 0.4) 100%
+  );
+}
+
+.login-auros-orb-stage {
+  opacity: 0.85;
+}
+
+.login-auros-orb-canvas {
+  display: block;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  mask-image: radial-gradient(ellipse 70% 65% at 55% 45%, #000 25%, transparent 72%);
+}
+
+.login-auros-orb-mini {
+  width: 140px;
+  height: 140px;
+}
+
+.login-auros-eyebrow {
+  font-family: var(--font-matter);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #bbc7c6;
+}
+
+.login-auros-hero {
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.login-auros-lead {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 400;
+  color: #bbc7c6;
+}
+
+.login-auros-stat {
+  font-size: clamp(2.75rem, 5vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+  color: #fde9ff;
+}
+
+.login-auros-metric-label {
+  margin-top: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #edfffe;
+}
+
+.login-auros-nav-link {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #707777;
+}
+
+.login-auros-nav-link.is-active {
+  color: #ffffff;
+}
+
+.login-auros-card {
+  background: #003734;
+  border-radius: 16px;
+  padding: 2.25rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .login-auros-card {
+    padding: 2.5rem 2.25rem;
+  }
+}
+
+.login-auros-card-title {
+  font-size: 1.5rem;
+  line-height: 1;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.login-auros-body {
+  font-size: 14px;
+  line-height: 1.43;
+  font-weight: 400;
+  color: #bbc7c6;
+}
+
+.login-auros-label {
+  display: block;
+  font-family: var(--font-arial-fallback);
+  font-size: 14px;
+  line-height: 1.43;
+  color: #edfffe;
+  margin-bottom: 8px;
+}
+
+.login-auros-input {
+  font-family: var(--font-matter);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.4;
+  padding: 12px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(112, 119, 119, 0.65);
+  background: #011d1c;
+  color: #edfffe;
+  outline: none;
+}
+
+.login-auros-input:focus {
+  border-color: rgba(203, 255, 252, 0.45);
+}
+
+.login-auros-input::placeholder {
+  color: #707777;
+}
+
+.login-auros-cta {
+  border: none;
+  border-radius: 6px;
+  padding: 14px 22px;
+  font-family: var(--font-arial-fallback);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #222222;
+  cursor: pointer;
+  background: linear-gradient(
+    90deg,
+    rgb(203, 255, 252) 0%,
+    rgb(237, 255, 254) 26%,
+    rgb(255, 253, 250) 48%,
+    rgb(250, 209, 255) 89%
+  );
+}
+
+.login-auros-cta:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.login-auros-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(3, 81, 75, 0.5);
+  color: #ffffff;
+}
+
+.login-auros-hairline {
+  height: 1px;
+  background: rgba(112, 119, 119, 0.55);
+  width: 100%;
+}
+
+.login-auros-footer {
+  border-top: 1px solid rgba(112, 119, 119, 0.35);
+}
+
+.login-auros-overlay {
+  backdrop-filter: blur(2px);
+}
+
+.login-auros-panel {
+  background: #003734;
+  border-radius: 16px;
+}
+
+.login-auros-aurora-bar {
+  background: #011d1c;
+}
+
+.login-auros-aurora-fill {
+  background: linear-gradient(
+    90deg,
+    rgb(0, 130, 124) 0%,
+    rgb(203, 255, 252) 100%
+  );
+}
+
+.login-auros-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(112, 119, 119, 0.5);
+}
+
+.login-auros-step-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  font-size: 13px;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: #707777;
+  border-bottom: 1px solid rgba(112, 119, 119, 0.35);
+  background: #011d1c;
+}
+
+.login-auros-step-row:last-child {
+  border-bottom: none;
+}
+
+.login-auros-step-row.is-active {
+  color: #edfffe;
+  background: rgba(0, 55, 52, 0.85);
+}
+
+.login-auros-step-row.is-done {
+  color: #bbc7c6;
+}
+
+.login-auros-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #cbfffc;
+  animation: login-auros-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes login-auros-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-auros-pulse-dot {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* ── Login IB lab (plano, sin órbitas — referencia bioluminescent) ── */

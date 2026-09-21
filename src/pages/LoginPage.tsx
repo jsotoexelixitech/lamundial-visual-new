@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, ArrowRight, Lock } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, ArrowUpRight, Lock } from 'lucide-react';
 import { login, getCurrentUser } from '@/lib/nexus-auth';
-import { MundialBrand, MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
-import { publicAsset } from '@/lib/public-asset';
+import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
+import { LoginParticleSphere } from '@/components/login/LoginParticleSphere';
+import { LoginMoleculeDecor } from '@/components/login/LoginMoleculeDecor';
 
-const MIN_LOADING_MS = 2200;
+const MIN_LOADING_MS = 2400;
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -25,9 +26,9 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
 
   useLayoutEffect(() => {
-    document.body.classList.add('portal-login-ib');
-    document.body.classList.remove('portal-login-route', 'portal-login-organic');
-    return () => document.body.classList.remove('portal-login-ib');
+    document.body.classList.add('portal-login-auros');
+    document.body.classList.remove('portal-login-route', 'portal-login-organic', 'portal-login-ib');
+    return () => document.body.classList.remove('portal-login-auros');
   }, []);
 
   useEffect(() => {
@@ -61,55 +62,69 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="login-ib min-h-screen" data-login-theme="ib-lab-v1" style={{ minHeight: '100dvh' }}>
+    <div className="login-auros relative min-h-screen overflow-hidden" data-login-theme="auros-v1" style={{ minHeight: '100dvh' }}>
+      <div className="login-auros-aurora-wash pointer-events-none absolute inset-0" aria-hidden />
       <LoginLoadingOverlay active={loading} stepIndex={loginStep} />
 
-      <div className="login-ib-grid min-h-screen lg:grid lg:grid-cols-2">
-        <section className="login-ib-dark relative flex flex-col justify-between px-8 py-10 sm:px-12 lg:px-16 lg:py-14">
-          <header className="flex flex-wrap items-center justify-between gap-4">
-            <MundialBrand variant="light" isotipoClassName="h-10 w-10" subtitle="Portal corporativo" />
-            <span className="login-ib-counter">01 / 02</span>
-          </header>
+      <div className="login-auros-orb-stage pointer-events-none absolute inset-0 lg:left-[38%]" aria-hidden>
+        <LoginParticleSphere className="login-auros-orb-canvas h-full w-full" particleCount={420} radius={165} />
+      </div>
 
-          <div className="flex-1 flex flex-col justify-center py-12 lg:py-16 max-w-xl">
-            <p className="login-ib-tag mb-8">
-              <span className="login-ib-dot" aria-hidden />
-              Suscripción digital
-            </p>
-            <h1 className="login-ib-hero mb-8">
-              Emisión de
-              <br />
-              pólizas en minutos.
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1440px] flex-col px-6 py-8 sm:px-10 lg:px-14 lg:py-10">
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <MundialBrand variant="light" isotipoClassName="h-10 w-10" subtitle="Portal corporativo" />
+          <nav className="login-auros-nav hidden sm:flex items-center gap-6" aria-label="Secciones">
+            <span className="login-auros-nav-link is-active">Acceso</span>
+            <span className="login-auros-nav-link">Emisión</span>
+            <span className="login-auros-nav-link">Canales</span>
+          </nav>
+        </header>
+
+        <main className="flex flex-1 flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-center lg:gap-16 pt-10 lg:pt-6 pb-12">
+          <section className="relative max-w-xl lg:max-w-2xl">
+            <p className="login-auros-eyebrow mb-6">La Mundial · Suscripción digital</p>
+            <h1 className="login-auros-hero mb-8">
+              Terminal de emisión
+              <span className="text-lavender-phosphor">.</span>
             </h1>
-            <p className="login-ib-lead max-w-md">
-              Un solo acceso para cotizar y emitir: RCV, planes de personas y seguros patrimoniales,
-              con el canal comercial que La Mundial de Seguros asignó a tu equipo.
+            <p className="login-auros-lead mb-12 max-w-md">
+              Cotiza y emite RCV, planes de personas y patrimoniales con el canal comercial que La Mundial
+              asignó a tu equipo — un solo acceso, trazabilidad completa.
             </p>
-          </div>
 
-          <div className="flex items-end justify-between gap-6 pt-8 border-t border-[#4d5757]">
-            <img
-              src={publicAsset(MUNDIAL_ISOTIPO)}
-              alt=""
-              className="h-14 w-14 object-contain opacity-90"
-              draggable={false}
-            />
-            <div className="login-ib-lime-band flex-1 max-w-xs h-2 rounded-full" aria-hidden />
-          </div>
-        </section>
-
-        <section className="login-ib-light flex items-center justify-center px-6 py-12 sm:px-10 lg:px-16">
-          <div className="login-ib-card w-full max-w-md">
-            <p className="login-ib-tag login-ib-tag--dark mb-6">
-              <span className="login-ib-dot" aria-hidden />
-              Acceso corporativo
-            </p>
-            <h2 className="login-ib-card-title mb-2">Iniciar sesión</h2>
-            <p className="login-ib-meta mb-10">Credenciales La Mundial de Seguros</p>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="login-auros-metrics mb-10 grid grid-cols-3 gap-6 max-w-lg">
               <div>
-                <label htmlFor="login-email" className="login-ib-label">
+                <p className="login-auros-stat">3</p>
+                <p className="login-auros-metric-label">Ramos activos</p>
+              </div>
+              <div>
+                <p className="login-auros-stat text-[clamp(2rem,4vw,3.5rem)]">24/7</p>
+                <p className="login-auros-metric-label">Disponibilidad</p>
+              </div>
+              <div>
+                <p className="login-auros-stat text-[clamp(2rem,4vw,3.5rem)]">1</p>
+                <p className="login-auros-metric-label">Acceso único</p>
+              </div>
+            </div>
+
+            <LoginMoleculeDecor className="hidden lg:block absolute -right-4 top-1/2 h-40 w-40 opacity-70 -translate-y-1/2 translate-x-full" />
+          </section>
+
+          <section className="login-auros-card w-full max-w-md lg:max-w-none lg:justify-self-end">
+            <div className="flex items-start justify-between gap-4 mb-8">
+              <div>
+                <p className="login-auros-eyebrow mb-3 text-liquid-mist">Explore</p>
+                <h2 className="login-auros-card-title">Iniciar sesión</h2>
+                <p className="login-auros-body mt-2">Credenciales corporativas La Mundial</p>
+              </div>
+              <span className="login-auros-icon-btn shrink-0" aria-hidden>
+                <ArrowUpRight size={16} strokeWidth={1.75} />
+              </span>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label htmlFor="login-email" className="login-auros-label">
                   Correo corporativo
                 </label>
                 <input
@@ -119,13 +134,13 @@ export const LoginPage: React.FC = () => {
                   placeholder="nombre@lamundialdeseguros.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="login-ib-input w-full"
+                  className="login-auros-input w-full"
                   disabled={loading}
                 />
               </div>
 
               <div>
-                <label htmlFor="login-password" className="login-ib-label">
+                <label htmlFor="login-password" className="login-auros-label">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -136,13 +151,13 @@ export const LoginPage: React.FC = () => {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="login-ib-input w-full pr-12"
+                    className="login-auros-input w-full pr-12"
                     disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-graphite hover:text-abyssal-ink"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-silver-mist hover:text-platinum"
                     tabIndex={-1}
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
@@ -152,32 +167,33 @@ export const LoginPage: React.FC = () => {
               </div>
 
               {error && (
-                <div className="flex gap-3 items-start rounded-lg border border-lichen bg-tissue px-4 py-3">
+                <div className="flex gap-3 items-start rounded-md border border-slate-deep/60 bg-liquid-deep px-4 py-3">
                   <AlertCircle size={18} className="text-mundial-red shrink-0 mt-0.5" />
-                  <p className="text-sm text-abyssal-ink font-normal">{error}</p>
+                  <p className="text-sm text-liquid-mist font-normal">{error}</p>
                 </div>
               )}
 
-              <button type="submit" disabled={loading} className="login-ib-submit-combo w-full flex pt-2">
-                <span className="login-ib-btn-primary flex-1">
-                  {loading ? 'Conectando…' : 'Entrar al portal'}
-                </span>
-                <span className="login-ib-arrow shrink-0" aria-hidden>
-                  <ArrowRight size={20} strokeWidth={1.75} />
-                </span>
+              <button type="submit" disabled={loading} className="login-auros-cta w-full mt-2">
+                {loading ? 'Conectando…' : 'Entrar al portal'}
               </button>
             </form>
 
-            <div className="login-ib-divider mt-10 mb-4" />
-            <p className="login-ib-meta flex items-center gap-2">
+            <div className="login-auros-hairline my-8" />
+            <p className="login-auros-body flex items-center gap-2 text-xs">
               <Lock size={13} />
               Conexión cifrada · acceso auditado
             </p>
-            <p className="login-ib-meta mt-6 text-center lg:text-left">
+            <p className="login-auros-body mt-4 text-xs opacity-80">
               ¿Problemas de acceso? Contacta a Tecnología La Mundial.
             </p>
-          </div>
-        </section>
+          </section>
+        </main>
+
+        <footer className="login-auros-footer mt-auto pt-10 text-center lg:text-left">
+          <p className="login-auros-body text-[10px] uppercase tracking-[0.15em] text-slate-deep">
+            © La Mundial de Seguros · Portal corporativo
+          </p>
+        </footer>
       </div>
     </div>
   );
