@@ -17,6 +17,19 @@
   --color-blueprint-blue: #b6d9fc;
   --color-glass-edge: #bad7f71f;
 
+  /* Login orgánico (bioluminescent) */
+  --color-bioluminescent-lime: #cef79e;
+  --color-abyssal-ink: #222f30;
+  --color-bone-white: #f7f7f5;
+  --color-paper: #ffffff;
+  --color-graphite: #4d5757;
+  --color-lichen: #c9cbbe;
+  --color-tissue: #e7e8e1;
+  --color-frost: #eeeeee;
+
+  --font-aspekta: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-roboto-mono: 'Roboto Mono', ui-monospace, monospace;
+
   /* Manual de Identidad - La Mundial de Seguros */
   --color-mundial-blue: #0F1A5A; /* Azul Pennsylvania (Principal) */
   --color-mundial-dark-blue: #091133;
@@ -165,6 +178,195 @@ body {
 body.portal-login-route {
   background-color: #05060f !important;
   color: #d1e4fa;
+}
+
+body.portal-login-organic {
+  background-color: #f7f7f5 !important;
+  color: #222f30;
+  font-family: var(--font-aspekta);
+}
+
+/* ── Login orgánico (lime + bone white) ── */
+.login-organic-page {
+  font-family: var(--font-aspekta);
+}
+
+.login-organic-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.55;
+}
+
+.login-organic-blob-a {
+  width: min(70vw, 420px);
+  height: min(70vw, 420px);
+  left: -10%;
+  top: 10%;
+  background: radial-gradient(circle, rgba(206, 247, 158, 0.85) 0%, transparent 70%);
+  animation: login-organic-drift-a 18s ease-in-out infinite;
+}
+
+.login-organic-blob-b {
+  width: min(60vw, 380px);
+  height: min(60vw, 380px);
+  right: -5%;
+  bottom: 5%;
+  background: radial-gradient(circle, rgba(201, 203, 190, 0.9) 0%, transparent 72%);
+  animation: login-organic-drift-b 22s ease-in-out infinite;
+}
+
+.login-organic-fast.login-organic-blob-a {
+  animation-duration: 10s;
+}
+
+.login-organic-fast.login-organic-blob-b {
+  animation-duration: 12s;
+}
+
+.login-organic-grain {
+  background-image: radial-gradient(rgba(34, 47, 48, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@keyframes login-organic-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(8vw, 4vh);
+  }
+}
+
+@keyframes login-organic-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-6vw, -5vh);
+  }
+}
+
+.login-organic-card {
+  background: #ffffff;
+  border: 1px solid #e7e8e1;
+  box-shadow:
+    0 24px 48px rgba(34, 47, 48, 0.06),
+    0 4px 12px rgba(34, 47, 48, 0.04);
+}
+
+.login-organic-chip {
+  font-family: var(--font-roboto-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #4d5757;
+  background: #e7e8e1;
+  border-radius: 999px;
+  border: 1px solid #c9cbbe;
+}
+
+.login-organic-eyebrow {
+  font-family: var(--font-roboto-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #4d5757;
+}
+
+.login-organic-label {
+  display: block;
+  font-family: var(--font-roboto-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #4d5757;
+  margin-bottom: 8px;
+}
+
+.login-organic-input {
+  border-radius: 12px;
+  padding: 13px 14px;
+  font-size: 16px;
+  color: #222f30;
+  background: #f7f7f5;
+  border: 1px solid #c9cbbe;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-organic-input::placeholder {
+  color: #9aa3a3;
+}
+
+.login-organic-input:focus {
+  border-color: #222f30;
+  box-shadow: 0 0 0 3px rgba(206, 247, 158, 0.45);
+}
+
+.login-organic-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #222f30;
+  background: #cef79e;
+  border: 1px solid #b8e07a;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-organic-cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(206, 247, 158, 0.45);
+}
+
+.login-organic-cta:disabled {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.login-organic-shimmer {
+  background: linear-gradient(90deg, #cef79e, #0f1a5a, #e84f51);
+  animation: login-organic-bar 4s ease-in-out infinite;
+}
+
+@keyframes login-organic-bar {
+  0% {
+    transform: translateX(-30%);
+  }
+  50% {
+    transform: translateX(220%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.login-logo-medallion--organic {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(206, 247, 158, 0.35), transparent 55%),
+    #ffffff;
+  box-shadow:
+    inset 0 0 0 1px #e7e8e1,
+    0 16px 40px rgba(34, 47, 48, 0.08);
+}
+
+.login-btn-spinner-dark {
+  border-color: rgba(34, 47, 48, 0.25);
+  border-top-color: #222f30;
+}
+
+.login-overlay-organic .login-organic-card {
+  box-shadow: 0 32px 64px rgba(34, 47, 48, 0.12);
 }
 
 .login-grid-bg {
