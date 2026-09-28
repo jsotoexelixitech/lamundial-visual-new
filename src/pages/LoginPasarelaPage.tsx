@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Car, Heart, Building2 } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Building, KeyRound, UserCheck } from 'lucide-react';
 import { login, getCurrentUser } from '@/lib/nexus-auth';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
@@ -10,9 +10,9 @@ import { LoginAmbientLayer } from '@/components/login/LoginAmbientLayer';
 const MIN_LOADING_MS = 2200;
 
 const FLOAT_ICONS = [
-  { Icon: Car, className: 'login-float-card login-float-1', label: 'RCV' },
-  { Icon: Heart, className: 'login-float-card login-float-2', label: 'Funerario' },
-  { Icon: Building2, className: 'login-float-card login-float-3', label: 'Personas' },
+  { Icon: Building, className: 'login-float-card login-float-1', label: 'Gestores' },
+  { Icon: KeyRound, className: 'login-float-card login-float-2', label: 'Canal Alterno' },
+  { Icon: UserCheck, className: 'login-float-card login-float-3', label: 'Sis2000' },
 ];
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -22,9 +22,10 @@ async function waitMin(totalMs: number, started: number) {
   if (remain > 0) await sleep(remain);
 }
 
-export const LoginPage: React.FC = () => {
+export const LoginPasarelaPage: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [gestorEmail, setGestorEmail] = useState('');
+  const [canalCode, setCanalCode] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,8 +49,8 @@ export const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError('Completa correo y contraseña.');
+    if (!gestorEmail.trim() || !password.trim()) {
+      setError('Completa el correo del gestor y la contraseña.');
       return;
     }
     const started = Date.now();
@@ -58,7 +59,8 @@ export const LoginPage: React.FC = () => {
     setError('');
     try {
       await sleep(400);
-      await login({ email: email.trim(), password });
+      // Autenticar gestor pasarela
+      await login({ email: gestorEmail.trim(), password });
       setLoginStep(1);
       await sleep(500);
       setLoginStep(2);
@@ -66,7 +68,7 @@ export const LoginPage: React.FC = () => {
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg || 'Credenciales incorrectas.');
+      setError(msg || 'Credenciales de pasarela incorrectas o gestor no activo.');
       setLoading(false);
       setLoginStep(0);
     }
@@ -93,22 +95,21 @@ export const LoginPage: React.FC = () => {
       <div className="relative z-10 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-16 px-6 py-12 max-w-6xl mx-auto">
         <section className="flex-1 max-w-xl text-center lg:text-left login-hero-enter">
           <header className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-10">
-            <MundialBrand variant="light" isotipoClassName="h-11 w-11" subtitle="Portal corporativo" />
-            <span className="login-glass-chip inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-moon-mist">
+            <MundialBrand variant="light" isotipoClassName="h-11 w-11" subtitle="Pasarela de Gestores" />
+            <span className="login-glass-chip inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
               <ShieldCheck size={12} className="login-icon-bounce" />
-              Acceso seguro
+              Canal Pasarela
             </span>
           </header>
 
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-fog-veil mb-4">
-            Suscripción digital
+            Ingreso Gestores & Canales Alternos
           </p>
           <h1 className="login-headline-gradient text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold leading-[1.08] mb-5">
-            Emisión de pólizas en minutos
+            Acceso Pasarela La Mundial
           </h1>
           <p className="text-fog-veil text-sm sm:text-base leading-relaxed max-w-md mx-auto lg:mx-0">
-            Un solo acceso para cotizar y emitir: RCV, planes de personas y seguros patrimoniales,
-            con el canal comercial que La Mundial de Seguros asignó a tu equipo.
+            Portal de acceso para gestores comerciales, intermediarios y canales alternos validados en Sys2000 (`magestor`).
           </p>
 
           <div className="mt-12 flex justify-center lg:justify-start">
@@ -118,37 +119,58 @@ export const LoginPage: React.FC = () => {
 
         <main className="w-full max-w-md login-form-enter">
           <div className="login-glass-modal rounded-2xl overflow-hidden">
-            <div className="h-1 bg-white/5 overflow-hidden">
+            <div className="h-1 bg-amber-500/20 overflow-hidden">
               <div className="h-full login-idle-shimmer" />
             </div>
             <div className="px-8 pt-8 pb-2 sm:px-10 sm:pt-10">
-              <h2 className="text-xl font-semibold text-ice-highlight mb-1">Iniciar sesión</h2>
-              <p className="text-sm text-fog-veil mb-7">Credenciales corporativas La Mundial</p>
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-xl font-semibold text-ice-highlight">Ingreso Pasarela</h2>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  Gestor
+                </span>
+              </div>
+              <p className="text-sm text-fog-veil mb-7">Credenciales de gestor registrado (`magestor` / Sys2000)</p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="login-email" className="login-label">
-                    Correo corporativo
+                  <label htmlFor="pasarela-email" className="login-label">
+                    Correo del Gestor (`magestor.xcorreo`)
                   </label>
                   <input
-                    id="login-email"
+                    id="pasarela-email"
                     type="email"
                     autoComplete="email"
-                    placeholder="nombre@lamundialdeseguros.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="gestor@lamundialdeseguros.com"
+                    value={gestorEmail}
+                    onChange={(e) => setGestorEmail(e.target.value)}
                     className="login-glass-input w-full"
                     disabled={loading}
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="login-password" className="login-label">
-                    Contraseña
+                  <label htmlFor="pasarela-canal" className="login-label flex justify-between">
+                    <span>Código de Canal Alterno / Gestor (Opcional)</span>
+                    <span className="text-[10px] text-fog-veil font-normal">`ccanalalt`</span>
+                  </label>
+                  <input
+                    id="pasarela-canal"
+                    type="text"
+                    placeholder="Ej: CANAL-01 o cgestor"
+                    value={canalCode}
+                    onChange={(e) => setCanalCode(e.target.value)}
+                    className="login-glass-input w-full"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="pasarela-password" className="login-label">
+                    Contraseña / PIN de Pasarela
                   </label>
                   <div className="relative">
                     <input
-                      id="login-password"
+                      id="pasarela-password"
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
                       placeholder="••••••••"
@@ -176,15 +198,15 @@ export const LoginPage: React.FC = () => {
                   </div>
                 )}
 
-                <button type="submit" disabled={loading} className="login-cta-violet w-full">
+                <button type="submit" disabled={loading} className="login-cta-violet w-full bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400">
                   {loading ? (
                     <span className="inline-flex items-center gap-2">
                       <span className="login-btn-spinner" />
-                      Conectando…
+                      Validando en pasarela…
                     </span>
                   ) : (
                     <>
-                      Entrar al portal
+                      Entrar a Pasarela
                       <ArrowRight size={18} />
                     </>
                   )}
@@ -194,17 +216,17 @@ export const LoginPage: React.FC = () => {
 
             <div className="mt-6 border-t border-white/5 px-8 sm:px-10 py-4 flex items-center justify-between text-[11px] text-fog-veil">
               <span className="inline-flex items-center gap-2">
-                <Lock size={13} className="text-blueprint-blue" />
-                Conexión cifrada · acceso auditado
+                <Lock size={13} className="text-amber-400" />
+                Acceso gestores auditado
               </span>
-              <Link to="/login-pasarela" className="text-amber-400 hover:underline font-medium">
-                Acceso Pasarela / Gestor →
+              <Link to="/login" className="text-blueprint-blue hover:underline font-medium">
+                Ir a Login Corporativo →
               </Link>
             </div>
           </div>
 
           <p className="mt-6 text-center text-xs text-fog-veil">
-            ¿Problemas de acceso? Contacta a Tecnología La Mundial.
+            ¿Dudas sobre tu código de gestor? Consulta con Administración de Canales La Mundial.
           </p>
         </main>
       </div>
@@ -212,4 +234,4 @@ export const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage;
+export default LoginPasarelaPage;

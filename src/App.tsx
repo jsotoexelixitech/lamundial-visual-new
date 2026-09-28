@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
+import { LoginPasarelaPage } from '@/pages/LoginPasarelaPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AuditPage } from '@/pages/AuditPage';
 import { UsersAdminPage } from '@/pages/UsersAdminPage';
@@ -20,6 +21,7 @@ function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/login-pasarela" element={<LoginPasarelaPage />} />
         <Route
           element={
             <RequireAuth>
