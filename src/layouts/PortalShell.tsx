@@ -61,14 +61,37 @@ export function PortalShell() {
   const displayRole = profile?.user.role ?? storageUser?.role ?? 'Operador';
   const displayEmpresa = profile?.empresa.nombre ?? storageUser?.empresa ?? 'La Mundial de Seguros';
   const canal = profile?.canal;
-  const navItems = isPortalAdmin(storageUser ?? profile?.user ?? null)
-    ? [...NAV, ADMIN_NAV]
-    : [...NAV];
+  const isAdmin = isPortalAdmin(storageUser ?? profile?.user ?? null);
+  const navItems = isAdmin ? [...NAV, ADMIN_NAV] : [...NAV];
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  // Operadores: solo el catálogo de emisión, como marketplace (sin menú lateral).
+  if (!isAdmin) {
+    return (
+      <div className="portal-app min-h-screen bg-[#F7F7F7] flex flex-col">
+        <header className="lm-market-bar">
+          <MundialBrand subtitle="Marketplace de emisión" isotipoClassName="h-9 w-9 sm:h-10 sm:w-10" />
+          <div className="lm-market-user">
+            <div className="lm-market-id">
+              <span className="lm-market-name">{displayName}</span>
+              {canal && <span className="lm-market-canal">Canal {canal.citem}</span>}
+            </div>
+            <button type="button" onClick={handleLogout} className="lm-market-logout" aria-label="Cerrar sesión">
+              <LogOut size={17} />
+              <span className="lm-market-logout-text">Cerrar sesión</span>
+            </button>
+          </div>
+        </header>
+        <main className="flex-1 min-w-0 overflow-x-clip">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   const sidebar = (
     <div className="portal-sidebar-inner flex flex-col h-full min-h-0">

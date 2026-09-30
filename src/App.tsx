@@ -32,7 +32,12 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/audit" element={<AuditPage />} />
+          <Route
+            path="/audit"
+            element={
+              isPortalAdmin(getCurrentUser()) ? <AuditPage /> : <Navigate to="/dashboard" replace />
+            }
+          />
           <Route
             path="/usuarios"
             element={

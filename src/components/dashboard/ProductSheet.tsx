@@ -63,13 +63,6 @@ export const ProductSheet: React.FC<Props> = ({
       </div>
 
       <div className="ficha-foot">
-        {product.marketplaceQr && (
-          <figure className="ficha-qr">
-            <img src={product.marketplaceQr} alt={`Código QR para emitir ${title}`} />
-            <figcaption>Tu cliente puede emitir escaneando este código</figcaption>
-          </figure>
-        )}
-
         <div className="ficha-actions">
           <button
             type="button"

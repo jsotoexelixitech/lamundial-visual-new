@@ -2950,40 +2950,6 @@ body.portal-login-apple-mundial {
   margin-top: 1.75rem;
 }
 
-@container (min-width: 30rem) {
-  .ficha-foot {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: end;
-  }
-}
-
-.ficha-qr {
-  justify-self: start;
-  width: 10.5rem;
-  margin: 0;
-  padding: 0.7rem;
-  border-radius: 0.9rem;
-  background: #fff;
-  color: #4a4f63;
-  outline: 1px dashed rgba(15, 26, 90, 0.28);
-  outline-offset: -6px;
-  box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.6);
-}
-
-.ficha-qr img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-}
-
-.ficha-qr figcaption {
-  margin-top: 0.35rem;
-  font-size: 11px;
-  line-height: 1.35;
-  text-align: center;
-}
-
 .ficha-actions {
   display: grid;
   gap: 0.75rem;
@@ -3086,10 +3052,6 @@ body.portal-login-apple-mundial {
 
 .ficha[data-variant="client"] .ficha-price-value {
   font-size: clamp(2.6rem, 1.8rem + 3vw, 4.25rem);
-}
-
-.ficha[data-variant="client"] .ficha-qr {
-  width: clamp(11rem, 9rem + 6vw, 15rem);
 }
 
 .lm-present {
@@ -3228,5 +3190,91 @@ body.portal-login-apple-mundial {
   .lm-row-skeleton,
   .ficha-skeleton {
     animation: none;
+  }
+}
+
+/* ── Marketplace (operadores sin menú lateral) ── */
+.lm-market-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem max(1rem, calc((100% - 80rem) / 2));
+  background: #fff;
+  border-bottom: 1px solid #e3e5ec;
+}
+
+.lm-market-bar::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(90deg, #0f1a5a, #2e6dbf 55%, #e84f51);
+}
+
+.lm-market-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.lm-market-id {
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.lm-market-name {
+  max-width: 16rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #091133;
+}
+
+.lm-market-canal {
+  font-size: 0.75rem;
+  color: #5e6275;
+}
+
+.lm-market-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #f0d0d0;
+  border-radius: 0.75rem;
+  background: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #e84f51;
+  transition: background-color 0.15s ease;
+}
+
+.lm-market-logout:hover {
+  background: #fef2f2;
+}
+
+.lm-market-logout-text {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .lm-market-id {
+    display: flex;
+  }
+
+  .lm-market-logout {
+    padding: 0.55rem 0.95rem;
+  }
+
+  .lm-market-logout-text {
+    display: inline;
   }
 }
