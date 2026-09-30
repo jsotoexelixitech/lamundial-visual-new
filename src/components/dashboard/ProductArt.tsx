@@ -4,14 +4,14 @@ import { productLine, type ProductLineId } from './product-lines';
 
 type ArtKind =
   | 'car'
-  | 'quad'
-  | 'home'
-  | 'bandage'
-  | 'people'
-  | 'health'
+  | 'heartHand'
+  | 'family'
+  | 'fall'
+  | 'care'
+  | 'ambulance'
   | 'plane'
   | 'suitcase'
-  | 'candle'
+  | 'dove'
   | 'boat'
   | 'building';
 
@@ -72,22 +72,22 @@ function productArtKind(product: PortalProductDto): ArtKind {
   const label = product.label.toLowerCase();
   const line = productLine(product);
   if (line === 'autos') return 'car';
-  if (line === 'funerario') return 'candle';
+  if (line === 'funerario') return 'dove';
   if (line === 'viajes') return /local|nacional/.test(label) ? 'suitcase' : 'plane';
   if (/embarc|nave|barco/.test(label) || Number(product.cramo) === 20) return 'boat';
-  if (/4 en 1|integral/.test(label)) return 'quad';
-  if (/familiar|hogar/.test(label)) return 'home';
-  if (/accident/.test(label)) return 'bandage';
-  if (/combinad|personas|colectiv/.test(label)) return 'people';
-  if (line === 'personas') return 'health';
+  if (/4 en 1|integral/.test(label)) return 'heartHand';
+  if (/familiar|hogar/.test(label)) return 'family';
+  if (/accident/.test(label)) return 'fall';
+  if (/combinad|personas|colectiv/.test(label)) return 'care';
+  if (line === 'personas') return 'ambulance';
   return 'building';
 }
 
 const LINE_KIND: Record<ProductLineId, ArtKind> = {
   autos: 'car',
-  personas: 'people',
+  personas: 'care',
   viajes: 'plane',
-  funerario: 'candle',
+  funerario: 'dove',
   patrimoniales: 'building',
 };
 
@@ -145,142 +145,192 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
           </g>
         </>
       );
-    case 'quad':
+    case 'heartHand':
+      // 4 en 1: mano que sostiene un corazón protegido (como en el marketplace).
       return (
-        <g className="art-subject">
-          <ellipse cx="160" cy="176" rx="62" ry="6" fill={t.ink} opacity=".12" />
+        <>
           <path
-            d="M160 26 L218 46 V98 C218 134 192 158 160 170 C128 158 102 134 102 98 V46 Z"
-            fill={t.light}
-          />
-          <path d="M160 26 L218 46 V98 C218 134 192 158 160 170 Z" fill={t.soft} opacity=".55" />
-          {/* Cuatro coberturas: vida, salud, accidentes y funerario. */}
-          <rect x="128" y="62" width="28" height="28" rx="7" fill={t.soft} />
-          <rect x="164" y="62" width="28" height="28" rx="7" fill={t.soft} />
-          <rect x="128" y="98" width="28" height="28" rx="7" fill={t.soft} />
-          <rect x="164" y="98" width="28" height="28" rx="7" fill={t.soft} />
-          <Heart x={132} y={67} s={1} fill={t.accent} />
-          <path
-            d="M175 67 H181 V73 H187 V79 H181 V85 H175 V79 H169 V73 H175 Z"
-            fill={t.ink}
-          />
-          {/* Curitas cruzadas, como en la escena de Accidentes. */}
-          <g transform="rotate(-40 142 112)">
-            <rect x="131" y="108.5" width="22" height="7" rx="3.5" fill={t.detail} />
-          </g>
-          <g transform="rotate(40 142 112)">
-            <rect x="131" y="108.5" width="22" height="7" rx="3.5" fill={t.ink} />
-            <rect x="138.5" y="108.5" width="7" height="7" fill={t.light} />
-          </g>
-          {/* Vela, como en la escena de Funerario. */}
-          <rect x="174" y="110" width="8" height="12" rx="1.5" fill={t.light} />
-          <path
-            d="M178 100 C180.5 103.5 182 106 182 107.8 C182 109.8 180.3 111 178 111 C175.7 111 174 109.8 174 107.8 C174 105.8 175.6 103.2 178 100 Z"
-            fill={t.accent}
-          />
-          <rect x="171" y="121.5" width="14" height="2.5" rx="1.25" fill={t.ink} />
-          <path
-            d="M62 60 v14 M55 67 h14 M262 118 v12 M256 124 h12 M250 44 v8 M246 48 h8"
+            d="M58 58 v14 M51 65 h14 M268 124 v12 M262 130 h12"
             stroke={t.detail}
             strokeWidth="3"
             strokeLinecap="round"
           />
-        </g>
-      );
-    case 'home':
-      return (
-        <>
-          <path d="M0 172 H320" stroke={t.detail} strokeWidth="2" opacity=".3" />
           <g className="art-subject">
-            <rect x="196" y="58" width="14" height="30" fill={t.ink} />
-            <rect x="108" y="98" width="104" height="74" fill={t.light} />
-            <path d="M92 104 L160 48 L228 104 Z" fill={t.ink} />
-            <rect x="148" y="130" width="26" height="42" rx="3" fill={t.detail} />
-            <rect x="120" y="112" width="22" height="22" rx="3" fill={t.soft} />
-            <Heart x={124} y={117} s={0.7} fill={t.accent} />
-            <rect x="182" y="112" width="20" height="20" rx="3" fill={t.soft} />
-          </g>
-          <circle cx="262" cy="132" r="22" fill={t.detail} opacity=".85" />
-          <rect x="259" y="150" width="6" height="22" fill={t.ink} />
-          <circle cx="56" cy="146" r="14" fill={t.detail} opacity=".5" />
-          <rect x="54" y="156" width="4" height="16" fill={t.ink} opacity=".7" />
-        </>
-      );
-    case 'bandage':
-      return (
-        <>
-          <path
-            d="M24 174 H112 L124 156 L138 188 L152 164 H296"
-            stroke={t.accent}
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <g className="art-subject">
-            <circle cx="160" cy="92" r="58" fill={t.light} />
-            <g transform="rotate(-40 160 92)">
-              <rect x="98" y="77" width="124" height="30" rx="15" fill={t.detail} />
-            </g>
-            <g transform="rotate(40 160 92)">
-              <rect x="98" y="77" width="124" height="30" rx="15" fill={t.ink} />
-              <rect x="144" y="80" width="32" height="24" rx="4" fill={t.soft} />
-              <circle cx="152" cy="88" r="2" fill={t.ink} />
-              <circle cx="160" cy="92" r="2" fill={t.ink} />
-              <circle cx="168" cy="88" r="2" fill={t.ink} />
-              <circle cx="152" cy="96" r="2" fill={t.ink} />
-              <circle cx="168" cy="96" r="2" fill={t.ink} />
-            </g>
-          </g>
-        </>
-      );
-    case 'people':
-      return (
-        <>
-          <path d="M40 174 H280" stroke={t.detail} strokeWidth="2" opacity=".3" />
-          <g className="art-subject">
-            <circle cx="108" cy="92" r="17" fill={t.ink} />
-            <path d="M78 172 C78 138 92 118 108 118 C124 118 138 138 138 172 Z" fill={t.ink} />
-            <circle cx="212" cy="92" r="17" fill={t.detail} />
+            <Heart x={112} y={30} s={4.6} fill={t.light} />
+            <Heart x={134} y={50} s={2.4} fill={t.soft} />
             <path
-              d="M182 172 C182 138 196 118 212 118 C228 118 242 138 242 172 Z"
-              fill={t.detail}
+              d="M40 150 H92 C104 150 112 146 122 140 L150 124 C160 118 172 122 172 132 C172 140 166 144 158 148 L136 158 H172 C188 158 206 150 224 136 C234 128 248 134 244 146 C238 162 212 182 176 184 H40 Z"
+              fill={t.ink}
             />
-            <circle cx="160" cy="80" r="22" fill={t.light} />
-            <path d="M120 174 C120 132 138 110 160 110 C182 110 200 132 200 174 Z" fill={t.light} />
+            <rect x="24" y="144" width="26" height="46" rx="4" fill={t.detail} />
+          </g>
+          <g className="art-badge">
             <path
-              d="M146 112 L160 128 L174 112"
-              stroke={t.accent}
-              strokeWidth="5"
+              d="M214 68 L238 77 V94 C238 108 227 117 214 122 C201 117 190 108 190 94 V77 Z"
+              fill={t.accent}
+            />
+            <path
+              d="M203 94 L211 102 L225 87"
+              stroke={t.light}
+              strokeWidth="4.5"
               fill="none"
+              strokeLinecap="round"
               strokeLinejoin="round"
             />
           </g>
-          <Heart x={236} y={36} s={1.3} fill={t.accent} />
         </>
       );
-    case 'health':
+    case 'family':
+      // Combinado Familiar: padre, madre e hijo de la mano.
+      return (
+        <>
+          <path d="M20 176 H300" stroke={t.detail} strokeWidth="2" opacity=".35" />
+          <g className="art-subject">
+            <circle cx="108" cy="58" r="16" fill={t.ink} />
+            <path
+              d="M88 80 H128 C136 80 142 86 142 94 V128 C142 132 139 134 135 134 H132 V176 H116 V140 H100 V176 H84 V134 H81 C77 134 74 132 74 128 V94 C74 86 80 80 88 80 Z"
+              fill={t.ink}
+            />
+            <circle cx="212" cy="58" r="16" fill={t.detail} />
+            <path
+              d="M192 80 H232 C240 80 246 86 246 94 V128 C246 132 243 134 239 134 H236 L242 176 H182 L188 134 H185 C181 134 178 132 178 128 V94 C178 86 184 80 192 80 Z"
+              fill={t.detail}
+            />
+            <circle cx="160" cy="102" r="12" fill={t.accent} />
+            <path
+              d="M149 120 H171 C176 120 180 124 180 129 V146 C180 149 178 150 176 150 H174 V176 H164 V154 H156 V176 H146 V150 H144 C142 150 140 149 140 146 V129 C140 124 144 120 149 120 Z"
+              fill={t.accent}
+            />
+            <path
+              d="M140 126 L136 118 M180 126 L184 118"
+              stroke={t.accent}
+              strokeWidth="7"
+              strokeLinecap="round"
+            />
+          </g>
+          <Heart x={150} y={40} s={1} fill={t.accent} />
+        </>
+      );
+    case 'fall':
+      // Accidentes Personales: persona que cae de una escalera.
+      return (
+        <>
+          <g className="art-subject">
+            <ellipse cx="170" cy="178" rx="96" ry="5" fill={t.ink} opacity=".12" />
+            <path
+              d="M206 34 V178 M244 34 V178 M206 58 H244 M206 84 H244 M206 110 H244 M206 136 H244 M206 162 H244"
+              stroke={t.ink}
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <g transform="rotate(-28 128 112)">
+              <circle cx="128" cy="62" r="15" fill={t.ink} />
+              <rect x="114" y="82" width="28" height="50" rx="12" fill={t.detail} />
+              <path
+                d="M116 90 L94 70 M140 90 L160 66 M120 128 L110 164 M136 128 L150 162"
+                stroke={t.ink}
+                strokeWidth="8"
+                strokeLinecap="round"
+              />
+            </g>
+            <path
+              d="M72 118 C64 126 64 138 72 146 M58 110 C46 124 46 142 58 156"
+              stroke={t.detail}
+              strokeWidth="4"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
+          <g className="art-badge">
+            <rect x="268" y="30" width="10" height="34" rx="5" fill={t.accent} />
+            <circle cx="273" cy="78" r="6" fill={t.accent} />
+          </g>
+        </>
+      );
+    case 'care':
+      // Combinado de Personas: dos manos que cuidan un corazón con cruz.
       return (
         <>
           <path
-            d="M20 132 H96 L110 108 L126 160 L140 124 H300"
+            d="M60 50 v12 M54 56 h12 M262 48 v14 M255 55 h14"
             stroke={t.detail}
-            strokeWidth="4"
-            fill="none"
+            strokeWidth="3"
             strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity=".55"
           />
           <g className="art-subject">
-            <rect x="112" y="46" width="96" height="96" rx="26" fill={t.light} />
+            <circle cx="160" cy="86" r="58" fill={t.light} />
+            <Heart x={124} y={52} s={3.6} fill={t.accent} />
+            <path d="M154 70 H166 V80 H176 V92 H166 V102 H154 V92 H144 V80 H154 Z" fill={t.light} />
             <path
-              d="M148 66 H172 V82 H188 V106 H172 V122 H148 V106 H132 V82 H148 Z"
+              d="M20 150 H58 C74 150 88 142 102 128 C110 120 122 124 120 134 C118 144 110 152 100 158 L84 168 C102 168 118 164 132 154 L140 148 C146 144 152 152 148 158 C136 176 112 186 84 186 H20 Z"
+              fill={t.ink}
+            />
+            <path
+              d="M300 150 H262 C246 150 232 142 218 128 C210 120 198 124 200 134 C202 144 210 152 220 158 L236 168 C218 168 202 164 188 154 L180 148 C174 144 168 152 172 158 C184 176 208 186 236 186 H300 Z"
+              fill={t.detail}
+            />
+          </g>
+        </>
+      );
+    case 'ambulance':
+      // Salud Individual: ambulancia (como en el marketplace).
+      return (
+        <>
+          <path
+            d="M18 118 H48 M26 134 H52 M14 150 H44"
+            stroke={t.detail}
+            strokeWidth="4"
+            strokeLinecap="round"
+            opacity=".6"
+          />
+          <path
+            d="M126 50 L118 40 M146 46 V34 M166 50 L174 40"
+            stroke={t.detail}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <g className="art-subject">
+            <ellipse cx="166" cy="172" rx="108" ry="5" fill={t.ink} opacity=".14" />
+            <rect x="128" y="56" width="36" height="14" rx="5" fill={t.detail} />
+            <rect x="66" y="70" width="150" height="84" rx="12" fill={t.light} />
+            <path d="M216 92 H246 C254 92 260 96 264 103 L278 128 V154 H216 Z" fill={t.light} />
+            <path d="M224 100 H244 L258 126 H224 Z" fill={t.detail} />
+            <rect x="66" y="136" width="212" height="6" fill={t.soft} />
+            <path
+              d="M132 88 H150 V102 H164 V120 H150 V134 H132 V120 H118 V102 H132 Z"
               fill={t.accent}
             />
-            <circle cx="160" cy="166" r="6" fill={t.ink} />
+            <circle cx="106" cy="156" r="18" fill={t.ink} />
+            <circle cx="106" cy="156" r="7" fill={t.soft} />
+            <circle cx="240" cy="156" r="18" fill={t.ink} />
+            <circle cx="240" cy="156" r="7" fill={t.soft} />
           </g>
-          <circle cx="258" cy="56" r="9" fill={t.detail} opacity=".5" />
-          <circle cx="64" cy="70" r="6" fill={t.detail} opacity=".5" />
+        </>
+      );
+    case 'dove':
+      // Funerario: paloma (como en el marketplace).
+      return (
+        <>
+          <circle cx="160" cy="96" r="62" fill={t.soft} />
+          <g className="art-subject">
+            <path
+              d="M70 150 C86 146 98 140 108 130 C112 108 136 92 172 94 C184 80 204 72 222 76 C232 78 238 86 236 94 L250 100 L234 104 C230 132 204 154 170 158 C146 160 124 154 108 146 L78 162 C80 156 76 152 70 150 Z"
+              fill={t.light}
+            />
+            <path
+              d="M126 110 C122 76 136 50 166 36 C170 58 168 84 158 106 C148 112 136 114 126 110 Z"
+              fill={t.detail}
+            />
+            <path d="M236 96 L252 100 L236 104 Z" fill={t.accent} />
+            <circle cx="222" cy="90" r="3" fill={t.ink} />
+            <path
+              d="M196 150 C204 164 214 170 228 172 M212 162 C218 156 226 154 232 156"
+              stroke={t.detail}
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
         </>
       );
     case 'plane':
@@ -353,31 +403,6 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
           </g>
         </>
       );
-    case 'candle':
-      return (
-        <>
-          <circle cx="160" cy="80" r="56" fill={t.soft} />
-          <circle cx="160" cy="80" r="34" fill={t.soft} opacity=".9" />
-          <g className="art-subject">
-            <path d="M144 166 C118 162 102 148 98 128 C120 130 136 144 144 166 Z" fill={t.detail} />
-            <path
-              d="M176 166 C202 162 218 148 222 128 C200 130 184 144 176 166 Z"
-              fill={t.detail}
-            />
-            <rect x="143" y="96" width="34" height="70" rx="5" fill={t.light} />
-            <path d="M160 96 V86" stroke={t.ink} strokeWidth="3" strokeLinecap="round" />
-            <path
-              d="M160 48 C169 60 174 69 174 76 C174 83 168 88 160 88 C152 88 146 83 146 76 C146 68 152 59 160 48 Z"
-              fill={t.accent}
-            />
-            <path
-              d="M160 64 C164 70 166 74 166 78 C166 82 163 84 160 84 C157 84 154 82 154 78 C154 74 156 70 160 64 Z"
-              fill="#FFE3E3"
-            />
-            <rect x="116" y="164" width="88" height="8" rx="4" fill={t.detail} />
-          </g>
-        </>
-      );
     case 'boat':
       return (
         <>
@@ -446,8 +471,7 @@ interface ArtProps {
 /** Plano de fondo propio por tipo de escena, para que la galería no repita un mismo telón. */
 function Backdrop({ kind, t }: { kind: ArtKind; t: Theme }) {
   switch (kind) {
-    case 'quad':
-    case 'candle':
+    case 'heartHand':
       return (
         <path
           d="M76 200 V112 C76 64 114 30 160 30 C206 30 244 64 244 112 V200 Z"
@@ -455,7 +479,7 @@ function Backdrop({ kind, t }: { kind: ArtKind; t: Theme }) {
           opacity=".7"
         />
       );
-    case 'home':
+    case 'family':
     case 'suitcase':
     case 'building':
       return (
@@ -464,16 +488,16 @@ function Backdrop({ kind, t }: { kind: ArtKind; t: Theme }) {
           <circle cx="64" cy="54" r="26" fill={t.soft} />
         </>
       );
-    case 'bandage':
+    case 'care':
       return (
         <g fill="none" stroke={t.soft}>
           <circle cx="160" cy="92" r="78" strokeWidth="16" opacity=".8" />
           <circle cx="160" cy="92" r="112" strokeWidth="12" opacity=".45" />
         </g>
       );
-    case 'health':
+    case 'ambulance':
       return <path d="M0 132 L320 28 V104 L0 208 Z" fill={t.soft} opacity=".6" />;
-    case 'people':
+    case 'fall':
       return (
         <>
           <circle cx="66" cy="60" r="54" fill={t.soft} opacity=".7" />

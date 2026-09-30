@@ -64,6 +64,14 @@ export function cleanCopy(text: string | undefined): string {
     .trim();
 }
 
+/** Nombre comercial que ve el canal; el RCV del catálogo se vende como Nacional y Binacional. */
+export function productTitle(product: PortalProductDto): string {
+  if (productLine(product) === 'autos' && /rcv/i.test(product.label)) {
+    return 'RCV Nacional y Binacional';
+  }
+  return cleanCopy(product.label);
+}
+
 /** Monto "desde" legible; algunos productos traen texto ("Desde cotización") en vez de monto. */
 export function priceInfo(product: PortalProductDto): { label: string; value: string } {
   const raw = String(product.mmontoInicial ?? '').trim();

@@ -28,9 +28,9 @@ import { publicAsset } from '@/lib/public-asset';
 import {
   PRODUCT_LINES,
   PRODUCT_LINE_ORDER,
-  cleanCopy,
   priceInfo,
   productLine,
+  productTitle,
   type ProductLineId,
 } from '@/components/dashboard/product-lines';
 
@@ -76,7 +76,8 @@ export const DashboardPage: React.FC = () => {
     const visible = products.filter(
       (p) =>
         (lineFilter === 'all' || productLine(p) === lineFilter) &&
-        (!q || normalize(`${p.label} ${p.description} ${p.cproducto}`).includes(q)),
+        (!q ||
+          normalize(`${productTitle(p)} ${p.label} ${p.description} ${p.cproducto}`).includes(q)),
     );
     return PRODUCT_LINE_ORDER.map((id) => ({
       line: PRODUCT_LINES[id],
@@ -341,7 +342,7 @@ export const DashboardPage: React.FC = () => {
           <ul key={lineFilter} className="lm-gallery" aria-label="Productos disponibles">
             {visibleProducts.map((p, i) => {
               const price = priceInfo(p);
-              const title = cleanCopy(p.label);
+              const title = productTitle(p);
               const external = p.launchMode === 'sysip';
               const line = PRODUCT_LINES[productLine(p)];
               return (

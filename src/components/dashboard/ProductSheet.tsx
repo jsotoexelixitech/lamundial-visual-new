@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, ExternalLink, Loader2, MonitorUp, Store } from 'lucide-react';
 import type { PortalProductDto } from '@/lib/nexus-auth';
-import { PRODUCT_LINES, cleanCopy, priceInfo, productLine } from './product-lines';
+import { PRODUCT_LINES, cleanCopy, priceInfo, productLine, productTitle } from './product-lines';
 import { ProductArt } from './ProductArt';
 
 interface Props {
@@ -25,7 +25,7 @@ export const ProductSheet: React.FC<Props> = ({
 }) => {
   const line = PRODUCT_LINES[productLine(product)];
   const external = product.launchMode === 'sysip';
-  const title = cleanCopy(product.label);
+  const title = productTitle(product);
   const description = cleanCopy(product.description);
   const price = priceInfo(product);
 
