@@ -122,7 +122,7 @@ export const DashboardPage: React.FC = () => {
 
   const firstName = (profile?.user.nombre ?? user.nombre).split(' ')[0];
   const canal = profile?.canal;
-  const canalText = canalLabel(canal?.centidad, canal?.citem);
+  const canalText = user.canal || canalLabel(canal?.centidad, canal?.citem);
   const onlineCount = products.filter((p) => p.launchMode !== 'sysip').length;
 
   const openSheet = (product: PortalProductDto) => {

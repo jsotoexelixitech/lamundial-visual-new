@@ -19,6 +19,8 @@ export interface LoginResponse {
     role?: string;
     /** Entró desde el menú de Sis2000 (sin login en el portal). */
     sso?: boolean;
+    /** Nombre del canal enviado por Sis2000 en el SSO (xcanal). */
+    canal?: string | null;
   };
 }
 

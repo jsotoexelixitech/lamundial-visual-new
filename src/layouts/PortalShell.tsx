@@ -81,7 +81,11 @@ export function PortalShell() {
           <div className="lm-market-user">
             <div className="lm-market-id">
               <span className="lm-market-name">{displayName}</span>
-              {canal && <span className="lm-market-canal">Canal {canal.citem}</span>}
+              {(storageUser?.canal || canal) && (
+                <span className="lm-market-canal">
+                  {storageUser?.canal || `Canal ${canal?.citem}`}
+                </span>
+              )}
             </div>
             {/* Desde Sis2000 la sesión la maneja el menú de Sis2000: sin cerrar sesión aquí. */}
             {!isSsoSession() && (
