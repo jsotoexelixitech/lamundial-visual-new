@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import {
   getCurrentUser,
+  isSsoSession,
   getToken,
   ssoDelegate,
   registerAudit,
@@ -59,7 +60,7 @@ export const DashboardPage: React.FC = () => {
   const sheetCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!userId) navigate('/login');
+    if (!userId) navigate(isSsoSession() ? '/sso' : '/login');
   }, [userId, navigate]);
 
   const lineCounts = useMemo(() => {

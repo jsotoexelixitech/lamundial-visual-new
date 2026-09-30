@@ -13,7 +13,7 @@ import {
   Users,
 } from 'lucide-react';
 import { MundialBrand } from '@/components/brand/MundialBrand';
-import { logout } from '@/lib/nexus-auth';
+import { isSsoSession, logout } from '@/lib/nexus-auth';
 import { usePortalSession } from '@/context/PortalSessionContext';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
 
@@ -74,16 +74,27 @@ export function PortalShell() {
     return (
       <div className="portal-app min-h-screen bg-[#F7F7F7] flex flex-col">
         <header className="lm-market-bar">
-          <MundialBrand subtitle="Marketplace de emisión" isotipoClassName="h-9 w-9 sm:h-10 sm:w-10" />
+          <MundialBrand
+            subtitle="Marketplace de emisión"
+            isotipoClassName="h-9 w-9 sm:h-10 sm:w-10"
+          />
           <div className="lm-market-user">
             <div className="lm-market-id">
               <span className="lm-market-name">{displayName}</span>
               {canal && <span className="lm-market-canal">Canal {canal.citem}</span>}
             </div>
-            <button type="button" onClick={handleLogout} className="lm-market-logout" aria-label="Cerrar sesión">
-              <LogOut size={17} />
-              <span className="lm-market-logout-text">Cerrar sesión</span>
-            </button>
+            {/* Desde Sis2000 la sesión la maneja el menú de Sis2000: sin cerrar sesión aquí. */}
+            {!isSsoSession() && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="lm-market-logout"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut size={17} />
+                <span className="lm-market-logout-text">Cerrar sesión</span>
+              </button>
+            )}
           </div>
         </header>
         <main className="flex-1 min-w-0 overflow-x-clip">
@@ -115,7 +126,9 @@ export function PortalShell() {
                 {userInitials(displayName)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-[#091133] leading-snug truncate">{displayName}</p>
+                <p className="text-sm font-bold text-[#091133] leading-snug truncate">
+                  {displayName}
+                </p>
                 <p className="text-[11px] text-[#777777] truncate mt-0.5">{displayEmail}</p>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#E84F51] mt-2">
                   {displayRole}
@@ -132,7 +145,8 @@ export function PortalShell() {
                   <Radio size={14} className="text-[#2E6DBF] shrink-0 mt-0.5" />
                   <div className="min-w-0 leading-snug">
                     <p>
-                      Productor <span className="font-semibold text-[#091133]">{canal.cproductor}</span>
+                      Productor{' '}
+                      <span className="font-semibold text-[#091133]">{canal.cproductor}</span>
                     </p>
                     <p className="text-[#777777]">
                       Canal {canal.centidad} · {canal.citem}

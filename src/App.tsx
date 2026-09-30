@@ -2,17 +2,19 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { LoginPasarelaPage } from '@/pages/LoginPasarelaPage';
+import { SsoEntryPage } from '@/pages/SsoEntryPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AuditPage } from '@/pages/AuditPage';
 import { UsersAdminPage } from '@/pages/UsersAdminPage';
 import { PortalShell } from '@/layouts/PortalShell';
 import { PortalSessionProvider } from '@/context/PortalSessionContext';
-import { getCurrentUser } from '@/lib/nexus-auth';
+import { getCurrentUser, isSsoSession } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = getCurrentUser();
-  if (!user) return <Navigate to="/login" replace />;
+  // Quien entró desde Sis2000 no ve el login: vuelve a la entrada SSO.
+  if (!user) return <Navigate to={isSsoSession() ? '/sso' : '/login'} replace />;
   return <>{children}</>;
 }
 
@@ -22,6 +24,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login-pasarela" element={<LoginPasarelaPage />} />
+        <Route path="/sso" element={<SsoEntryPage />} />
         <Route
           element={
             <RequireAuth>

@@ -17,6 +17,8 @@ export interface LoginResponse {
     email: string;
     empresa?: string;
     role?: string;
+    /** Entró desde el menú de Sis2000 (sin login en el portal). */
+    sso?: boolean;
   };
 }
 
@@ -28,6 +30,9 @@ export interface SsoDelegatePayload {
   ccanalalt_in?: string;
   cscanalalt_in?: number | string;
   cgestor_in?: string;
+  /** Gestor productor-gestor (ej. "348-342"), igual que el marketplace SysIP. */
+  cgestor?: string;
+  csubitem?: string;
   product?: 'rcv' | 'funerario' | 'patrimoniales';
   centidad?: string;
   citem?: string;
@@ -60,6 +65,7 @@ export interface PortalProductDto {
   xlogo?: string;
   cproductor?: string;
   cusuario?: string;
+  cgestor?: string;
   centidad?: string;
   citem?: string;
   ccanalaltIn?: string;
@@ -88,15 +94,41 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const { data } = await api.post<LoginResponse>('/api/auth/login', payload);
   sessionStorage.setItem('portal_token', data.token);
   sessionStorage.setItem('portal_user', JSON.stringify(data.user));
+  sessionStorage.removeItem('portal_sso');
   return data;
 }
 
 /** Login con usuario/clave del marketplace La Mundial (Sis2000). Misma sesión que login(). */
 export async function loginSis2000(xlogin: string, xcontrasena: string): Promise<LoginResponse> {
-  const { data } = await api.post<LoginResponse>('/api/portal/login-sis2000', { xlogin, xcontrasena });
+  const { data } = await api.post<LoginResponse>('/api/portal/login-sis2000', {
+    xlogin,
+    xcontrasena,
+  });
   sessionStorage.setItem('portal_token', data.token);
   sessionStorage.setItem('portal_user', JSON.stringify(data.user));
+  sessionStorage.removeItem('portal_sso');
   return data;
+}
+
+const SSO_FLAG = 'portal_sso';
+
+/**
+ * Entrada desde el menú de Sis2000: canjea el pase (?nexus_token=) por la sesión del portal.
+ * La sesión queda marcada como SSO: sin login ni cierre de sesión en el portal.
+ */
+export async function startSsoSession(nexusToken: string): Promise<LoginResponse> {
+  const { data } = await api.post<LoginResponse>('/api/portal/sso-session', {
+    nexus_token: nexusToken,
+  });
+  sessionStorage.setItem('portal_token', data.token);
+  sessionStorage.setItem('portal_user', JSON.stringify(data.user));
+  sessionStorage.setItem(SSO_FLAG, '1');
+  return data;
+}
+
+/** La sesión viene del menú de Sis2000 (se mantiene aunque la sesión venza). */
+export function isSsoSession(): boolean {
+  return sessionStorage.getItem(SSO_FLAG) === '1';
 }
 
 /** Cierra sesión — limpia sessionStorage. */
@@ -109,7 +141,11 @@ export function logout(): void {
 export function getCurrentUser(): LoginResponse['user'] | null {
   const raw = sessionStorage.getItem('portal_user');
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 /** Devuelve el token actual. */
