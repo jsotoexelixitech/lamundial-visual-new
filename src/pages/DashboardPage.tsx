@@ -1,18 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import {
-  Car,
-  Building2,
-  Heart,
-  Package,
-  ArrowRight,
-  Loader2,
-  ExternalLink,
-  AlertCircle,
-  ShieldCheck,
-  Inbox,
-} from 'lucide-react';
+import { AlertCircle, ExternalLink, Inbox, Layers, Radio, Search, SearchX, X } from 'lucide-react';
 import {
   getCurrentUser,
   getToken,
@@ -22,35 +11,30 @@ import {
 } from '@/lib/nexus-auth';
 import { buildFallbackModuleUrl, buildSsoPayload } from '@/lib/sso-launch';
 import { usePortalSession } from '@/context/PortalSessionContext';
+import { EmissionProductCard } from '@/components/dashboard/EmissionProductCard';
+import {
+  PRODUCT_LINES,
+  PRODUCT_LINE_ORDER,
+  productLine,
+  type ProductLineId,
+} from '@/components/dashboard/product-lines';
 
-function cardVisual(product: PortalProductDto) {
-  if (product.product === 'rcv') {
-    return {
-      icon: <Car size={26} strokeWidth={1.75} />,
-      accent: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)',
-      tint: '#E84F51',
-    };
-  }
-  if (product.product === 'funerario') {
-    return {
-      icon: <Heart size={26} strokeWidth={1.75} />,
-      accent: 'linear-gradient(135deg, #2E6DBF 0%, #0F1A5A 100%)',
-      tint: '#2E6DBF',
-    };
-  }
-  if (product.product === 'patrimoniales') {
-    return {
-      icon: <Building2 size={26} strokeWidth={1.75} />,
-      accent: 'linear-gradient(135deg, #0F1A5A 0%, #091133 100%)',
-      tint: '#0F1A5A',
-    };
-  }
-  return {
-    icon: <Package size={26} strokeWidth={1.75} />,
-    accent: 'linear-gradient(135deg, #162A7F 0%, #0F1A5A 100%)',
-    tint: '#162A7F',
-  };
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Buenos días';
+  if (h < 19) return 'Buenas tardes';
+  return 'Buenas noches';
 }
+
+function canalLabel(centidad?: string, citem?: string): string | null {
+  if (!citem) return null;
+  if (centidad === 'C') return `Canal ${citem}`;
+  if (centidad === 'G') return `Gestor ${citem}`;
+  return `Productor ${citem}`;
+}
+
+const normalize = (s: string) =>
+  s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,14 +43,44 @@ export const DashboardPage: React.FC = () => {
   const { profile, products, productsLoading, productsError } = usePortalSession();
   const [launching, setLaunching] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState('');
+  const [query, setQuery] = useState('');
+  const [lineFilter, setLineFilter] = useState<ProductLineId | 'all'>('all');
 
   useEffect(() => {
     if (!userId) navigate('/login');
   }, [userId, navigate]);
 
+  const lineCounts = useMemo(() => {
+    const counts = new Map<ProductLineId, number>();
+    for (const p of products) {
+      const id = productLine(p);
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return counts;
+  }, [products]);
+
+  const visibleProducts = useMemo(() => {
+    const q = normalize(query.trim());
+    return products
+      .filter((p) => lineFilter === 'all' || productLine(p) === lineFilter)
+      .filter(
+        (p) =>
+          !q ||
+          normalize(`${p.label} ${p.description} ${p.cproducto}`).includes(q),
+      )
+      .sort(
+        (a, b) =>
+          PRODUCT_LINE_ORDER.indexOf(productLine(a)) - PRODUCT_LINE_ORDER.indexOf(productLine(b)) ||
+          a.label.localeCompare(b.label, 'es'),
+      );
+  }, [products, query, lineFilter]);
+
   if (!userId || !user) return null;
 
   const firstName = (profile?.user.nombre ?? user.nombre).split(' ')[0];
+  const canal = profile?.canal;
+  const canalText = canalLabel(canal?.centidad, canal?.citem);
+  const onlineCount = products.filter((p) => p.launchMode !== 'sysip').length;
 
   const handleLaunch = async (product: PortalProductDto) => {
     setLaunching(product.key);
@@ -74,6 +88,17 @@ export const DashboardPage: React.FC = () => {
     try {
       const token = getToken();
       if (!token) throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
+
+      if (product.launchMode === 'sysip') {
+        if (!product.marketplaceUrl) throw new Error('Este producto no tiene enlace de emisión.');
+        window.open(product.marketplaceUrl, '_blank', 'noopener,noreferrer');
+        await registerAudit({
+          accion: `open_marketplace_${product.cproducto}`,
+          producto: product.cproducto,
+          detalle: { cproducto: product.cproducto, xform: product.xform, launchMode: 'sysip' },
+        }).catch(() => undefined);
+        return;
+      }
 
       const payload = buildSsoPayload(product);
       let url: string;
@@ -120,169 +145,191 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
+  const filtersActive = query.trim() !== '' || lineFilter !== 'all';
+
   return (
     <div className="portal-page">
-      <div className="portal-page-header">
-        <div>
-          <p className="portal-page-eyebrow">Suscripción digital</p>
-          <h1 className="portal-page-title">Hola, {firstName}</h1>
-          <p className="portal-page-subtitle">
-            Elige el ramo que deseas emitir. Solo verás los productos habilitados para tu perfil y
-            tu canal comercial.
-          </p>
-        </div>
-      </div>
+      <section className="dash-hero">
+        <div className="dash-hero-inner">
+          <div className="min-w-0">
+            <p className="portal-page-eyebrow">{greeting()}</p>
+            <h1 className="portal-page-title">Hola, {firstName}</h1>
+            <p className="portal-page-subtitle">
+              Estos son los productos habilitados para tu canal. Elige uno para iniciar la emisión.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {canalText && (
+                <span className="dash-hero-chip">
+                  <Radio size={13} />
+                  {canalText}
+                </span>
+              )}
+              {profile?.empresa.nombre && (
+                <span className="dash-hero-chip dash-hero-chip--muted">{profile.empresa.nombre}</span>
+              )}
+            </div>
+          </div>
 
-      <div className="portal-page-body">
+          <dl className="dash-stats">
+            <div className="dash-stat">
+              <dt>Productos</dt>
+              <dd>{productsLoading ? '—' : products.length}</dd>
+            </div>
+            <div className="dash-stat">
+              <dt>Líneas</dt>
+              <dd>{productsLoading ? '—' : lineCounts.size}</dd>
+            </div>
+            <div className="dash-stat">
+              <dt>En línea</dt>
+              <dd>{productsLoading ? '—' : onlineCount}</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <div className="portal-page-body dash-body">
         {launchError && (
-          <div className="mb-6 flex gap-3 items-start rounded-xl border border-red-200 bg-red-50 px-4 py-3.5">
+          <div
+            role="alert"
+            className="mb-5 flex gap-3 items-start rounded-xl border border-red-200 bg-red-50 px-4 py-3.5"
+          >
             <AlertCircle size={18} className="text-[#E84F51] shrink-0 mt-0.5" />
-            <div className="text-sm text-[#991B1B]">
-              <p className="font-semibold">No se pudo abrir el flujo</p>
+            <div className="text-sm text-[#991B1B] min-w-0 flex-1">
+              <p className="font-semibold">No se pudo abrir la emisión</p>
               <p className="mt-0.5 font-medium text-[#B45356]">{launchError}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setLaunchError('')}
+              className="text-[#B45356] hover:text-[#991B1B]"
+              aria-label="Cerrar aviso"
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
 
         {productsError && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {productsError}
           </div>
         )}
 
-        <div className="flex items-end justify-between gap-4 mb-5">
-          <h2 className="font-display text-lg font-bold text-[#091133]">Productos disponibles</h2>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ACACAC]">
-            {productsLoading ? '…' : `${products.length} producto${products.length === 1 ? '' : 's'}`}
-          </span>
+        <div className="dash-toolbar">
+          <label className="dash-search">
+            <Search size={17} className="text-[#9A9A9A] shrink-0" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar producto o código"
+              aria-label="Buscar producto"
+              disabled={productsLoading}
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery('')} aria-label="Limpiar búsqueda">
+                <X size={15} />
+              </button>
+            )}
+          </label>
+
+          <div className="dash-chips" role="tablist" aria-label="Filtrar por línea">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={lineFilter === 'all'}
+              className={`dash-chip ${lineFilter === 'all' ? 'dash-chip--active' : ''}`}
+              onClick={() => setLineFilter('all')}
+            >
+              <Layers size={14} />
+              Todos
+              <span className="dash-chip-count">{products.length}</span>
+            </button>
+            {PRODUCT_LINE_ORDER.filter((id) => lineCounts.has(id)).map((id) => {
+              const line = PRODUCT_LINES[id];
+              const active = lineFilter === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={`dash-chip ${active ? 'dash-chip--active' : ''}`}
+                  style={active ? { background: line.tint, borderColor: line.tint } : undefined}
+                  onClick={() => setLineFilter(active ? 'all' : id)}
+                >
+                  <span style={{ color: active ? '#fff' : line.tint }} className="inline-flex">
+                    {line.icon(14)}
+                  </span>
+                  {line.label}
+                  <span className="dash-chip-count">{lineCounts.get(id)}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {productsLoading && (
-          <div className="flex justify-center py-20">
-            <Loader2 size={36} className="animate-spin text-[#0F1A5A]" />
+          <div className="dash-grid" aria-busy="true" aria-label="Cargando productos">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="dash-skeleton rounded-2xl" />
+            ))}
           </div>
         )}
 
         {!productsLoading && products.length === 0 && !productsError && (
-          <div className="portal-panel rounded-2xl p-12 text-center">
+          <div className="portal-panel rounded-2xl px-6 py-14 text-center">
             <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
             <p className="font-semibold text-[#091133]">Sin productos asignados</p>
             <p className="text-sm text-[#777777] mt-2 max-w-md mx-auto">
-              No hay productos asignados a tu canal o tu perfil aún no tiene permisos. Contacta al
-              administrador de usuarios de tu empresa.
+              Tu canal aún no tiene productos habilitados para emitir. Contacta a Administración de
+              Canales La Mundial.
             </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
-          {!productsLoading &&
-            products.map((product) => {
-              const style = cardVisual(product);
-              const busy = launching === product.key;
+        {!productsLoading && products.length > 0 && visibleProducts.length === 0 && (
+          <div className="portal-panel rounded-2xl px-6 py-12 text-center">
+            <SearchX size={36} className="mx-auto text-[#ACACAC] mb-3" />
+            <p className="font-semibold text-[#091133]">Ningún producto coincide</p>
+            <button
+              type="button"
+              className="mt-3 text-sm font-semibold text-[#2E6DBF] hover:underline"
+              onClick={() => {
+                setQuery('');
+                setLineFilter('all');
+              }}
+            >
+              Ver todos los productos
+            </button>
+          </div>
+        )}
 
-              return (
-                <article
+        {!productsLoading && visibleProducts.length > 0 && (
+          <>
+            {filtersActive && (
+              <p className="mb-3 text-xs font-semibold text-[#777777]">
+                {visibleProducts.length} de {products.length} productos
+              </p>
+            )}
+            <div className="dash-grid">
+              {visibleProducts.map((product, i) => (
+                <EmissionProductCard
                   key={product.key}
-                  className="portal-panel group relative rounded-2xl overflow-hidden flex flex-col hover:shadow-[0_12px_32px_-12px_rgba(9,17,51,0.18)] hover:-translate-y-0.5 transition-all duration-200"
-                >
-                  <div className="h-1.5 w-full" style={{ background: style.accent }} />
+                  product={product}
+                  index={i}
+                  busy={launching === product.key}
+                  disabled={launching !== null}
+                  onLaunch={handleLaunch}
+                />
+              ))}
+            </div>
+          </>
+        )}
 
-                  <div className="p-5 sm:p-6 flex flex-col flex-1">
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div
-                        className="h-12 w-12 rounded-xl text-white grid place-items-center shadow-sm"
-                        style={{ background: style.accent }}
-                      >
-                        {style.icon}
-                      </div>
-                      <span
-                        className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] bg-[#F0F2F8]"
-                        style={{ color: style.tint }}
-                      >
-                        {product.cproducto} · ramo {product.cramo}
-                      </span>
-                    </div>
-
-                    <h3 className="font-display text-lg font-bold text-[#091133] mb-1.5">
-                      {product.label}
-                    </h3>
-                    <p className="text-sm text-[#777777] leading-relaxed flex-1 line-clamp-3">
-                      {product.description}
-                    </p>
-
-                    {(product.mmontoInicial || product.xfraccionamiento) && (
-                      <div className="mt-3 space-y-1">
-                        {product.mmontoInicial && (
-                          <p className="text-sm font-semibold text-[#091133]">
-                            Desde {product.mmontoInicial}
-                          </p>
-                        )}
-                        {product.xfraccionamiento && (
-                          <p className="text-xs text-[#777777]">{product.xfraccionamiento}</p>
-                        )}
-                      </div>
-                    )}
-
-                    {product.xurlPresentacion && (
-                      <a
-                        href={product.xurlPresentacion.trim()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2E6DBF] hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Ver presentación
-                        <ExternalLink size={12} />
-                      </a>
-                    )}
-
-                    {product.marketplaceQr && (
-                      <img
-                        src={product.marketplaceQr}
-                        alt=""
-                        className="mt-3 h-20 w-20 rounded-lg border border-[#eceef4] object-contain bg-white"
-                      />
-                    )}
-
-                    <div className="mt-4 pt-3 border-t border-[#eceef4] flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ACACAC]">
-                      <ShieldCheck size={13} style={{ color: style.tint }} />
-                      {product.moduleLabel}
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={busy || launching !== null}
-                      onClick={() => handleLaunch(product)}
-                      className="mt-4 inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105 active:scale-[0.99] disabled:opacity-50"
-                      style={{ background: style.accent }}
-                    >
-                      {busy ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Generando acceso…
-                        </>
-                      ) : (
-                        <>
-                          Abrir flujo
-                          <ArrowRight size={17} className="group-hover:translate-x-0.5 transition-transform" />
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  {busy && (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] pointer-events-none" />
-                  )}
-                </article>
-              );
-            })}
-        </div>
-
-        <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e4e6ee] pt-5 text-xs text-[#ACACAC]">
-          <span className="flex items-center gap-1.5">
-            <ExternalLink size={12} />
-            Cada emisión se abre en una ventana nueva para continuar el proceso
-          </span>
+        <footer className="mt-8 flex items-center gap-1.5 border-t border-[#e4e6ee] pt-5 text-xs text-[#9A9A9A]">
+          <ExternalLink size={12} className="shrink-0" />
+          Cada emisión se abre en una pestaña nueva para que no pierdas tu lugar en el portal.
         </footer>
       </div>
     </div>

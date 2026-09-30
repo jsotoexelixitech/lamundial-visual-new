@@ -69,6 +69,8 @@ export interface PortalProductDto {
   xurlPresentacion?: string;
   marketplaceUrl?: string;
   marketplaceQr?: string;
+  /** sso = módulo Exélixi · sysip = formulario del marketplace La Mundial (marketplaceUrl). */
+  launchMode?: 'sso' | 'sysip';
 }
 
 export interface PortalCanalDto {
@@ -84,6 +86,14 @@ export interface PortalCanalDto {
 /** Login con credenciales Nexus. Guarda token en sessionStorage. */
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
   const { data } = await api.post<LoginResponse>('/api/auth/login', payload);
+  sessionStorage.setItem('portal_token', data.token);
+  sessionStorage.setItem('portal_user', JSON.stringify(data.user));
+  return data;
+}
+
+/** Login con usuario/clave del marketplace La Mundial (Sis2000). Misma sesión que login(). */
+export async function loginSis2000(xlogin: string, xcontrasena: string): Promise<LoginResponse> {
+  const { data } = await api.post<LoginResponse>('/api/portal/login-sis2000', { xlogin, xcontrasena });
   sessionStorage.setItem('portal_token', data.token);
   sessionStorage.setItem('portal_user', JSON.stringify(data.user));
   return data;

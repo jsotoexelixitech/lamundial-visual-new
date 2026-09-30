@@ -2445,3 +2445,317 @@ body.portal-login-apple-mundial {
 .badge-success { background: #ECFDF5; color: #065F46; }
 .badge-error   { background: #FEF2F2; color: #991B1B; }
 .badge-pending { background: #FFFBEB; color: #92400E; }
+
+/* ── Dashboard de emisión (canal) ───────────────────────────────────────── */
+.dash-hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 88% -20%, rgba(232, 79, 81, 0.32), transparent 42%),
+    radial-gradient(circle at 12% 120%, rgba(46, 109, 191, 0.35), transparent 45%),
+    linear-gradient(120deg, #091133 0%, #0f1a5a 58%, #162a7f 100%);
+}
+
+.dash-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0f1a5a, #2e6dbf 55%, #e84f51);
+}
+
+.dash-hero-inner {
+  position: relative;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .dash-hero-inner {
+    padding: 2.25rem 2rem 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dash-hero-inner {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+}
+
+.dash-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+}
+
+.dash-hero-chip--muted {
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.dash-stat {
+  min-width: 0;
+  border-radius: 0.9rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+@media (min-width: 1024px) {
+  .dash-stat {
+    min-width: 7.25rem;
+  }
+}
+
+.dash-stat dt {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dash-stat dd {
+  margin-top: 0.15rem;
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-body {
+  padding-top: 1.25rem;
+}
+
+.dash-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 900px) {
+  .dash-toolbar {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.dash-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  border-radius: 0.8rem;
+  border: 1px solid #e0e3ec;
+  background: #fff;
+  padding: 0 0.85rem;
+  height: 2.75rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+@media (min-width: 900px) {
+  .dash-search {
+    width: 18rem;
+    flex-shrink: 0;
+  }
+}
+
+.dash-search:focus-within {
+  border-color: #2e6dbf;
+  box-shadow: 0 0 0 3px rgba(46, 109, 191, 0.15);
+}
+
+.dash-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 0.875rem;
+  color: #091133;
+}
+
+.dash-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.dash-search button {
+  color: #9a9a9a;
+}
+
+.dash-chips {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  min-width: 0;
+}
+
+.dash-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.dash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  border: 1px solid #e0e3ec;
+  background: #fff;
+  padding: 0.45rem 0.85rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f1a5a;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.dash-chip:hover {
+  border-color: #c5cad9;
+}
+
+.dash-chip--active {
+  background: #0f1a5a;
+  border-color: #0f1a5a;
+  color: #fff;
+}
+
+.dash-chip-count {
+  border-radius: 9999px;
+  padding: 0 0.4rem;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(15, 26, 90, 0.08);
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-chip--active .dash-chip-count {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .dash-grid {
+    gap: 1.25rem;
+  }
+}
+
+.dash-card {
+  border: 1px solid #e4e6ee;
+  box-shadow: 0 2px 8px rgba(9, 17, 51, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  animation: dash-card-in 0.4s ease both;
+}
+
+.dash-card:hover {
+  transform: translateY(-3px);
+  border-color: #d5d9e6;
+  box-shadow: 0 16px 36px -14px rgba(9, 17, 51, 0.22);
+}
+
+.dash-card-band {
+  height: 4px;
+}
+
+.dash-card-icon {
+  box-shadow: 0 8px 18px -8px rgba(9, 17, 51, 0.45);
+  transition: transform 0.2s ease;
+}
+
+.dash-card:hover .dash-card-icon {
+  transform: scale(1.05) rotate(-3deg);
+}
+
+.dash-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 0.6rem;
+  color: #6b6b6b;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dash-icon-btn:hover {
+  background: #f0f2f8;
+  color: #0f1a5a;
+}
+
+.dash-cta {
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
+}
+
+.dash-cta:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 10px 22px -12px rgba(9, 17, 51, 0.55);
+}
+
+.dash-cta:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.dash-skeleton {
+  height: 17rem;
+  border: 1px solid #eceef4;
+  background: linear-gradient(100deg, #ffffff 30%, #f3f4f8 50%, #ffffff 70%);
+  background-size: 200% 100%;
+  animation: dash-shimmer 1.4s linear infinite;
+}
+
+@keyframes dash-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dash-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-card,
+  .dash-skeleton {
+    animation: none;
+  }
+  .dash-card:hover,
+  .dash-card:hover .dash-card-icon {
+    transform: none;
+  }
+}

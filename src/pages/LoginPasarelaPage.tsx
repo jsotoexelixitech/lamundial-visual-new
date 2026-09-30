@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Building, KeyRound, UserCheck } from 'lucide-react';
-import { login, getCurrentUser } from '@/lib/nexus-auth';
+import { loginSis2000, getCurrentUser } from '@/lib/nexus-auth';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
@@ -12,7 +12,7 @@ const MIN_LOADING_MS = 2200;
 const FLOAT_ICONS = [
   { Icon: Building, className: 'login-float-card login-float-1', label: 'Gestores' },
   { Icon: KeyRound, className: 'login-float-card login-float-2', label: 'Canal Alterno' },
-  { Icon: UserCheck, className: 'login-float-card login-float-3', label: 'Sis2000' },
+  { Icon: UserCheck, className: 'login-float-card login-float-3', label: 'Marketplace' },
 ];
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -24,8 +24,7 @@ async function waitMin(totalMs: number, started: number) {
 
 export const LoginPasarelaPage: React.FC = () => {
   const navigate = useNavigate();
-  const [gestorEmail, setGestorEmail] = useState('');
-  const [canalCode, setCanalCode] = useState('');
+  const [xlogin, setXlogin] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,8 +48,8 @@ export const LoginPasarelaPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!gestorEmail.trim() || !password.trim()) {
-      setError('Completa el correo del gestor y la contraseña.');
+    if (!xlogin.trim() || !password) {
+      setError('Completa tu usuario y contraseña.');
       return;
     }
     const started = Date.now();
@@ -59,8 +58,7 @@ export const LoginPasarelaPage: React.FC = () => {
     setError('');
     try {
       await sleep(400);
-      // Autenticar gestor pasarela
-      await login({ email: gestorEmail.trim(), password });
+      await loginSis2000(xlogin.trim(), password);
       setLoginStep(1);
       await sleep(500);
       setLoginStep(2);
@@ -68,7 +66,7 @@ export const LoginPasarelaPage: React.FC = () => {
       navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg || 'Credenciales de pasarela incorrectas o gestor no activo.');
+      setError(msg || 'Usuario o contraseña incorrectos.');
       setLoading(false);
       setLoginStep(0);
     }
@@ -109,7 +107,7 @@ export const LoginPasarelaPage: React.FC = () => {
             Acceso Pasarela La Mundial
           </h1>
           <p className="text-fog-veil text-sm sm:text-base leading-relaxed max-w-md mx-auto lg:mx-0">
-            Portal de acceso para gestores comerciales, intermediarios y canales alternos validados en Sys2000 (`magestor`).
+            Ingresa con el mismo usuario y contraseña del marketplace La Mundial. Verás los productos habilitados para tu canal.
           </p>
 
           <div className="mt-12 flex justify-center lg:justify-start">
@@ -129,36 +127,22 @@ export const LoginPasarelaPage: React.FC = () => {
                   Gestor
                 </span>
               </div>
-              <p className="text-sm text-fog-veil mb-7">Credenciales de gestor registrado (`magestor` / Sys2000)</p>
+              <p className="text-sm text-fog-veil mb-7">Usuario y contraseña del marketplace La Mundial</p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="pasarela-email" className="login-label">
-                    Correo del Gestor (`magestor.xcorreo`)
+                  <label htmlFor="pasarela-usuario" className="login-label">
+                    Usuario
                   </label>
                   <input
-                    id="pasarela-email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="gestor@lamundialdeseguros.com"
-                    value={gestorEmail}
-                    onChange={(e) => setGestorEmail(e.target.value)}
-                    className="login-glass-input w-full"
-                    disabled={loading}
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="pasarela-canal" className="login-label flex justify-between">
-                    <span>Código de Canal Alterno / Gestor (Opcional)</span>
-                    <span className="text-[10px] text-fog-veil font-normal">`ccanalalt`</span>
-                  </label>
-                  <input
-                    id="pasarela-canal"
+                    id="pasarela-usuario"
                     type="text"
-                    placeholder="Ej: CANAL-01 o cgestor"
-                    value={canalCode}
-                    onChange={(e) => setCanalCode(e.target.value)}
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="Usuario o correo"
+                    value={xlogin}
+                    onChange={(e) => setXlogin(e.target.value)}
                     className="login-glass-input w-full"
                     disabled={loading}
                   />
@@ -166,7 +150,7 @@ export const LoginPasarelaPage: React.FC = () => {
 
                 <div>
                   <label htmlFor="pasarela-password" className="login-label">
-                    Contraseña / PIN de Pasarela
+                    Contraseña
                   </label>
                   <div className="relative">
                     <input
@@ -202,11 +186,11 @@ export const LoginPasarelaPage: React.FC = () => {
                   {loading ? (
                     <span className="inline-flex items-center gap-2">
                       <span className="login-btn-spinner" />
-                      Validando en pasarela…
+                      Validando…
                     </span>
                   ) : (
                     <>
-                      Entrar a Pasarela
+                      Ingresar
                       <ArrowRight size={18} />
                     </>
                   )}
@@ -217,16 +201,16 @@ export const LoginPasarelaPage: React.FC = () => {
             <div className="mt-6 border-t border-white/5 px-8 sm:px-10 py-4 flex items-center justify-between text-[11px] text-fog-veil">
               <span className="inline-flex items-center gap-2">
                 <Lock size={13} className="text-amber-400" />
-                Acceso gestores auditado
+                Acceso auditado
               </span>
               <Link to="/login" className="text-blueprint-blue hover:underline font-medium">
-                Ir a Login Corporativo →
+                Acceso administrador →
               </Link>
             </div>
           </div>
 
           <p className="mt-6 text-center text-xs text-fog-veil">
-            ¿Dudas sobre tu código de gestor? Consulta con Administración de Canales La Mundial.
+            ¿Problemas para ingresar? Consulta con Administración de Canales La Mundial.
           </p>
         </main>
       </div>
