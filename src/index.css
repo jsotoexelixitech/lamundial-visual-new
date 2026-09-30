@@ -2560,7 +2560,7 @@ body.portal-login-apple-mundial {
 @media (min-width: 900px) {
   .dash-toolbar {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
   }
 }
 
@@ -2618,6 +2618,22 @@ body.portal-login-apple-mundial {
 
 .dash-chips::-webkit-scrollbar {
   display: none;
+}
+
+/* Tablet/escritorio: los chips bajan de línea en vez de cortarse */
+@media (min-width: 640px) {
+  .dash-chips {
+    flex: 1;
+    flex-wrap: wrap;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+}
+
+@media (min-width: 900px) {
+  .dash-chips {
+    padding-top: 0.2rem;
+  }
 }
 
 .dash-chip {
