@@ -213,7 +213,7 @@ export function PortalShell() {
           </div>
         </header>
 
-        <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto">
+        <main className="flex-1 min-w-0 overflow-x-clip">
           <Outlet />
         </main>
       </div>

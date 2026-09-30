@@ -1,0 +1,67 @@
+{
+  "title": "Dashboard de emisión — La Mundial",
+  "question": "Tres estructuras para el catálogo del canal, todas con la marca La Mundial (Azul Pennsylvania, Rojo Imperial, Plata; Poppins y Libre Baskerville). Elige una, o pide otra tanda.",
+  "options": [
+    {
+      "id": "ficha",
+      "label": "Ficha de producto",
+      "kicker": "THE ROLL",
+      "lineage": "Mostrador de agencia: lista a la izquierda, ficha comercial a la derecha",
+      "thesis": "Lista rápida de productos y una ficha grande del seleccionado, lista para mostrar al cliente y emitir.",
+      "palette": ["#0F1A5A", "#E84F51", "#ACACAC", "#F7F7F7", "#FFFFFF"],
+      "materials": ["ficha impresa", "sello de la línea", "QR grande"],
+      "viewport": "Izquierda: buscador, filtros y lista compacta con precio. Derecha: ficha con nombre en Libre Baskerville, monto desde, fraccionamiento, QR y botón Emitir fijo abajo.",
+      "risk": "En móvil la ficha pasa a hoja deslizable; hay que cuidar que no se sienta como dos pasos.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "Saludo + canal", "x": 0, "y": 0, "w": 12, "h": 1},
+        {"label": "Buscar + líneas", "x": 0, "y": 1, "w": 5, "h": 1},
+        {"label": "Lista de productos con precio", "x": 0, "y": 2, "w": 5, "h": 8},
+        {"label": "Ficha: nombre, monto, fraccionamiento", "x": 5, "y": 1, "w": 7, "h": 5, "accent": true},
+        {"label": "QR + presentación", "x": 5, "y": 6, "w": 4, "h": 3},
+        {"label": "Emitir", "x": 9, "y": 6, "w": 3, "h": 3, "accent": true},
+        {"label": "Nota apertura", "x": 5, "y": 9, "w": 7, "h": 1}
+      ]}
+    },
+    {
+      "id": "vitrina",
+      "label": "Vitrina por líneas",
+      "lineage": "Catálogo comercial por secciones",
+      "thesis": "Cada línea (Autos, Salud, Viajes, Funerario, Patrimoniales) es un estante con un producto destacado y sus hermanos.",
+      "palette": ["#0F1A5A", "#162A7F", "#E84F51", "#ACACAC", "#FFFFFF"],
+      "materials": ["estantes", "banda de color por línea", "precio protagonista"],
+      "viewport": "Cabecera con canal e índice de líneas ancladas; debajo el primer estante con tarjeta destacada grande y dos compactas.",
+      "risk": "Con pocos productos por línea los estantes quedan cortos; necesita ritmo para no parecer vacío.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "Saludo + canal + índice de líneas", "x": 0, "y": 0, "w": 12, "h": 2},
+        {"label": "Autos · destacado", "x": 0, "y": 2, "w": 6, "h": 3, "accent": true},
+        {"label": "Autos · resto", "x": 6, "y": 2, "w": 6, "h": 3},
+        {"label": "Salud y personas · destacado", "x": 0, "y": 5, "w": 4, "h": 3, "accent": true},
+        {"label": "Salud · resto", "x": 4, "y": 5, "w": 8, "h": 3},
+        {"label": "Viajes / Funerario / Patrimoniales", "x": 0, "y": 8, "w": 12, "h": 2}
+      ]}
+    },
+    {
+      "id": "cartera",
+      "label": "Cartera de pólizas",
+      "lineage": "Carnets y tarjetas de póliza físicas",
+      "thesis": "Cada producto es una tarjeta de póliza con forma de carnet La Mundial: se toma, se voltea y se emite.",
+      "palette": ["#091133", "#0F1A5A", "#E84F51", "#ACACAC", "#F7F7F7"],
+      "materials": ["carnet plastificado", "franja de seguridad", "reverso con QR"],
+      "viewport": "Grilla de carnets en proporción de tarjeta; al pasar o tocar, el carnet gira y muestra el reverso con QR, fraccionamiento y Emitir.",
+      "risk": "El giro esconde datos detrás de una interacción; el precio y Emitir deben seguir visibles en el frente.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "Saludo + canal + indicadores", "x": 0, "y": 0, "w": 12, "h": 2},
+        {"label": "Buscar + líneas", "x": 0, "y": 2, "w": 12, "h": 1},
+        {"label": "Carnet", "x": 0, "y": 3, "w": 4, "h": 3, "accent": true},
+        {"label": "Carnet", "x": 4, "y": 3, "w": 4, "h": 3},
+        {"label": "Carnet (reverso: QR)", "x": 8, "y": 3, "w": 4, "h": 3, "accent": true},
+        {"label": "Carnet", "x": 0, "y": 6, "w": 4, "h": 3},
+        {"label": "Carnet", "x": 4, "y": 6, "w": 4, "h": 3},
+        {"label": "Carnet", "x": 8, "y": 6, "w": 4, "h": 3}
+      ]}
+    }
+  ],
+  "reroll": true,
+  "steer": true,
+  "buildPath": {"value": "code"}
+}

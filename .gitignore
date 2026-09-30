@@ -27,3 +27,8 @@ dist-ssr
 .env
 .env.production
 .env.local
+
+# Impeccable (capturas y estado local)
+.impeccable/review/
+.impeccable/questions/
+.impeccable/hook.cache.json

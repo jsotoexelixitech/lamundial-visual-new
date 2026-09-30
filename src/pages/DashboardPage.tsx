@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AlertCircle, ExternalLink, Inbox, Layers, Radio, Search, SearchX, X } from 'lucide-react';
+import { AlertCircle, ChevronRight, ExternalLink, Inbox, Search, SearchX, X } from 'lucide-react';
 import {
   getCurrentUser,
   getToken,
@@ -11,20 +11,15 @@ import {
 } from '@/lib/nexus-auth';
 import { buildFallbackModuleUrl, buildSsoPayload } from '@/lib/sso-launch';
 import { usePortalSession } from '@/context/PortalSessionContext';
-import { EmissionProductCard } from '@/components/dashboard/EmissionProductCard';
+import { ProductSheet } from '@/components/dashboard/ProductSheet';
 import {
   PRODUCT_LINES,
   PRODUCT_LINE_ORDER,
+  cleanCopy,
+  priceInfo,
   productLine,
   type ProductLineId,
 } from '@/components/dashboard/product-lines';
-
-function greeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Buenos días';
-  if (h < 19) return 'Buenas tardes';
-  return 'Buenas noches';
-}
 
 function canalLabel(centidad?: string, citem?: string): string | null {
   if (!citem) return null;
@@ -36,15 +31,34 @@ function canalLabel(centidad?: string, citem?: string): string | null {
 const normalize = (s: string) =>
   s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
+function useIsDesktop(): boolean {
+  const query = '(min-width: 1024px)';
+  const [matches, setMatches] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(query).matches : true,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = () => setMatches(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return matches;
+}
+
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const userId = user?.id;
   const { profile, products, productsLoading, productsError } = usePortalSession();
+  const isDesktop = useIsDesktop();
   const [launching, setLaunching] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState('');
   const [query, setQuery] = useState('');
   const [lineFilter, setLineFilter] = useState<ProductLineId | 'all'>('all');
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [presenting, setPresenting] = useState(false);
+  const presentCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!userId) navigate('/login');
@@ -59,21 +73,42 @@ export const DashboardPage: React.FC = () => {
     return counts;
   }, [products]);
 
-  const visibleProducts = useMemo(() => {
+  const groups = useMemo(() => {
     const q = normalize(query.trim());
-    return products
-      .filter((p) => lineFilter === 'all' || productLine(p) === lineFilter)
-      .filter(
-        (p) =>
-          !q ||
-          normalize(`${p.label} ${p.description} ${p.cproducto}`).includes(q),
-      )
-      .sort(
-        (a, b) =>
-          PRODUCT_LINE_ORDER.indexOf(productLine(a)) - PRODUCT_LINE_ORDER.indexOf(productLine(b)) ||
-          a.label.localeCompare(b.label, 'es'),
-      );
+    const visible = products.filter(
+      (p) =>
+        (lineFilter === 'all' || productLine(p) === lineFilter) &&
+        (!q || normalize(`${p.label} ${p.description} ${p.cproducto}`).includes(q)),
+    );
+    return PRODUCT_LINE_ORDER.map((id) => ({
+      line: PRODUCT_LINES[id],
+      items: visible
+        .filter((p) => productLine(p) === id)
+        .sort((a, b) => a.label.localeCompare(b.label, 'es')),
+    })).filter((g) => g.items.length > 0);
   }, [products, query, lineFilter]);
+
+  const visibleProducts = useMemo(() => groups.flatMap((g) => g.items), [groups]);
+  const selected =
+    visibleProducts.find((p) => p.key === selectedKey) ??
+    (isDesktop ? visibleProducts[0] : undefined);
+
+  const closePresent = useCallback(() => setPresenting(false), []);
+
+  useEffect(() => {
+    if (!presenting && !sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (presenting) setPresenting(false);
+      else setSheetOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [presenting, sheetOpen]);
+
+  useEffect(() => {
+    if (presenting) presentCloseRef.current?.focus();
+  }, [presenting]);
 
   if (!userId || !user) return null;
 
@@ -82,12 +117,17 @@ export const DashboardPage: React.FC = () => {
   const canalText = canalLabel(canal?.centidad, canal?.citem);
   const onlineCount = products.filter((p) => p.launchMode !== 'sysip').length;
 
+  const handleSelect = (product: PortalProductDto) => {
+    setSelectedKey(product.key);
+    if (!isDesktop) setSheetOpen(true);
+  };
+
   const handleLaunch = async (product: PortalProductDto) => {
     setLaunching(product.key);
     setLaunchError('');
     try {
       const token = getToken();
-      if (!token) throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
+      if (!token) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
 
       if (product.launchMode === 'sysip') {
         if (!product.marketplaceUrl) throw new Error('Este producto no tiene enlace de emisión.');
@@ -139,199 +179,235 @@ export const DashboardPage: React.FC = () => {
 
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      setLaunchError(err instanceof Error ? err.message : 'No se pudo abrir el módulo.');
+      setLaunchError(err instanceof Error ? err.message : 'No se pudo abrir la emisión.');
     } finally {
       setLaunching(null);
     }
   };
 
-  const filtersActive = query.trim() !== '' || lineFilter !== 'all';
+  const sheetProps = selected
+    ? {
+        product: selected,
+        busy: launching === selected.key,
+        disabled: launching !== null,
+        onLaunch: handleLaunch,
+      }
+    : null;
+
+  const summary = productsLoading
+    ? 'Cargando tu catálogo…'
+    : `${products.length} producto${products.length === 1 ? '' : 's'} habilitado${
+        products.length === 1 ? '' : 's'
+      }, ${onlineCount} con emisión en línea.`;
 
   return (
-    <div className="portal-page">
-      <section className="dash-hero">
-        <div className="dash-hero-inner">
-          <div className="min-w-0">
-            <p className="portal-page-eyebrow">{greeting()}</p>
-            <h1 className="portal-page-title">Hola, {firstName}</h1>
-            <p className="portal-page-subtitle">
-              Estos son los productos habilitados para tu canal. Elige uno para iniciar la emisión.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              {canalText && (
-                <span className="dash-hero-chip">
-                  <Radio size={13} />
-                  {canalText}
-                </span>
-              )}
-              {profile?.empresa.nombre && (
-                <span className="dash-hero-chip dash-hero-chip--muted">{profile.empresa.nombre}</span>
-              )}
-            </div>
-          </div>
-
-          <dl className="dash-stats">
-            <div className="dash-stat">
-              <dt>Productos</dt>
-              <dd>{productsLoading ? '—' : products.length}</dd>
-            </div>
-            <div className="dash-stat">
-              <dt>Líneas</dt>
-              <dd>{productsLoading ? '—' : lineCounts.size}</dd>
-            </div>
-            <div className="dash-stat">
-              <dt>En línea</dt>
-              <dd>{productsLoading ? '—' : onlineCount}</dd>
-            </div>
-          </dl>
+    <div className="portal-page lm-desk">
+      <header className="lm-desk-top">
+        <div className="min-w-0">
+          <h1 className="lm-desk-title">Hola, {firstName}</h1>
+          <p className="lm-desk-summary">
+            {canalText && <strong>{canalText}</strong>}
+            {canalText && profile?.empresa.nombre && <span aria-hidden> · </span>}
+            {profile?.empresa.nombre && <span>{profile.empresa.nombre}</span>}
+            {(canalText || profile?.empresa.nombre) && <span aria-hidden> — </span>}
+            <span>{summary}</span>
+          </p>
         </div>
-      </section>
-
-      <div className="portal-page-body dash-body">
-        {launchError && (
-          <div
-            role="alert"
-            className="mb-5 flex gap-3 items-start rounded-xl border border-red-200 bg-red-50 px-4 py-3.5"
-          >
-            <AlertCircle size={18} className="text-[#E84F51] shrink-0 mt-0.5" />
-            <div className="text-sm text-[#991B1B] min-w-0 flex-1">
-              <p className="font-semibold">No se pudo abrir la emisión</p>
-              <p className="mt-0.5 font-medium text-[#B45356]">{launchError}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setLaunchError('')}
-              className="text-[#B45356] hover:text-[#991B1B]"
-              aria-label="Cerrar aviso"
-            >
-              <X size={16} />
+        <label className="lm-search">
+          <Search size={17} aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar producto o código"
+            aria-label="Buscar producto"
+            disabled={productsLoading}
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery('')} aria-label="Limpiar búsqueda">
+              <X size={15} />
             </button>
-          </div>
-        )}
+          )}
+        </label>
+      </header>
 
-        {productsError && (
-          <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            {productsError}
-          </div>
-        )}
-
-        <div className="dash-toolbar">
-          <label className="dash-search">
-            <Search size={17} className="text-[#9A9A9A] shrink-0" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar producto o código"
-              aria-label="Buscar producto"
-              disabled={productsLoading}
-            />
-            {query && (
-              <button type="button" onClick={() => setQuery('')} aria-label="Limpiar búsqueda">
-                <X size={15} />
+      {(launchError || productsError) && (
+        <div className="lm-desk-alerts">
+          {launchError && (
+            <div role="alert" className="lm-alert lm-alert--error">
+              <AlertCircle size={18} aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">No se pudo abrir la emisión</p>
+                <p>{launchError}</p>
+              </div>
+              <button type="button" onClick={() => setLaunchError('')} aria-label="Cerrar aviso">
+                <X size={16} />
               </button>
-            )}
-          </label>
+            </div>
+          )}
+          {productsError && (
+            <div role="alert" className="lm-alert lm-alert--warn">
+              <AlertCircle size={18} aria-hidden />
+              <p className="min-w-0 flex-1">{productsError}</p>
+            </div>
+          )}
+        </div>
+      )}
 
-          <div className="dash-chips" role="tablist" aria-label="Filtrar por línea">
+      <div className="lm-desk-body">
+        <section className="lm-catalog" aria-label="Productos disponibles">
+          <div className="lm-lines" role="group" aria-label="Filtrar por línea">
             <button
               type="button"
-              role="tab"
-              aria-selected={lineFilter === 'all'}
-              className={`dash-chip ${lineFilter === 'all' ? 'dash-chip--active' : ''}`}
+              aria-pressed={lineFilter === 'all'}
+              className="lm-line"
               onClick={() => setLineFilter('all')}
             >
-              <Layers size={14} />
-              Todos
-              <span className="dash-chip-count">{products.length}</span>
+              Todos <span className="lm-line-count">{products.length}</span>
             </button>
             {PRODUCT_LINE_ORDER.filter((id) => lineCounts.has(id)).map((id) => {
               const line = PRODUCT_LINES[id];
-              const active = lineFilter === id;
               return (
                 <button
                   key={id}
                   type="button"
-                  role="tab"
-                  aria-selected={active}
-                  className={`dash-chip ${active ? 'dash-chip--active' : ''}`}
-                  style={active ? { background: line.tint, borderColor: line.tint } : undefined}
-                  onClick={() => setLineFilter(active ? 'all' : id)}
+                  aria-pressed={lineFilter === id}
+                  className="lm-line"
+                  onClick={() => setLineFilter(lineFilter === id ? 'all' : id)}
                 >
-                  <span style={{ color: active ? '#fff' : line.tint }} className="inline-flex">
-                    {line.icon(14)}
-                  </span>
+                  <span className="lm-dot" style={{ background: line.dot }} aria-hidden />
                   {line.label}
-                  <span className="dash-chip-count">{lineCounts.get(id)}</span>
+                  <span className="lm-line-count">{lineCounts.get(id)}</span>
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {productsLoading && (
-          <div className="dash-grid" aria-busy="true" aria-label="Cargando productos">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="dash-skeleton rounded-2xl" />
-            ))}
-          </div>
-        )}
-
-        {!productsLoading && products.length === 0 && !productsError && (
-          <div className="portal-panel rounded-2xl px-6 py-14 text-center">
-            <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
-            <p className="font-semibold text-[#091133]">Sin productos asignados</p>
-            <p className="text-sm text-[#777777] mt-2 max-w-md mx-auto">
-              Tu canal aún no tiene productos habilitados para emitir. Contacta a Administración de
-              Canales La Mundial.
-            </p>
-          </div>
-        )}
-
-        {!productsLoading && products.length > 0 && visibleProducts.length === 0 && (
-          <div className="portal-panel rounded-2xl px-6 py-12 text-center">
-            <SearchX size={36} className="mx-auto text-[#ACACAC] mb-3" />
-            <p className="font-semibold text-[#091133]">Ningún producto coincide</p>
-            <button
-              type="button"
-              className="mt-3 text-sm font-semibold text-[#2E6DBF] hover:underline"
-              onClick={() => {
-                setQuery('');
-                setLineFilter('all');
-              }}
-            >
-              Ver todos los productos
-            </button>
-          </div>
-        )}
-
-        {!productsLoading && visibleProducts.length > 0 && (
-          <>
-            {filtersActive && (
-              <p className="mb-3 text-xs font-semibold text-[#777777]">
-                {visibleProducts.length} de {products.length} productos
-              </p>
-            )}
-            <div className="dash-grid">
-              {visibleProducts.map((product, i) => (
-                <EmissionProductCard
-                  key={product.key}
-                  product={product}
-                  index={i}
-                  busy={launching === product.key}
-                  disabled={launching !== null}
-                  onLaunch={handleLaunch}
-                />
+          {productsLoading && (
+            <div className="lm-list" aria-busy="true" aria-label="Cargando productos">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <div key={i} className="lm-row-skeleton" />
               ))}
             </div>
-          </>
-        )}
+          )}
 
-        <footer className="mt-8 flex items-center gap-1.5 border-t border-[#e4e6ee] pt-5 text-xs text-[#9A9A9A]">
-          <ExternalLink size={12} className="shrink-0" />
-          Cada emisión se abre en una pestaña nueva para que no pierdas tu lugar en el portal.
-        </footer>
+          {!productsLoading && products.length === 0 && !productsError && (
+            <div className="lm-empty">
+              <Inbox size={34} aria-hidden />
+              <p className="lm-empty-title">Tu canal aún no tiene productos</p>
+              <p>Contacta a Administración de Canales La Mundial para habilitarlos.</p>
+            </div>
+          )}
+
+          {!productsLoading && products.length > 0 && visibleProducts.length === 0 && (
+            <div className="lm-empty">
+              <SearchX size={32} aria-hidden />
+              <p className="lm-empty-title">Ningún producto coincide</p>
+              <button
+                type="button"
+                className="lm-empty-reset"
+                onClick={() => {
+                  setQuery('');
+                  setLineFilter('all');
+                }}
+              >
+                Ver todos los productos
+              </button>
+            </div>
+          )}
+
+          {!productsLoading &&
+            groups.map(({ line, items }) => (
+              <div key={line.id} className="lm-group">
+                <h2 className="lm-group-title">
+                  <span className="lm-dot" style={{ background: line.dot }} aria-hidden />
+                  {line.label}
+                </h2>
+                <ul className="lm-list">
+                  {items.map((p) => {
+                    const price = priceInfo(p);
+                    const active = selected?.key === p.key;
+                    return (
+                      <li key={p.key}>
+                        <button
+                          type="button"
+                          className="lm-row"
+                          aria-current={active ? 'true' : undefined}
+                          onClick={() => handleSelect(p)}
+                        >
+                          <span className="lm-row-main">
+                            <span className="lm-row-name">{cleanCopy(p.label)}</span>
+                            <span className="lm-row-meta">
+                              N.º {p.cproducto}
+                              {p.launchMode === 'sysip' && (
+                                <>
+                                  <span aria-hidden> · </span>
+                                  <ExternalLink size={11} aria-hidden /> Marketplace
+                                </>
+                              )}
+                            </span>
+                          </span>
+                          <span className="lm-row-price">
+                            {price.label === 'Desde' ? price.value : 'Cotizar'}
+                          </span>
+                          <ChevronRight size={17} className="lm-row-chevron" aria-hidden />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+        </section>
+
+        <aside className="lm-sheet-col" aria-label="Ficha del producto">
+          {productsLoading ? (
+            <div className="ficha-skeleton" />
+          ) : (
+            sheetProps && (
+              <div key={sheetProps.product.key} className="lm-sheet-swap">
+                <ProductSheet {...sheetProps} onPresent={() => setPresenting(true)} />
+              </div>
+            )
+          )}
+        </aside>
       </div>
+
+      {!isDesktop && sheetOpen && sheetProps && (
+        <div className="lm-bottom-sheet" role="dialog" aria-modal="true" aria-label="Ficha del producto">
+          <button
+            type="button"
+            className="lm-bottom-sheet-backdrop"
+            aria-label="Cerrar ficha"
+            onClick={() => setSheetOpen(false)}
+          />
+          <div className="lm-bottom-sheet-panel">
+            <button
+              type="button"
+              className="lm-bottom-sheet-close"
+              onClick={() => setSheetOpen(false)}
+              aria-label="Cerrar ficha"
+            >
+              <X size={18} />
+            </button>
+            <ProductSheet {...sheetProps} onPresent={() => setPresenting(true)} />
+          </div>
+        </div>
+      )}
+
+      {presenting && sheetProps && (
+        <div className="lm-present" role="dialog" aria-modal="true" aria-label="Ficha para el cliente">
+          <button
+            ref={presentCloseRef}
+            type="button"
+            className="lm-present-close"
+            onClick={closePresent}
+          >
+            <X size={18} /> Cerrar
+          </button>
+          <ProductSheet {...sheetProps} variant="client" />
+        </div>
+      )}
     </div>
   );
 };

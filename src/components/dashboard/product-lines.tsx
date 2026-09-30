@@ -7,52 +7,40 @@ export type ProductLineId = 'autos' | 'personas' | 'viajes' | 'funerario' | 'pat
 export interface ProductLine {
   id: ProductLineId;
   label: string;
-  accent: string;
-  tint: string;
-  soft: string;
+  /** Color de la línea (paleta del manual: azules, rojo imperial, plata). */
+  dot: string;
   icon: (size: number) => ReactNode;
 }
 
-/** Líneas comerciales con la paleta del manual de marca (azules, rojo imperial, plata). */
 export const PRODUCT_LINES: Record<ProductLineId, ProductLine> = {
   autos: {
     id: 'autos',
     label: 'Autos',
-    accent: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)',
-    tint: '#C9383B',
-    soft: '#FDECEC',
+    dot: '#E84F51',
     icon: (s) => <Car size={s} strokeWidth={1.75} />,
   },
   personas: {
     id: 'personas',
     label: 'Salud y personas',
-    accent: 'linear-gradient(135deg, #2E6DBF 0%, #1B4E97 100%)',
-    tint: '#2E6DBF',
-    soft: '#EAF1FB',
+    dot: '#2E6DBF',
     icon: (s) => <HeartPulse size={s} strokeWidth={1.75} />,
   },
   viajes: {
     id: 'viajes',
     label: 'Viajes',
-    accent: 'linear-gradient(135deg, #162A7F 0%, #0F1A5A 100%)',
-    tint: '#162A7F',
-    soft: '#ECEEF8',
+    dot: '#7FA7E0',
     icon: (s) => <Plane size={s} strokeWidth={1.75} />,
   },
   funerario: {
     id: 'funerario',
     label: 'Funerario',
-    accent: 'linear-gradient(135deg, #0F1A5A 0%, #091133 100%)',
-    tint: '#0F1A5A',
-    soft: '#EDEFF5',
+    dot: '#0F1A5A',
     icon: (s) => <Flower2 size={s} strokeWidth={1.75} />,
   },
   patrimoniales: {
     id: 'patrimoniales',
     label: 'Patrimoniales',
-    accent: 'linear-gradient(135deg, #777777 0%, #4A4A4A 100%)',
-    tint: '#5B5B5B',
-    soft: '#F2F2F2',
+    dot: '#ACACAC',
     icon: (s) => <Building2 size={s} strokeWidth={1.75} />,
   },
 };
@@ -65,7 +53,7 @@ export const PRODUCT_LINE_ORDER: ProductLineId[] = [
   'patrimoniales',
 ];
 
-/** Clasifica por ramo Sis2000 y nombre del producto. */
+/** Clasifica por ramo y nombre del producto. */
 export function productLine(product: PortalProductDto): ProductLineId {
   const label = product.label.toLowerCase();
   const cramo = Number(product.cramo);
@@ -85,4 +73,22 @@ export function productIcon(product: PortalProductDto, size: number): ReactNode 
     return <Ship size={size} strokeWidth={1.75} />;
   }
   return PRODUCT_LINES[productLine(product)].icon(size);
+}
+
+/** Quita marcas técnicas del catálogo (ej. "(Nexus)", "(Iframe)") que no son para el cliente. */
+export function cleanCopy(text: string | undefined): string {
+  return String(text ?? '')
+    .replace(/\s*-\s*(nexus|iframe|sysip|sis2000|ex[eé]lixi)\b/gi, '')
+    .replace(/\(\s*(nexus|iframe|sysip|sis2000|ex[eé]lixi)\s*\)/gi, '')
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s+([.,;])/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+/** Monto "desde" legible; algunos productos traen texto ("Desde cotización") en vez de monto. */
+export function priceInfo(product: PortalProductDto): { label: string; value: string } {
+  const raw = String(product.mmontoInicial ?? '').trim();
+  if (!raw || /cotiz/i.test(raw)) return { label: 'Precio', value: 'Según cotización' };
+  return { label: 'Desde', value: raw.replace(/^desde\s*/i, '') };
 }
