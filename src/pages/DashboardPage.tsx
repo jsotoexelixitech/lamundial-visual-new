@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { AlertCircle, ChevronRight, ExternalLink, Inbox, Search, SearchX, X } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  ExternalLink,
+  Inbox,
+  Loader2,
+  Search,
+  SearchX,
+  X,
+} from 'lucide-react';
 import {
   getCurrentUser,
   getToken,
@@ -12,6 +21,8 @@ import {
 import { buildFallbackModuleUrl, buildSsoPayload } from '@/lib/sso-launch';
 import { usePortalSession } from '@/context/PortalSessionContext';
 import { ProductSheet } from '@/components/dashboard/ProductSheet';
+import { LineArt, ProductArt } from '@/components/dashboard/ProductArt';
+import { publicAsset } from '@/lib/public-asset';
 import {
   PRODUCT_LINES,
   PRODUCT_LINE_ORDER,
@@ -28,29 +39,13 @@ function canalLabel(centidad?: string, citem?: string): string | null {
   return `Productor ${citem}`;
 }
 
-const normalize = (s: string) =>
-  s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-function useIsDesktop(): boolean {
-  const query = '(min-width: 1024px)';
-  const [matches, setMatches] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(query).matches : true,
-  );
-  useEffect(() => {
-    const mq = window.matchMedia(query);
-    const onChange = () => setMatches(mq.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-  return matches;
-}
+const normalize = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const userId = user?.id;
   const { profile, products, productsLoading, productsError } = usePortalSession();
-  const isDesktop = useIsDesktop();
   const [launching, setLaunching] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState('');
   const [query, setQuery] = useState('');
@@ -59,6 +54,7 @@ export const DashboardPage: React.FC = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [presenting, setPresenting] = useState(false);
   const presentCloseRef = useRef<HTMLButtonElement>(null);
+  const sheetCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!userId) navigate('/login');
@@ -89,9 +85,7 @@ export const DashboardPage: React.FC = () => {
   }, [products, query, lineFilter]);
 
   const visibleProducts = useMemo(() => groups.flatMap((g) => g.items), [groups]);
-  const selected =
-    visibleProducts.find((p) => p.key === selectedKey) ??
-    (isDesktop ? visibleProducts[0] : undefined);
+  const selected = products.find((p) => p.key === selectedKey);
 
   const closePresent = useCallback(() => setPresenting(false), []);
 
@@ -110,6 +104,16 @@ export const DashboardPage: React.FC = () => {
     if (presenting) presentCloseRef.current?.focus();
   }, [presenting]);
 
+  useEffect(() => {
+    if (!sheetOpen) return;
+    sheetCloseRef.current?.focus();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [sheetOpen]);
+
   if (!userId || !user) return null;
 
   const firstName = (profile?.user.nombre ?? user.nombre).split(' ')[0];
@@ -117,9 +121,9 @@ export const DashboardPage: React.FC = () => {
   const canalText = canalLabel(canal?.centidad, canal?.citem);
   const onlineCount = products.filter((p) => p.launchMode !== 'sysip').length;
 
-  const handleSelect = (product: PortalProductDto) => {
+  const openSheet = (product: PortalProductDto) => {
     setSelectedKey(product.key);
-    if (!isDesktop) setSheetOpen(true);
+    setSheetOpen(true);
   };
 
   const handleLaunch = async (product: PortalProductDto) => {
@@ -135,7 +139,11 @@ export const DashboardPage: React.FC = () => {
         await registerAudit({
           accion: `open_marketplace_${product.cproducto}`,
           producto: product.cproducto,
-          detalle: { cproducto: product.cproducto, xform: product.xform, launchMode: 'sysip' },
+          detalle: {
+            cproducto: product.cproducto,
+            xform: product.xform,
+            launchMode: 'sysip',
+          },
         }).catch(() => undefined);
         return;
       }
@@ -174,7 +182,11 @@ export const DashboardPage: React.FC = () => {
       await registerAudit({
         accion: `launch_${product.cproducto}`,
         producto: product.cproducto,
-        detalle: { target: payload.target, product: payload.product, cproducto: product.cproducto },
+        detalle: {
+          target: payload.target,
+          product: payload.product,
+          cproducto: product.cproducto,
+        },
       });
 
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -255,136 +267,157 @@ export const DashboardPage: React.FC = () => {
       )}
 
       <div className="lm-desk-body">
-        <section className="lm-catalog" aria-label="Productos disponibles">
-          <div className="lm-lines" role="group" aria-label="Filtrar por línea">
-            <button
-              type="button"
-              aria-pressed={lineFilter === 'all'}
-              className="lm-line"
-              onClick={() => setLineFilter('all')}
-            >
-              Todos <span className="lm-line-count">{products.length}</span>
-            </button>
-            {PRODUCT_LINE_ORDER.filter((id) => lineCounts.has(id)).map((id) => {
-              const line = PRODUCT_LINES[id];
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  aria-pressed={lineFilter === id}
-                  className="lm-line"
-                  onClick={() => setLineFilter(lineFilter === id ? 'all' : id)}
-                >
-                  <span className="lm-dot" style={{ background: line.dot }} aria-hidden />
-                  {line.label}
-                  <span className="lm-line-count">{lineCounts.get(id)}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {productsLoading && (
-            <div className="lm-list" aria-busy="true" aria-label="Cargando productos">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <div key={i} className="lm-row-skeleton" />
-              ))}
-            </div>
-          )}
-
-          {!productsLoading && products.length === 0 && !productsError && (
-            <div className="lm-empty">
-              <Inbox size={34} aria-hidden />
-              <p className="lm-empty-title">Tu canal aún no tiene productos</p>
-              <p>Contacta a Administración de Canales La Mundial para habilitarlos.</p>
-            </div>
-          )}
-
-          {!productsLoading && products.length > 0 && visibleProducts.length === 0 && (
-            <div className="lm-empty">
-              <SearchX size={32} aria-hidden />
-              <p className="lm-empty-title">Ningún producto coincide</p>
-              <button
-                type="button"
-                className="lm-empty-reset"
-                onClick={() => {
-                  setQuery('');
-                  setLineFilter('all');
-                }}
-              >
-                Ver todos los productos
-              </button>
-            </div>
-          )}
-
-          {!productsLoading &&
-            groups.map(({ line, items }) => (
-              <div key={line.id} className="lm-group">
-                <h2 className="lm-group-title">
-                  <span className="lm-dot" style={{ background: line.dot }} aria-hidden />
-                  {line.label}
-                </h2>
-                <ul className="lm-list">
-                  {items.map((p) => {
-                    const price = priceInfo(p);
-                    const active = selected?.key === p.key;
-                    return (
-                      <li key={p.key}>
-                        <button
-                          type="button"
-                          className="lm-row"
-                          aria-current={active ? 'true' : undefined}
-                          onClick={() => handleSelect(p)}
-                        >
-                          <span className="lm-row-main">
-                            <span className="lm-row-name">{cleanCopy(p.label)}</span>
-                            <span className="lm-row-meta">
-                              N.º {p.cproducto}
-                              {p.launchMode === 'sysip' && (
-                                <>
-                                  <span aria-hidden> · </span>
-                                  <ExternalLink size={11} aria-hidden /> Marketplace
-                                </>
-                              )}
-                            </span>
-                          </span>
-                          <span className="lm-row-price">
-                            {price.label === 'Desde' ? price.value : 'Cotizar'}
-                          </span>
-                          <ChevronRight size={17} className="lm-row-chevron" aria-hidden />
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-        </section>
-
-        <aside className="lm-sheet-col" aria-label="Ficha del producto">
-          {productsLoading ? (
-            <div className="ficha-skeleton" />
-          ) : (
-            sheetProps && (
-              <div key={sheetProps.product.key} className="lm-sheet-swap">
-                <ProductSheet {...sheetProps} onPresent={() => setPresenting(true)} />
-              </div>
-            )
-          )}
-        </aside>
-      </div>
-
-      {!isDesktop && sheetOpen && sheetProps && (
-        <div className="lm-bottom-sheet" role="dialog" aria-modal="true" aria-label="Ficha del producto">
+        <nav className="lm-rail" aria-label="Líneas de producto">
           <button
             type="button"
-            className="lm-bottom-sheet-backdrop"
-            aria-label="Cerrar ficha"
-            onClick={() => setSheetOpen(false)}
-          />
-          <div className="lm-bottom-sheet-panel">
+            className="lm-rail-tab"
+            aria-pressed={lineFilter === 'all'}
+            onClick={() => setLineFilter('all')}
+          >
+            <span className="lm-rail-art lm-rail-art--all">
+              <img src={publicAsset('brand/mundial-isotipo.png')} alt="" aria-hidden />
+            </span>
+            <span className="lm-rail-text">
+              <span className="lm-rail-label">Todos</span>
+              <span className="lm-rail-count">{productsLoading ? '…' : products.length}</span>
+            </span>
+          </button>
+          {PRODUCT_LINE_ORDER.filter((id) => lineCounts.has(id)).map((id) => (
+            <button
+              key={id}
+              type="button"
+              className="lm-rail-tab"
+              aria-pressed={lineFilter === id}
+              onClick={() => setLineFilter(lineFilter === id ? 'all' : id)}
+            >
+              <span className="lm-rail-art">
+                <LineArt line={id} />
+              </span>
+              <span className="lm-rail-text">
+                <span className="lm-rail-label">{PRODUCT_LINES[id].label}</span>
+                <span className="lm-rail-count">{lineCounts.get(id)}</span>
+              </span>
+            </button>
+          ))}
+        </nav>
+
+        {productsLoading && (
+          <div className="lm-gallery" aria-busy="true" aria-label="Cargando productos">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="lm-card-skeleton" />
+            ))}
+          </div>
+        )}
+
+        {!productsLoading && products.length === 0 && !productsError && (
+          <div className="lm-empty">
+            <Inbox size={34} aria-hidden />
+            <p className="lm-empty-title">Tu canal aún no tiene productos</p>
+            <p>Contacta a Administración de Canales La Mundial para habilitarlos.</p>
+          </div>
+        )}
+
+        {!productsLoading && products.length > 0 && visibleProducts.length === 0 && (
+          <div className="lm-empty">
+            <SearchX size={32} aria-hidden />
+            <p className="lm-empty-title">Ningún producto coincide</p>
             <button
               type="button"
-              className="lm-bottom-sheet-close"
+              className="lm-empty-reset"
+              onClick={() => {
+                setQuery('');
+                setLineFilter('all');
+              }}
+            >
+              Ver todos los productos
+            </button>
+          </div>
+        )}
+
+        {!productsLoading && visibleProducts.length > 0 && (
+          <ul key={lineFilter} className="lm-gallery" aria-label="Productos disponibles">
+            {visibleProducts.map((p, i) => {
+              const price = priceInfo(p);
+              const title = cleanCopy(p.label);
+              const external = p.launchMode === 'sysip';
+              const line = PRODUCT_LINES[productLine(p)];
+              return (
+                <li
+                  key={p.key}
+                  className="lm-card"
+                  data-line={line.id}
+                  style={{ '--i': Math.min(i, 11) } as React.CSSProperties}
+                >
+                  <div className="lm-card-stage">
+                    <ProductArt product={p} />
+                    {external && (
+                      <span className="lm-card-badge">
+                        <ExternalLink size={12} aria-hidden /> Marketplace
+                      </span>
+                    )}
+                  </div>
+                  <div className="lm-card-body">
+                    <h3 className="lm-card-title">
+                      <button type="button" className="lm-card-open" onClick={() => openSheet(p)}>
+                        {title}
+                      </button>
+                    </h3>
+                    <p className="lm-card-meta">
+                      {line.label} · N.º {p.cproducto}
+                    </p>
+                    <div className="lm-card-foot">
+                      <span className="lm-card-price">
+                        <span className="lm-card-price-label">{price.label}</span>
+                        <span
+                          className="lm-card-price-value"
+                          data-kind={price.label === 'Desde' ? 'amount' : 'text'}
+                        >
+                          {price.value}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        className="lm-card-emit"
+                        disabled={launching !== null}
+                        onClick={() => handleLaunch(p)}
+                        aria-label={`Emitir ${title}`}
+                      >
+                        {launching === p.key ? (
+                          <Loader2 size={16} className="animate-spin" aria-hidden />
+                        ) : (
+                          <>
+                            Emitir
+                            {external ? (
+                              <ExternalLink size={15} aria-hidden />
+                            ) : (
+                              <ArrowRight size={16} aria-hidden />
+                            )}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {sheetOpen && sheetProps && (
+        <div className="lm-modal" role="dialog" aria-modal="true" aria-label="Ficha del producto">
+          <button
+            type="button"
+            className="lm-modal-backdrop"
+            aria-label="Cerrar ficha"
+            tabIndex={-1}
+            onClick={() => setSheetOpen(false)}
+          />
+          <div className="lm-modal-panel">
+            <button
+              ref={sheetCloseRef}
+              type="button"
+              className="lm-modal-close"
               onClick={() => setSheetOpen(false)}
               aria-label="Cerrar ficha"
             >
@@ -396,7 +429,12 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {presenting && sheetProps && (
-        <div className="lm-present" role="dialog" aria-modal="true" aria-label="Ficha para el cliente">
+        <div
+          className="lm-present"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ficha para el cliente"
+        >
           <button
             ref={presentCloseRef}
             type="button"

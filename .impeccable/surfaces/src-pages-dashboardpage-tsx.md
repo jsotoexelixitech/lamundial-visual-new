@@ -8,20 +8,21 @@ related_targets: []
 # Dashboard de emisión (canal)
 
 Scope: `/dashboard` del portal La Mundial. Mode: operate (con vitrina para mostrar al cliente).
-Audience: canales, gestores e intermediarios; emiten varias veces al día, a menudo en teléfono o mostrador.
-Task: encontrar el producto y abrir la emisión en segundos; poder mostrar la ficha al cliente (monto, fraccionamiento, QR, presentación).
-Constraints: marca La Mundial (Azul Pennsylvania, Rojo Imperial, Plata; Poppins + Libre Baskerville; logos oficiales). Nunca nombres internos. Mantener búsqueda, filtros por línea, launchMode sso/sysip, errores, carga, vacío.
+Audience: canales, gestores e intermediarios; emiten varias veces al día, a menudo en teléfono o mostrador. Los operadores ven solo este catálogo (sin menú lateral); el admin conserva el menú.
+Task: encontrar el producto y abrir la emisión en segundos; poder mostrar la ficha al cliente (monto, fraccionamiento, presentación). Sin QR.
+Constraints: marca La Mundial (Azul Pennsylvania, Rojo Imperial, Plata; Poppins + Libre Baskerville; logos oficiales). Nunca nombres internos. Mantener búsqueda, filtros por línea, launchMode sso/sysip, errores, carga, vacío, "Mostrar al cliente".
+Rechazado por el usuario: lista larga tipo tarifario con ficha fija (crecía hacia abajo, se veía plana).
 
 ## Direction contract
 
-THESIS: Mostrador de agencia: una lista de productos que se escanea como tarifario y una ficha comercial grande del producto elegido que se puede girar hacia el cliente. Rechaza la grilla de tarjetas iguales donde todo pesa lo mismo.
+THESIS: Vitrina ilustrada de La Mundial: cada línea comercial es una pestaña grande con su propia escena, y cada producto una tarjeta con ilustración propia, como un escaparate que se recorre por línea. Rechaza la lista de filas iguales y los iconos planos del marketplace.
 
-OWN-WORLD: Fondo Plata muy claro, lista en blanco con filas finas y precio alineado a la derecha en tabulares; ficha sobre Azul Pennsylvania profundo con número de producto grande en Libre Baskerville, sello de línea en Rojo Imperial, QR en recuadro blanco tipo cupón, CTA Emitir rojo. Líneas comerciales codificadas por un punto de color, no por degradados.
+OWN-WORLD: Fondo plata muy claro; escenarios de tarjeta en tintes de marca por línea (Pennsylvania profundo para Autos y Funerario, azules claros para Personas y Viajes, plata para Patrimoniales); ilustraciones geométricas planas en blanco, Pennsylvania y un solo acento Rojo Imperial; nombres en Poppins, precio en Libre Baskerville; botón Emitir rojo.
 
-STORY: El operador ve su canal y cuántos productos puede emitir, busca o filtra, toca un producto, la ficha muestra todo lo que el cliente necesita y un solo botón Emitir.
+STORY: El operador ve su canal, elige una línea en la fila ilustrada o busca, la galería se reordena, toca una tarjeta para ver la ficha o pulsa Emitir directo.
 
-FIRST VIEWPORT: Barra fina con saludo, canal y conteos. Debajo, dos columnas: izquierda 38% (buscador, chips de línea, lista agrupada por línea), derecha 62% ficha sticky con el primer producto seleccionado; Emitir abajo a la derecha de la ficha. En móvil: lista a pantalla completa y ficha como hoja inferior.
+FIRST VIEWPORT: Encabezado con saludo, canal y buscador. Debajo, fila de pestañas ilustradas (Todos + líneas con conteo). Luego galería en cuadrícula de 4 columnas en escritorio, 2 en tablet, 1-2 en móvil; cada tarjeta: escena 16:10, nombre, línea y N.º, precio y Emitir. La ficha abre en modal centrado (hoja inferior en móvil).
 
-FORM: Ficha de producto, posición 3 de 7 en la lista ordenada; seed a1b2c50e.
+FORM: Líneas ilustradas + galería, posición 4 de 7 en la lista ordenada; seed 6110e0a3.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

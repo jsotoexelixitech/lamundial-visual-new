@@ -1,14 +1,8 @@
 import React from 'react';
 import { ArrowRight, ExternalLink, Loader2, MonitorUp, Store } from 'lucide-react';
 import type { PortalProductDto } from '@/lib/nexus-auth';
-import { publicAsset } from '@/lib/public-asset';
-import {
-  PRODUCT_LINES,
-  cleanCopy,
-  priceInfo,
-  productIcon,
-  productLine,
-} from './product-lines';
+import { PRODUCT_LINES, cleanCopy, priceInfo, productLine } from './product-lines';
+import { ProductArt } from './ProductArt';
 
 interface Props {
   product: PortalProductDto;
@@ -37,19 +31,14 @@ export const ProductSheet: React.FC<Props> = ({
 
   return (
     <article className="ficha" data-variant={variant} aria-label={`Ficha de ${title}`}>
-      <img src={publicAsset('brand/mundial-isotipo.png')} alt="" aria-hidden className="ficha-mark" />
-
-      <div className="ficha-head">
-        <span className="ficha-seal">
-          <span className="ficha-seal-icon" style={{ background: line.dot }}>
-            {productIcon(product, 15)}
-          </span>
-          {line.label}
-        </span>
-        <span className="ficha-code">Producto N.º {product.cproducto}</span>
+      <div className="ficha-art">
+        <ProductArt product={product} />
       </div>
 
       <h2 className="ficha-title">{title}</h2>
+      <p className="ficha-meta">
+        {line.label} · Producto N.º {product.cproducto}
+      </p>
       {description && description !== title && <p className="ficha-desc">{description}</p>}
 
       <div className="ficha-price">

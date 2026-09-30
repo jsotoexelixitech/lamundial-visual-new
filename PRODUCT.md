@@ -26,7 +26,7 @@ El catálogo es exactamente el del marketplace de La Mundial para ese canal (mis
 
 ## Capabilities and Constraints
 
-- Tarjetas por producto con monto desde, fraccionamiento, presentación (enlace), QR para el cliente y modo de apertura (`sso` en línea / `sysip` marketplace).
+- Tarjetas ilustradas por producto con monto desde, fraccionamiento, presentación (enlace) y modo de apertura (`sso` en línea / `sysip` marketplace).
 - Búsqueda y filtro por línea comercial; estados de carga, vacío y error.
 - React 19 + Tailwind v4 + Vite; servido en `/portal-lm/`.
 

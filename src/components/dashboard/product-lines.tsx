@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-import { Building2, Car, Flower2, HeartPulse, Plane, Ship } from 'lucide-react';
 import type { PortalProductDto } from '@/lib/nexus-auth';
 
 export type ProductLineId = 'autos' | 'personas' | 'viajes' | 'funerario' | 'patrimoniales';
@@ -7,41 +5,28 @@ export type ProductLineId = 'autos' | 'personas' | 'viajes' | 'funerario' | 'pat
 export interface ProductLine {
   id: ProductLineId;
   label: string;
-  /** Color de la línea (paleta del manual: azules, rojo imperial, plata). */
-  dot: string;
-  icon: (size: number) => ReactNode;
 }
 
 export const PRODUCT_LINES: Record<ProductLineId, ProductLine> = {
   autos: {
     id: 'autos',
     label: 'Autos',
-    dot: '#E84F51',
-    icon: (s) => <Car size={s} strokeWidth={1.75} />,
   },
   personas: {
     id: 'personas',
     label: 'Salud y personas',
-    dot: '#2E6DBF',
-    icon: (s) => <HeartPulse size={s} strokeWidth={1.75} />,
   },
   viajes: {
     id: 'viajes',
     label: 'Viajes',
-    dot: '#7FA7E0',
-    icon: (s) => <Plane size={s} strokeWidth={1.75} />,
   },
   funerario: {
     id: 'funerario',
     label: 'Funerario',
-    dot: '#0F1A5A',
-    icon: (s) => <Flower2 size={s} strokeWidth={1.75} />,
   },
   patrimoniales: {
     id: 'patrimoniales',
     label: 'Patrimoniales',
-    dot: '#ACACAC',
-    icon: (s) => <Building2 size={s} strokeWidth={1.75} />,
   },
 };
 
@@ -66,13 +51,6 @@ export function productLine(product: PortalProductDto): ProductLineId {
     return 'personas';
   }
   return 'patrimoniales';
-}
-
-export function productIcon(product: PortalProductDto, size: number): ReactNode {
-  if (/embarc/i.test(product.label) || Number(product.cramo) === 20) {
-    return <Ship size={size} strokeWidth={1.75} />;
-  }
-  return PRODUCT_LINES[productLine(product)].icon(size);
 }
 
 /** Quita marcas técnicas del catálogo (ej. "(Nexus)", "(Iframe)") que no son para el cliente. */
