@@ -1,6 +1,6 @@
 import React from 'react';
 import type { PortalProductDto } from '@/lib/nexus-auth';
-import { productLine, type ProductLineId } from './product-lines';
+import { productLine, productSignals, type ProductLineId } from './product-lines';
 
 type ArtKind =
   | 'car'
@@ -68,17 +68,34 @@ const THEMES: Record<ProductLineId, Theme> = {
   },
 };
 
+/** Ícono del marketplace (xdescripcion_c) → escena equivalente de la vitrina. */
+const LOGO_KIND: [RegExp, ArtKind][] = [
+  [/4_1/, 'heartHand'],
+  [/3_1/, 'care'],
+  [/acc_|accident/, 'fall'],
+  [/salud|ambulance/, 'ambulance'],
+  [/family|familiar/, 'family'],
+  [/funer|coffin|bird/, 'dove'],
+  [/viaj|plane|avion/, 'plane'],
+  [/rcv|car\b|car\./, 'car'],
+  [/boat|embarc/, 'boat'],
+];
+
 function productArtKind(product: PortalProductDto): ArtKind {
-  const label = product.label.toLowerCase();
+  const { text, logo } = productSignals(product);
   const line = productLine(product);
+  // Viajero Local lleva el mismo ícono que Viajero en el marketplace; aquí se distingue.
+  if (line === 'viajes' && /local|nacional/.test(text)) return 'suitcase';
+  const fromLogo = LOGO_KIND.find(([re]) => re.test(logo));
+  if (fromLogo) return fromLogo[1];
   if (line === 'autos') return 'car';
   if (line === 'funerario') return 'dove';
-  if (line === 'viajes') return /local|nacional/.test(label) ? 'suitcase' : 'plane';
-  if (/embarc|nave|barco/.test(label) || Number(product.cramo) === 20) return 'boat';
-  if (/4 en 1|integral/.test(label)) return 'heartHand';
-  if (/familiar|hogar/.test(label)) return 'family';
-  if (/accident/.test(label)) return 'fall';
-  if (/combinad|personas|colectiv/.test(label)) return 'care';
+  if (line === 'viajes') return 'plane';
+  if (/embarc|nave|barco/.test(text)) return 'boat';
+  if (/4 en 1|integral/.test(text)) return 'heartHand';
+  if (/familiar|hogar/.test(text)) return 'family';
+  if (/accident/.test(text)) return 'fall';
+  if (/combinad|personas|colectiv/.test(text)) return 'care';
   if (line === 'personas') return 'ambulance';
   return 'building';
 }

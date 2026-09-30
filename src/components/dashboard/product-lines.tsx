@@ -38,16 +38,45 @@ export const PRODUCT_LINE_ORDER: ProductLineId[] = [
   'patrimoniales',
 ];
 
-/** Clasifica por ramo y nombre del producto. */
+/**
+ * Datos del producto tal como los configura La Mundial en maproductos: nombre, formulario
+ * (xform) e ícono del marketplace (xdescripcion_c → xlogo, ej. "4_1.png", "acc_person.png").
+ * Nada depende de ramos fijos: si La Mundial cambia el ícono o el formulario, el portal lo sigue.
+ */
+export function productSignals(product: PortalProductDto): { text: string; logo: string } {
+  return {
+    text: `${product.label} ${product.xform ?? ''}`.toLowerCase(),
+    logo: (product.xlogo ?? '').toLowerCase(),
+  };
+}
+
+/**
+ * Línea comercial de la tarjeta. No usa `product` del SSO: los productos de personas viajan
+ * como "funerario" (mismo flujo OCR) pero se muestran en su propia línea.
+ */
 export function productLine(product: PortalProductDto): ProductLineId {
-  const label = product.label.toLowerCase();
-  const cramo = Number(product.cramo);
-  if (product.product === 'rcv' || cramo === 18 || /rcv|auto|veh/.test(label)) return 'autos';
-  if (product.product === 'funerario' || cramo === 9 || cramo === 45 || /funer/.test(label)) {
-    return 'funerario';
+  const { text, logo } = productSignals(product);
+  if (
+    product.product === 'rcv' ||
+    /rcv|auto|veh|casco/.test(text) ||
+    /rcv|car\b|car\./.test(logo)
+  ) {
+    return 'autos';
   }
-  if (cramo === 5 || /viaj/.test(label)) return 'viajes';
-  if ([7, 48, 49, 51].includes(cramo) || /salud|accident|combinad|4 en 1|vida/.test(label)) {
+  if (/funer|sepel/.test(text) || /funer|coffin|bird/.test(logo)) return 'funerario';
+  if (/viaj|travel/.test(text) || /viaj|plane|avion/.test(logo)) return 'viajes';
+  if (
+    product.product === 'patrimoniales' ||
+    /patrimon|hogar|resid|embarc|incend|general-risk/.test(text) ||
+    /patrimon|home|house|boat/.test(logo)
+  ) {
+    return 'patrimoniales';
+  }
+  if (
+    product.product === 'funerario' ||
+    /salud|accident|combinad|4 en 1|vida|person|familiar/.test(text) ||
+    /4_1|3_1|acc_|accident|salud|ambulance|family|vida|heart|person/.test(logo)
+  ) {
     return 'personas';
   }
   return 'patrimoniales';
