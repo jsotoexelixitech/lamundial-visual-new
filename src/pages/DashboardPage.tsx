@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -22,6 +23,7 @@ import { buildFallbackModuleUrl, buildSsoPayload } from '@/lib/sso-launch';
 import { usePortalSession } from '@/context/PortalSessionContext';
 import { ProductSheet } from '@/components/dashboard/ProductSheet';
 import { LineArt, ProductArt } from '@/components/dashboard/ProductArt';
+import { VitrinaBackdrop } from '@/components/dashboard/VitrinaBackdrop';
 import { publicAsset } from '@/lib/public-asset';
 import {
   PRODUCT_LINES,
@@ -214,6 +216,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="portal-page lm-desk">
+      <VitrinaBackdrop />
       <header className="lm-desk-top">
         <div className="min-w-0">
           <h1 className="lm-desk-title">Hola, {firstName}</h1>
@@ -404,48 +407,54 @@ export const DashboardPage: React.FC = () => {
         )}
       </div>
 
-      {sheetOpen && sheetProps && (
-        <div className="lm-modal" role="dialog" aria-modal="true" aria-label="Ficha del producto">
-          <button
-            type="button"
-            className="lm-modal-backdrop"
-            aria-label="Cerrar ficha"
-            tabIndex={-1}
-            onClick={() => setSheetOpen(false)}
-          />
-          <div className="lm-modal-panel">
+      {sheetOpen &&
+        sheetProps &&
+        createPortal(
+          <div className="lm-modal" role="dialog" aria-modal="true" aria-label="Ficha del producto">
             <button
-              ref={sheetCloseRef}
               type="button"
-              className="lm-modal-close"
-              onClick={() => setSheetOpen(false)}
+              className="lm-modal-backdrop"
               aria-label="Cerrar ficha"
-            >
-              <X size={18} />
-            </button>
-            <ProductSheet {...sheetProps} onPresent={() => setPresenting(true)} />
-          </div>
-        </div>
-      )}
+              tabIndex={-1}
+              onClick={() => setSheetOpen(false)}
+            />
+            <div className="lm-modal-panel">
+              <button
+                ref={sheetCloseRef}
+                type="button"
+                className="lm-modal-close"
+                onClick={() => setSheetOpen(false)}
+                aria-label="Cerrar ficha"
+              >
+                <X size={18} />
+              </button>
+              <ProductSheet {...sheetProps} onPresent={() => setPresenting(true)} />
+            </div>
+          </div>,
+          document.body,
+        )}
 
-      {presenting && sheetProps && (
-        <div
-          className="lm-present"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Ficha para el cliente"
-        >
-          <button
-            ref={presentCloseRef}
-            type="button"
-            className="lm-present-close"
-            onClick={closePresent}
+      {presenting &&
+        sheetProps &&
+        createPortal(
+          <div
+            className="lm-present"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Ficha para el cliente"
           >
-            <X size={18} /> Cerrar
-          </button>
-          <ProductSheet {...sheetProps} variant="client" />
-        </div>
-      )}
+            <button
+              ref={presentCloseRef}
+              type="button"
+              className="lm-present-close"
+              onClick={closePresent}
+            >
+              <X size={18} /> Cerrar
+            </button>
+            <ProductSheet {...sheetProps} variant="client" />
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

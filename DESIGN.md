@@ -208,7 +208,7 @@ Cada ilustración define fondo, plano suave, blanco, tinta, acento Imperial y un
 - **Patrimoniales**: fondo #EAEBF0, plano #D8DAE2, detalle #8A93B8.
 
 ### Neutral
-- **Escaparate** (#F4F5F8): fondo de la vitrina bajo el encabezado.
+- **Escaparate** (#F4F5F8): tono base de la vitrina. Sobre él va el telón `VitrinaBackdrop` (SVG fijo, detrás de todo el contenido, incluido el saludo): degradado #E3EBF8→#F1F4FA, halo y anillo #D5E1F4 arriba a la derecha, arco #D9E4F5 abajo a la izquierda, colina #CFDCF2, banda blanca diagonal, estela punteada blanca que termina en un solo punto Imperial, y cruces y puntos #2E6DBF muy tenues. Son los mismos planos de las escenas, a escala de página.
 - **Papel** (#FFFFFF): tarjetas, pestañas, encabezado, barra marketplace, buscador.
 - **Tinta Suave** (#5E6275): meta de tarjeta, conteos, resumen del canal, etiqueta de precio.
 - **Filete** (#E3E5EC): bordes de 1px en tarjetas, pestañas, encabezado y barra.
