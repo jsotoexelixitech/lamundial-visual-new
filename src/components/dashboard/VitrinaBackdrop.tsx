@@ -19,7 +19,7 @@ export const VitrinaBackdrop: React.FC = () => (
 
     <path d="M0 380 L1440 110 V210 L0 480 Z" fill="#FFFFFF" opacity=".4" />
 
-    <circle cx="1290" cy="110" r="250" fill="#D5E1F4" opacity=".75" />
+    <circle className="lm-bd-halo" cx="1290" cy="110" r="250" fill="#D5E1F4" opacity=".75" />
     <circle
       cx="1290"
       cy="110"
@@ -43,6 +43,7 @@ export const VitrinaBackdrop: React.FC = () => (
     />
 
     <path
+      className="lm-bd-trail"
       d="M140 330 C420 250 700 300 980 210 C1100 172 1180 150 1250 150"
       fill="none"
       stroke="#FFFFFF"

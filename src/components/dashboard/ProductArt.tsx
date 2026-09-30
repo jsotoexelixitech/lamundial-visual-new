@@ -107,6 +107,7 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
       return (
         <>
           <path
+            className="art-speed"
             d="M18 116 H50 M28 132 H54 M14 148 H46"
             stroke={t.detail}
             strokeWidth="4"
@@ -115,19 +116,21 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
           />
           <g className="art-subject">
             <ellipse cx="166" cy="168" rx="116" ry="6" fill={t.ink} opacity=".45" />
-            <path
-              d="M58 150 V126 C58 118 64 113 72 112 L104 108 L132 84 C137 80 143 78 150 78 H204 C212 78 218 81 223 87 L242 108 L262 112 C270 114 274 120 274 128 V150 Z"
-              fill={t.light}
-            />
-            <path d="M141 88 L121 107 H176 V88 Z" fill={t.detail} />
-            <path d="M184 88 V107 H231 L217 91 C215 89 212 88 209 88 Z" fill={t.detail} />
-            <rect x="58" y="130" width="216" height="6" fill={t.accent} />
-            <path d="M180 110 V148" stroke="#D5DCEE" strokeWidth="2" />
-            <rect x="262" y="116" width="12" height="7" rx="2" fill="#FFD9D9" />
-            <circle cx="104" cy="152" r="21" fill={t.ink} />
-            <circle cx="104" cy="152" r="9" fill={t.detail} />
-            <circle cx="230" cy="152" r="21" fill={t.ink} />
-            <circle cx="230" cy="152" r="9" fill={t.detail} />
+            <g className="art-bob">
+              <path
+                d="M58 150 V126 C58 118 64 113 72 112 L104 108 L132 84 C137 80 143 78 150 78 H204 C212 78 218 81 223 87 L242 108 L262 112 C270 114 274 120 274 128 V150 Z"
+                fill={t.light}
+              />
+              <path d="M141 88 L121 107 H176 V88 Z" fill={t.detail} />
+              <path d="M184 88 V107 H231 L217 91 C215 89 212 88 209 88 Z" fill={t.detail} />
+              <rect x="58" y="130" width="216" height="6" fill={t.accent} />
+              <path d="M180 110 V148" stroke="#D5DCEE" strokeWidth="2" />
+              <rect x="262" y="116" width="12" height="7" rx="2" fill="#FFD9D9" />
+              <circle cx="104" cy="152" r="21" fill={t.ink} />
+              <circle cx="104" cy="152" r="9" fill={t.detail} />
+              <circle cx="230" cy="152" r="21" fill={t.ink} />
+              <circle cx="230" cy="152" r="9" fill={t.detail} />
+            </g>
           </g>
           <g className="art-badge">
             <path
@@ -156,8 +159,10 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
             strokeLinecap="round"
           />
           <g className="art-subject">
-            <Heart x={112} y={30} s={4.6} fill={t.light} />
-            <Heart x={134} y={50} s={2.4} fill={t.soft} />
+            <g className="art-beat">
+              <Heart x={112} y={30} s={4.6} fill={t.light} />
+              <Heart x={134} y={50} s={2.4} fill={t.soft} />
+            </g>
             <path
               d="M40 150 H92 C104 150 112 146 122 140 L150 124 C160 118 172 122 172 132 C172 140 166 144 158 148 L136 158 H172 C188 158 206 150 224 136 C234 128 248 134 244 146 C238 162 212 182 176 184 H40 Z"
               fill={t.ink}
@@ -186,29 +191,33 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
         <>
           <path d="M20 176 H300" stroke={t.detail} strokeWidth="2" opacity=".35" />
           <g className="art-subject">
-            <circle cx="108" cy="58" r="16" fill={t.ink} />
-            <path
-              d="M88 80 H128 C136 80 142 86 142 94 V128 C142 132 139 134 135 134 H132 V176 H116 V140 H100 V176 H84 V134 H81 C77 134 74 132 74 128 V94 C74 86 80 80 88 80 Z"
-              fill={t.ink}
-            />
-            <circle cx="212" cy="58" r="16" fill={t.detail} />
-            <path
-              d="M192 80 H232 C240 80 246 86 246 94 V128 C246 132 243 134 239 134 H236 L242 176 H182 L188 134 H185 C181 134 178 132 178 128 V94 C178 86 184 80 192 80 Z"
-              fill={t.detail}
-            />
-            <circle cx="160" cy="102" r="12" fill={t.accent} />
-            <path
-              d="M149 120 H171 C176 120 180 124 180 129 V146 C180 149 178 150 176 150 H174 V176 H164 V154 H156 V176 H146 V150 H144 C142 150 140 149 140 146 V129 C140 124 144 120 149 120 Z"
-              fill={t.accent}
-            />
-            <path
-              d="M140 126 L136 118 M180 126 L184 118"
-              stroke={t.accent}
-              strokeWidth="7"
-              strokeLinecap="round"
-            />
+            <g className="art-sway">
+              <circle cx="108" cy="58" r="16" fill={t.ink} />
+              <path
+                d="M88 80 H128 C136 80 142 86 142 94 V128 C142 132 139 134 135 134 H132 V176 H116 V140 H100 V176 H84 V134 H81 C77 134 74 132 74 128 V94 C74 86 80 80 88 80 Z"
+                fill={t.ink}
+              />
+              <circle cx="212" cy="58" r="16" fill={t.detail} />
+              <path
+                d="M192 80 H232 C240 80 246 86 246 94 V128 C246 132 243 134 239 134 H236 L242 176 H182 L188 134 H185 C181 134 178 132 178 128 V94 C178 86 184 80 192 80 Z"
+                fill={t.detail}
+              />
+              <circle cx="160" cy="102" r="12" fill={t.accent} />
+              <path
+                d="M149 120 H171 C176 120 180 124 180 129 V146 C180 149 178 150 176 150 H174 V176 H164 V154 H156 V176 H146 V150 H144 C142 150 140 149 140 146 V129 C140 124 144 120 149 120 Z"
+                fill={t.accent}
+              />
+              <path
+                d="M140 126 L136 118 M180 126 L184 118"
+                stroke={t.accent}
+                strokeWidth="7"
+                strokeLinecap="round"
+              />
+            </g>
           </g>
-          <Heart x={150} y={40} s={1} fill={t.accent} />
+          <g className="art-beat">
+            <Heart x={150} y={40} s={1} fill={t.accent} />
+          </g>
         </>
       );
     case 'fall':
@@ -223,17 +232,20 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
               strokeWidth="6"
               strokeLinecap="round"
             />
-            <g transform="rotate(-28 128 112)">
-              <circle cx="128" cy="62" r="15" fill={t.ink} />
-              <rect x="114" y="82" width="28" height="50" rx="12" fill={t.detail} />
-              <path
-                d="M116 90 L94 70 M140 90 L160 66 M120 128 L110 164 M136 128 L150 162"
-                stroke={t.ink}
-                strokeWidth="8"
-                strokeLinecap="round"
-              />
+            <g className="art-wobble">
+              <g transform="rotate(-28 128 112)">
+                <circle cx="128" cy="62" r="15" fill={t.ink} />
+                <rect x="114" y="82" width="28" height="50" rx="12" fill={t.detail} />
+                <path
+                  d="M116 90 L94 70 M140 90 L160 66 M120 128 L110 164 M136 128 L150 162"
+                  stroke={t.ink}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+              </g>
             </g>
             <path
+              className="art-blink"
               d="M72 118 C64 126 64 138 72 146 M58 110 C46 124 46 142 58 156"
               stroke={t.detail}
               strokeWidth="4"
@@ -259,13 +271,20 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
           />
           <g className="art-subject">
             <circle cx="160" cy="86" r="58" fill={t.light} />
-            <Heart x={124} y={52} s={3.6} fill={t.accent} />
-            <path d="M154 70 H166 V80 H176 V92 H166 V102 H154 V92 H144 V80 H154 Z" fill={t.light} />
+            <g className="art-beat">
+              <Heart x={124} y={52} s={3.6} fill={t.accent} />
+              <path
+                d="M154 70 H166 V80 H176 V92 H166 V102 H154 V92 H144 V80 H154 Z"
+                fill={t.light}
+              />
+            </g>
             <path
+              className="art-hand-l"
               d="M20 150 H58 C74 150 88 142 102 128 C110 120 122 124 120 134 C118 144 110 152 100 158 L84 168 C102 168 118 164 132 154 L140 148 C146 144 152 152 148 158 C136 176 112 186 84 186 H20 Z"
               fill={t.ink}
             />
             <path
+              className="art-hand-r"
               d="M300 150 H262 C246 150 232 142 218 128 C210 120 198 124 200 134 C202 144 210 152 220 158 L236 168 C218 168 202 164 188 154 L180 148 C174 144 168 152 172 158 C184 176 208 186 236 186 H300 Z"
               fill={t.detail}
             />
@@ -277,6 +296,7 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
       return (
         <>
           <path
+            className="art-speed"
             d="M18 118 H48 M26 134 H52 M14 150 H44"
             stroke={t.detail}
             strokeWidth="4"
@@ -284,6 +304,7 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
             opacity=".6"
           />
           <path
+            className="art-blink"
             d="M126 50 L118 40 M146 46 V34 M166 50 L174 40"
             stroke={t.detail}
             strokeWidth="4"
@@ -291,19 +312,21 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
           />
           <g className="art-subject">
             <ellipse cx="166" cy="172" rx="108" ry="5" fill={t.ink} opacity=".14" />
-            <rect x="128" y="56" width="36" height="14" rx="5" fill={t.detail} />
-            <rect x="66" y="70" width="150" height="84" rx="12" fill={t.light} />
-            <path d="M216 92 H246 C254 92 260 96 264 103 L278 128 V154 H216 Z" fill={t.light} />
-            <path d="M224 100 H244 L258 126 H224 Z" fill={t.detail} />
-            <rect x="66" y="136" width="212" height="6" fill={t.soft} />
-            <path
-              d="M132 88 H150 V102 H164 V120 H150 V134 H132 V120 H118 V102 H132 Z"
-              fill={t.accent}
-            />
-            <circle cx="106" cy="156" r="18" fill={t.ink} />
-            <circle cx="106" cy="156" r="7" fill={t.soft} />
-            <circle cx="240" cy="156" r="18" fill={t.ink} />
-            <circle cx="240" cy="156" r="7" fill={t.soft} />
+            <g className="art-bob">
+              <rect x="128" y="56" width="36" height="14" rx="5" fill={t.detail} />
+              <rect x="66" y="70" width="150" height="84" rx="12" fill={t.light} />
+              <path d="M216 92 H246 C254 92 260 96 264 103 L278 128 V154 H216 Z" fill={t.light} />
+              <path d="M224 100 H244 L258 126 H224 Z" fill={t.detail} />
+              <rect x="66" y="136" width="212" height="6" fill={t.soft} />
+              <path
+                d="M132 88 H150 V102 H164 V120 H150 V134 H132 V120 H118 V102 H132 Z"
+                fill={t.accent}
+              />
+              <circle cx="106" cy="156" r="18" fill={t.ink} />
+              <circle cx="106" cy="156" r="7" fill={t.soft} />
+              <circle cx="240" cy="156" r="18" fill={t.ink} />
+              <circle cx="240" cy="156" r="7" fill={t.soft} />
+            </g>
           </g>
         </>
       );
@@ -313,23 +336,26 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
         <>
           <circle cx="160" cy="96" r="62" fill={t.soft} />
           <g className="art-subject">
-            <path
-              d="M70 150 C86 146 98 140 108 130 C112 108 136 92 172 94 C184 80 204 72 222 76 C232 78 238 86 236 94 L250 100 L234 104 C230 132 204 154 170 158 C146 160 124 154 108 146 L78 162 C80 156 76 152 70 150 Z"
-              fill={t.light}
-            />
-            <path
-              d="M126 110 C122 76 136 50 166 36 C170 58 168 84 158 106 C148 112 136 114 126 110 Z"
-              fill={t.detail}
-            />
-            <path d="M236 96 L252 100 L236 104 Z" fill={t.accent} />
-            <circle cx="222" cy="90" r="3" fill={t.ink} />
-            <path
-              d="M196 150 C204 164 214 170 228 172 M212 162 C218 156 226 154 232 156"
-              stroke={t.detail}
-              strokeWidth="3"
-              fill="none"
-              strokeLinecap="round"
-            />
+            <g className="art-float">
+              <path
+                d="M70 150 C86 146 98 140 108 130 C112 108 136 92 172 94 C184 80 204 72 222 76 C232 78 238 86 236 94 L250 100 L234 104 C230 132 204 154 170 158 C146 160 124 154 108 146 L78 162 C80 156 76 152 70 150 Z"
+                fill={t.light}
+              />
+              <path
+                className="art-flap"
+                d="M126 110 C122 76 136 50 166 36 C170 58 168 84 158 106 C148 112 136 114 126 110 Z"
+                fill={t.detail}
+              />
+              <path d="M236 96 L252 100 L236 104 Z" fill={t.accent} />
+              <circle cx="222" cy="90" r="3" fill={t.ink} />
+              <path
+                d="M196 150 C204 164 214 170 228 172 M212 162 C218 156 226 154 232 156"
+                stroke={t.detail}
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </g>
           </g>
         </>
       );
@@ -337,6 +363,7 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
       return (
         <>
           <path
+            className="art-dash"
             d="M26 176 C86 158 142 128 188 100"
             stroke={t.light}
             strokeWidth="4"
@@ -344,7 +371,7 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
             strokeLinecap="round"
             fill="none"
           />
-          <g fill={t.light}>
+          <g className="art-drift" fill={t.light}>
             <circle cx="72" cy="138" r="16" />
             <circle cx="94" cy="128" r="22" />
             <circle cx="118" cy="140" r="14" />
@@ -354,16 +381,18 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
             <rect x="234" y="158" width="52" height="12" rx="6" opacity=".8" />
           </g>
           <g className="art-subject">
-            <g transform="translate(222 82) rotate(-24)">
-              <path d="M-6 -8 L-22 -56 H-8 L28 -8 Z" fill={t.detail} />
-              <path d="M-6 8 L-22 56 H-8 L28 8 Z" fill={t.detail} />
-              <path d="M-40 -7 L-54 -28 H-45 L-28 -7 Z" fill={t.accent} />
-              <path d="M-40 7 L-54 28 H-45 L-28 7 Z" fill={t.accent} />
-              <path
-                d="M-54 0 C-54 -6 -46 -9 -36 -9 H40 C52 -9 62 -5 66 0 C62 5 52 9 40 9 H-36 C-46 9 -54 6 -54 0 Z"
-                fill={t.ink}
-              />
-              <path d="M44 -5 C52 -5 58 -3 61 0 H44 Z" fill={t.detail} />
+            <g className="art-fly">
+              <g transform="translate(222 82) rotate(-24)">
+                <path d="M-6 -8 L-22 -56 H-8 L28 -8 Z" fill={t.detail} />
+                <path d="M-6 8 L-22 56 H-8 L28 8 Z" fill={t.detail} />
+                <path d="M-40 -7 L-54 -28 H-45 L-28 -7 Z" fill={t.accent} />
+                <path d="M-40 7 L-54 28 H-45 L-28 7 Z" fill={t.accent} />
+                <path
+                  d="M-54 0 C-54 -6 -46 -9 -36 -9 H40 C52 -9 62 -5 66 0 C62 5 52 9 40 9 H-36 C-46 9 -54 6 -54 0 Z"
+                  fill={t.ink}
+                />
+                <path d="M44 -5 C52 -5 58 -3 61 0 H44 Z" fill={t.detail} />
+              </g>
             </g>
           </g>
         </>
@@ -372,6 +401,7 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
       return (
         <>
           <path
+            className="art-dash"
             d="M186 126 C214 118 228 106 234 94"
             stroke={t.detail}
             strokeWidth="3.5"
@@ -411,14 +441,16 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
             fill={t.soft}
           />
           <g className="art-subject">
-            <path d="M164 40 V142" stroke={t.ink} strokeWidth="4" />
-            <path d="M170 46 L170 132 L234 132 Z" fill={t.light} />
-            <path d="M158 58 L158 132 L108 132 Z" fill={t.accent} />
-            <path d="M166 40 L184 46 L166 52 Z" fill={t.accent} />
-            <path d="M92 140 H240 L220 166 H114 Z" fill={t.ink} />
-            <circle cx="140" cy="152" r="3.5" fill={t.light} />
-            <circle cx="160" cy="152" r="3.5" fill={t.light} />
-            <circle cx="180" cy="152" r="3.5" fill={t.light} />
+            <g className="art-rock">
+              <path d="M164 40 V142" stroke={t.ink} strokeWidth="4" />
+              <path d="M170 46 L170 132 L234 132 Z" fill={t.light} />
+              <path d="M158 58 L158 132 L108 132 Z" fill={t.accent} />
+              <path className="art-flag" d="M166 40 L184 46 L166 52 Z" fill={t.accent} />
+              <path d="M92 140 H240 L220 166 H114 Z" fill={t.ink} />
+              <circle cx="140" cy="152" r="3.5" fill={t.light} />
+              <circle cx="160" cy="152" r="3.5" fill={t.light} />
+              <circle cx="180" cy="152" r="3.5" fill={t.light} />
+            </g>
           </g>
           <path
             d="M20 180 C40 174 60 174 80 180 M220 184 C240 178 260 178 280 184"
@@ -440,6 +472,8 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
               [0, 1, 2].map((c) => (
                 <rect
                   key={`${r}-${c}`}
+                  className="art-window"
+                  style={{ animationDelay: `${((r * 3 + c * 7) % 11) * 0.45}s` }}
                   x={128 + c * 18}
                   y={52 + r * 22}
                   width="12"
@@ -530,6 +564,7 @@ function Art({ kind, line, className }: ArtProps) {
     <svg
       viewBox="0 0 320 200"
       className={className}
+      data-art={kind}
       aria-hidden
       focusable="false"
       preserveAspectRatio="xMidYMid slice"
