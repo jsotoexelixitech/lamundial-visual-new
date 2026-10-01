@@ -2,6 +2,7 @@ import type { ProductConfig } from './portal-config';
 import { portalConfig } from './portal-config';
 import type { PortalProductDto, SsoDelegatePayload } from './nexus-auth';
 import { getFlowMetadataOverrides } from './portal-sso-config';
+import { getCurrentUser } from './nexus-auth';
 
 export type LaunchProduct = ProductConfig | PortalProductDto;
 
@@ -68,8 +69,12 @@ export function buildSsoPayload(product: LaunchProduct): SsoDelegatePayload {
   const cramo =
     flowCramo && !Number.isNaN(Number(flowCramo)) ? Number(flowCramo) : cramoFromProduct;
 
+  // Rol Sis2000 del usuario que entró desde el backoffice (solo así llega crol).
+  const crol = String(getCurrentUser()?.crol ?? '').trim();
+
   const base: SsoDelegatePayload = {
     target: product.target,
+    ...(crol ? { crol } : {}),
     cproductor,
     cusuario,
     centidad,

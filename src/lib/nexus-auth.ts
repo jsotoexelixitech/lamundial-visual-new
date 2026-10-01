@@ -21,6 +21,8 @@ export interface LoginResponse {
     sso?: boolean;
     /** Nombre del canal enviado por Sis2000 en el SSO (xcanal). */
     canal?: string | null;
+    /** Rol Sis2000 (crol) cuando entra desde el backoffice: técnico vs productor. */
+    crol?: string | null;
   };
 }
 
@@ -41,6 +43,8 @@ export interface SsoDelegatePayload {
   cproducto?: string;
   xform?: string;
   xproducto?: string;
+  /** Rol Sis2000: Emisión muestra el selector de productor solo al técnico. */
+  crol?: string;
 }
 
 export interface SsoDelegateResponse {
