@@ -6,6 +6,9 @@ type ArtKind =
   | 'car'
   | 'heartHand'
   | 'family'
+  | 'familyHealth'
+  | 'life'
+  | 'doveFamily'
   | 'fall'
   | 'care'
   | 'ambulance'
@@ -71,6 +74,7 @@ const THEMES: Record<ProductLineId, Theme> = {
 /** Ícono del marketplace (xdescripcion_c) → escena equivalente de la vitrina. */
 const LOGO_KIND: [RegExp, ArtKind][] = [
   [/4_1/, 'heartHand'],
+  [/vida/, 'life'],
   [/3_1/, 'care'],
   [/acc_|accident/, 'fall'],
   [/salud|ambulance/, 'ambulance'],
@@ -78,7 +82,7 @@ const LOGO_KIND: [RegExp, ArtKind][] = [
   [/funer|coffin|bird/, 'dove'],
   [/viaj|plane|avion/, 'plane'],
   [/rcv|car\b|car\./, 'car'],
-  [/boat|embarc/, 'boat'],
+  [/boat|embarc|nave/, 'boat'],
 ];
 
 function productArtKind(product: PortalProductDto): ArtKind {
@@ -86,6 +90,9 @@ function productArtKind(product: PortalProductDto): ArtKind {
   const line = productLine(product);
   // Viajero Local lleva el mismo ícono que Viajero en el marketplace; aquí se distingue.
   if (line === 'viajes' && /local|nacional/.test(text)) return 'suitcase';
+  // Variantes familiares: el marketplace repite el ícono del producto individual.
+  if (/funer|sepel/.test(text) && /familiar/.test(text)) return 'doveFamily';
+  if (/salud/.test(text) && /familiar/.test(text)) return 'familyHealth';
   const fromLogo = LOGO_KIND.find(([re]) => re.test(logo));
   if (fromLogo) return fromLogo[1];
   if (line === 'autos') return 'car';
@@ -93,6 +100,7 @@ function productArtKind(product: PortalProductDto): ArtKind {
   if (line === 'viajes') return 'plane';
   if (/embarc|nave|barco/.test(text)) return 'boat';
   if (/4 en 1|integral/.test(text)) return 'heartHand';
+  if (/vida/.test(text)) return 'life';
   if (/familiar|hogar/.test(text)) return 'family';
   if (/accident/.test(text)) return 'fall';
   if (/combinad|personas|colectiv/.test(text)) return 'care';
@@ -115,6 +123,63 @@ function Heart({ x, y, s, fill }: { x: number; y: number; s: number; fill: strin
       d="M10 18 C4 13 0 9.5 0 5.5 C0 2.4 2.4 0 5.4 0 C7.4 0 9 1.1 10 2.7 C11 1.1 12.6 0 14.6 0 C17.6 0 20 2.4 20 5.5 C20 9.5 16 13 10 18 Z"
       fill={fill}
     />
+  );
+}
+
+/** Padre, madre e hijo de la mano (Combinado Familiar / Salud Familiar). */
+function FamilyFigures({ t }: { t: Theme }) {
+  return (
+    <g className="art-sway">
+      <circle cx="108" cy="58" r="16" fill={t.ink} />
+      <path
+        d="M88 80 H128 C136 80 142 86 142 94 V128 C142 132 139 134 135 134 H132 V176 H116 V140 H100 V176 H84 V134 H81 C77 134 74 132 74 128 V94 C74 86 80 80 88 80 Z"
+        fill={t.ink}
+      />
+      <circle cx="212" cy="58" r="16" fill={t.detail} />
+      <path
+        d="M192 80 H232 C240 80 246 86 246 94 V128 C246 132 243 134 239 134 H236 L242 176 H182 L188 134 H185 C181 134 178 132 178 128 V94 C178 86 184 80 192 80 Z"
+        fill={t.detail}
+      />
+      <circle cx="160" cy="102" r="12" fill={t.accent} />
+      <path
+        d="M149 120 H171 C176 120 180 124 180 129 V146 C180 149 178 150 176 150 H174 V176 H164 V154 H156 V176 H146 V150 H144 C142 150 140 149 140 146 V129 C140 124 144 120 149 120 Z"
+        fill={t.accent}
+      />
+      <path
+        d="M140 126 L136 118 M180 126 L184 118"
+        stroke={t.accent}
+        strokeWidth="7"
+        strokeLinecap="round"
+      />
+    </g>
+  );
+}
+
+/** Paloma del marketplace; `transform` permite reusarla a otra escala. */
+function DoveShape({ t, transform }: { t: Theme; transform?: string }) {
+  return (
+    <g transform={transform}>
+      <g className="art-float">
+        <path
+          d="M70 150 C86 146 98 140 108 130 C112 108 136 92 172 94 C184 80 204 72 222 76 C232 78 238 86 236 94 L250 100 L234 104 C230 132 204 154 170 158 C146 160 124 154 108 146 L78 162 C80 156 76 152 70 150 Z"
+          fill={t.light}
+        />
+        <path
+          className="art-flap"
+          d="M126 110 C122 76 136 50 166 36 C170 58 168 84 158 106 C148 112 136 114 126 110 Z"
+          fill={t.detail}
+        />
+        <path d="M236 96 L252 100 L236 104 Z" fill={t.accent} />
+        <circle cx="222" cy="90" r="3" fill={t.ink} />
+        <path
+          d="M196 150 C204 164 214 170 228 172 M212 162 C218 156 226 154 232 156"
+          stroke={t.detail}
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+        />
+      </g>
+    </g>
   );
 }
 
@@ -208,29 +273,7 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
         <>
           <path d="M20 176 H300" stroke={t.detail} strokeWidth="2" opacity=".35" />
           <g className="art-subject">
-            <g className="art-sway">
-              <circle cx="108" cy="58" r="16" fill={t.ink} />
-              <path
-                d="M88 80 H128 C136 80 142 86 142 94 V128 C142 132 139 134 135 134 H132 V176 H116 V140 H100 V176 H84 V134 H81 C77 134 74 132 74 128 V94 C74 86 80 80 88 80 Z"
-                fill={t.ink}
-              />
-              <circle cx="212" cy="58" r="16" fill={t.detail} />
-              <path
-                d="M192 80 H232 C240 80 246 86 246 94 V128 C246 132 243 134 239 134 H236 L242 176 H182 L188 134 H185 C181 134 178 132 178 128 V94 C178 86 184 80 192 80 Z"
-                fill={t.detail}
-              />
-              <circle cx="160" cy="102" r="12" fill={t.accent} />
-              <path
-                d="M149 120 H171 C176 120 180 124 180 129 V146 C180 149 178 150 176 150 H174 V176 H164 V154 H156 V176 H146 V150 H144 C142 150 140 149 140 146 V129 C140 124 144 120 149 120 Z"
-                fill={t.accent}
-              />
-              <path
-                d="M140 126 L136 118 M180 126 L184 118"
-                stroke={t.accent}
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-            </g>
+            <FamilyFigures t={t} />
           </g>
           <g className="art-beat">
             <Heart x={150} y={40} s={1} fill={t.accent} />
@@ -353,26 +396,71 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
         <>
           <circle cx="160" cy="96" r="62" fill={t.soft} />
           <g className="art-subject">
-            <g className="art-float">
+            <DoveShape t={t} />
+          </g>
+        </>
+      );
+    case 'familyHealth':
+      // Salud Familiar: la familia con una cruz médica (no el corazón de Combinado Familiar).
+      return (
+        <>
+          <path d="M20 176 H300" stroke={t.detail} strokeWidth="2" opacity=".35" />
+          <g className="art-subject">
+            <FamilyFigures t={t} />
+          </g>
+          <g className="art-beat">
+            <circle cx="160" cy="46" r="16" fill={t.light} />
+            <path d="M156 36 H164 V42 H170 V50 H164 V56 H156 V50 H150 V42 H156 Z" fill={t.accent} />
+          </g>
+        </>
+      );
+    case 'life':
+      // Póliza de Vida: persona con los brazos en alto y un corazón que brilla (como en el marketplace).
+      return (
+        <>
+          <path d="M40 176 H280" stroke={t.detail} strokeWidth="2" opacity=".35" />
+          <path
+            className="art-blink"
+            d="M160 26 V14 M126 42 L116 34 M194 42 L204 34 M118 66 H106 M202 66 H214"
+            stroke={t.detail}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <g className="art-subject">
+            <g className="art-sway">
               <path
-                d="M70 150 C86 146 98 140 108 130 C112 108 136 92 172 94 C184 80 204 72 222 76 C232 78 238 86 236 94 L250 100 L234 104 C230 132 204 154 170 158 C146 160 124 154 108 146 L78 162 C80 156 76 152 70 150 Z"
-                fill={t.light}
+                d="M138 130 L106 94 M182 130 L214 94"
+                stroke={t.ink}
+                strokeWidth="13"
+                strokeLinecap="round"
               />
+              <circle cx="160" cy="104" r="17" fill={t.ink} />
               <path
-                className="art-flap"
-                d="M126 110 C122 76 136 50 166 36 C170 58 168 84 158 106 C148 112 136 114 126 110 Z"
-                fill={t.detail}
-              />
-              <path d="M236 96 L252 100 L236 104 Z" fill={t.accent} />
-              <circle cx="222" cy="90" r="3" fill={t.ink} />
-              <path
-                d="M196 150 C204 164 214 170 228 172 M212 162 C218 156 226 154 232 156"
-                stroke={t.detail}
+                d="M152 106 Q160 113 168 106"
+                stroke={t.light}
                 strokeWidth="3"
                 fill="none"
                 strokeLinecap="round"
               />
+              <path
+                d="M140 124 H180 C186 124 190 128 190 134 V176 H130 V134 C130 128 134 124 140 124 Z"
+                fill={t.ink}
+              />
             </g>
+          </g>
+          <g className="art-beat">
+            <Heart x={140} y={40} s={2} fill={t.accent} />
+          </g>
+        </>
+      );
+    case 'doveFamily':
+      // Funerario Familiar: dos palomas que vuelan juntas (no la paloma sola de Funerario).
+      return (
+        <>
+          <circle cx="150" cy="104" r="62" fill={t.soft} />
+          <g className="art-subject">
+            <DoveShape t={t} transform="translate(-22 18) scale(0.85)" />
+            <DoveShape t={t} transform="translate(150 -6) scale(0.5)" />
           </g>
         </>
       );
@@ -531,6 +619,8 @@ function Backdrop({ kind, t }: { kind: ArtKind; t: Theme }) {
         />
       );
     case 'family':
+    case 'familyHealth':
+    case 'life':
     case 'suitcase':
     case 'building':
       return (

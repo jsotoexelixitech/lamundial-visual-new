@@ -83,7 +83,8 @@ export function PortalShell() {
               <span className="lm-market-name">{displayName}</span>
               {(storageUser?.canal || canal) && (
                 <span className="lm-market-canal">
-                  {storageUser?.canal || `Canal ${canal?.citem}`}
+                  {storageUser?.canal ||
+                    `${canal?.centidad === 'P' ? 'Productor' : canal?.centidad === 'G' ? 'Gestor' : 'Canal'} ${canal?.citem}`}
                 </span>
               )}
             </div>
