@@ -9,6 +9,10 @@ type ArtKind =
   | 'familyHealth'
   | 'life'
   | 'doveFamily'
+  | 'candle'
+  | 'road'
+  | 'umbrella'
+  | 'globe'
   | 'fall'
   | 'care'
   | 'ambulance'
@@ -108,11 +112,12 @@ function productArtKind(product: PortalProductDto): ArtKind {
   return 'building';
 }
 
+/** Emblemas de las pestañas: distintos de las escenas de producto para no repetir dibujos. */
 const LINE_KIND: Record<ProductLineId, ArtKind> = {
-  autos: 'car',
-  personas: 'care',
-  viajes: 'plane',
-  funerario: 'dove',
+  autos: 'road',
+  personas: 'umbrella',
+  viajes: 'globe',
+  funerario: 'candle',
   patrimoniales: 'building',
 };
 
@@ -454,14 +459,143 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
         </>
       );
     case 'doveFamily':
-      // Funerario Familiar: dos palomas que vuelan juntas (no la paloma sola de Funerario).
+      // Funerario Familiar: la familia bajo una paloma (no la paloma sola de Funerario).
       return (
         <>
-          <circle cx="150" cy="104" r="62" fill={t.soft} />
+          <circle cx="160" cy="110" r="64" fill={t.soft} />
           <g className="art-subject">
-            <DoveShape t={t} transform="translate(-22 18) scale(0.85)" />
-            <DoveShape t={t} transform="translate(150 -6) scale(0.5)" />
+            <g className="art-sway">
+              <circle cx="118" cy="126" r="13" fill={t.light} />
+              <path d="M96 178 C96 154 105 143 118 143 C131 143 140 154 140 178 Z" fill={t.light} />
+              <circle cx="202" cy="126" r="13" fill={t.light} />
+              <path
+                d="M180 178 C180 154 189 143 202 143 C215 143 224 154 224 178 Z"
+                fill={t.light}
+              />
+              <circle cx="160" cy="140" r="10" fill={t.detail} />
+              <path
+                d="M145 178 C145 161 151 154 160 154 C169 154 175 161 175 178 Z"
+                fill={t.detail}
+              />
+            </g>
           </g>
+          <DoveShape t={t} transform="translate(88 -8) scale(0.45)" />
+        </>
+      );
+    case 'candle':
+      // Pestaña Funerario: vela encendida entre hojas.
+      return (
+        <>
+          <circle cx="160" cy="80" r="56" fill={t.soft} />
+          <circle cx="160" cy="80" r="34" fill={t.soft} opacity=".9" />
+          <g className="art-subject">
+            <path d="M144 166 C118 162 102 148 98 128 C120 130 136 144 144 166 Z" fill={t.detail} />
+            <path
+              d="M176 166 C202 162 218 148 222 128 C200 130 184 144 176 166 Z"
+              fill={t.detail}
+            />
+            <rect x="143" y="96" width="34" height="70" rx="5" fill={t.light} />
+            <path d="M160 96 V86" stroke={t.ink} strokeWidth="3" strokeLinecap="round" />
+            <g className="art-beat">
+              <path
+                d="M160 48 C169 60 174 69 174 76 C174 83 168 88 160 88 C152 88 146 83 146 76 C146 68 152 59 160 48 Z"
+                fill={t.accent}
+              />
+              <path
+                d="M160 64 C164 70 166 74 166 78 C166 82 163 84 160 84 C157 84 154 82 154 78 C154 74 156 70 160 64 Z"
+                fill="#FFE3E3"
+              />
+            </g>
+            <rect x="116" y="164" width="88" height="8" rx="4" fill={t.detail} />
+          </g>
+        </>
+      );
+    case 'road':
+      // Pestaña Autos: carretera con escudo (no el auto de RCV).
+      return (
+        <>
+          <path d="M0 150 C80 128 240 128 320 150 V200 H0 Z" fill={t.soft} />
+          <g className="art-subject">
+            <path d="M118 200 L150 96 H170 L202 200 Z" fill={t.ink} />
+            <path
+              className="art-dash"
+              d="M160 196 L160 102"
+              stroke={t.light}
+              strokeWidth="4"
+              strokeDasharray="10 12"
+            />
+          </g>
+          <g className="art-badge">
+            <path
+              d="M160 22 L188 33 V54 C188 70 176 81 160 87 C144 81 132 70 132 54 V33 Z"
+              fill={t.accent}
+            />
+            <path
+              d="M148 54 L157 63 L173 46"
+              stroke={t.light}
+              strokeWidth="5"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        </>
+      );
+    case 'umbrella':
+      // Pestaña Salud y personas: paraguas que protege un corazón.
+      return (
+        <>
+          <path
+            className="art-blink"
+            d="M64 70 l-6 14 M86 58 l-6 14 M240 70 l-6 14 M262 86 l-6 14 M70 112 l-6 14"
+            stroke={t.detail}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <g className="art-subject">
+            <path
+              d="M88 104 C96 58 128 34 160 34 C192 34 224 58 232 104 C220 96 208 96 196 104 C184 96 172 96 160 104 C148 96 136 96 124 104 C112 96 100 96 88 104 Z"
+              fill={t.detail}
+            />
+            <path d="M160 34 V26" stroke={t.ink} strokeWidth="4" strokeLinecap="round" />
+            <path
+              d="M160 104 V164 C160 174 148 174 148 164"
+              stroke={t.ink}
+              strokeWidth="6"
+              fill="none"
+              strokeLinecap="round"
+            />
+            <g className="art-beat">
+              <Heart x={176} y={126} s={1.8} fill={t.accent} />
+            </g>
+          </g>
+        </>
+      );
+    case 'globe':
+      // Pestaña Viajes: globo con ruta de vuelo.
+      return (
+        <>
+          <g className="art-subject">
+            <circle cx="160" cy="104" r="54" fill={t.light} />
+            <g fill="none" stroke={t.detail} strokeWidth="3">
+              <ellipse cx="160" cy="104" rx="24" ry="54" />
+              <path d="M106 104 H214 M114 76 H206 M114 132 H206 M160 50 V158" />
+            </g>
+          </g>
+          <ellipse
+            className="art-dash"
+            cx="160"
+            cy="104"
+            rx="96"
+            ry="34"
+            fill="none"
+            stroke={t.ink}
+            strokeWidth="3"
+            strokeDasharray="2 10"
+            strokeLinecap="round"
+            transform="rotate(-18 160 104)"
+          />
+          <path className="art-badge" d="M244 62 L266 70 L244 78 L248 70 Z" fill={t.accent} />
         </>
       );
     case 'plane':
