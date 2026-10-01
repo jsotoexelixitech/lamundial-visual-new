@@ -3,7 +3,8 @@ module.exports = {
     {
       name: 'portal-lamundial',
       script: 'serve',
-      cwd: '/home/jsoto/portal',
+      // Carpeta del repo en cada servidor (jsoto@120, proyect@121, …).
+      cwd: __dirname,
       env: {
         PM2_SERVE_PATH: './dist',
         PM2_SERVE_PORT: 5190,
