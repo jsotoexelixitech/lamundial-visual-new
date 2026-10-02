@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, ExternalLink, Loader2, MonitorUp, Store } from 'lucide-react';
+import { ArrowRight, ExternalLink, Loader2, Store } from 'lucide-react';
 import type { PortalProductDto } from '@/lib/nexus-auth';
 import { PRODUCT_LINES, cleanCopy, priceInfo, productLine, productTitle } from './product-lines';
 import { ProductArt } from './ProductArt';
@@ -9,8 +9,6 @@ interface Props {
   busy: boolean;
   disabled: boolean;
   onLaunch: (product: PortalProductDto) => void;
-  /** Abre la ficha a pantalla completa para mostrarla al cliente. */
-  onPresent?: () => void;
   variant?: 'panel' | 'client';
 }
 
@@ -20,7 +18,6 @@ export const ProductSheet: React.FC<Props> = ({
   busy,
   disabled,
   onLaunch,
-  onPresent,
   variant = 'panel',
 }) => {
   const line = PRODUCT_LINES[productLine(product)];
@@ -78,28 +75,6 @@ export const ProductSheet: React.FC<Props> = ({
               ? 'Se abre el formulario del marketplace La Mundial en una pestaña nueva.'
               : 'La emisión se abre en una pestaña nueva.'}
           </p>
-
-          {(product.xurlPresentacion || onPresent) && (
-            <div className="ficha-links">
-              {product.xurlPresentacion && (
-                <a
-                  href={product.xurlPresentacion.trim()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="ficha-link"
-                >
-                  Ver presentación
-                  <ExternalLink size={14} />
-                </a>
-              )}
-              {onPresent && (
-                <button type="button" className="ficha-link" onClick={onPresent}>
-                  <MonitorUp size={15} />
-                  Mostrar al cliente
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </article>

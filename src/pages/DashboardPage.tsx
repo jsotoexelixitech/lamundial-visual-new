@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -55,8 +55,6 @@ export const DashboardPage: React.FC = () => {
   const [lineFilter, setLineFilter] = useState<ProductLineId | 'all'>('all');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [presenting, setPresenting] = useState(false);
-  const presentCloseRef = useRef<HTMLButtonElement>(null);
   const sheetCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -91,22 +89,14 @@ export const DashboardPage: React.FC = () => {
   const visibleProducts = useMemo(() => groups.flatMap((g) => g.items), [groups]);
   const selected = products.find((p) => p.key === selectedKey);
 
-  const closePresent = useCallback(() => setPresenting(false), []);
-
   useEffect(() => {
-    if (!presenting && !sheetOpen) return;
+    if (!sheetOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (presenting) setPresenting(false);
-      else setSheetOpen(false);
+      if (e.key === 'Escape') setSheetOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [presenting, sheetOpen]);
-
-  useEffect(() => {
-    if (presenting) presentCloseRef.current?.focus();
-  }, [presenting]);
+  }, [sheetOpen]);
 
   useEffect(() => {
     if (!sheetOpen) return;
@@ -430,30 +420,8 @@ export const DashboardPage: React.FC = () => {
               >
                 <X size={18} />
               </button>
-              <ProductSheet {...sheetProps} onPresent={() => setPresenting(true)} />
+              <ProductSheet {...sheetProps} />
             </div>
-          </div>,
-          document.body,
-        )}
-
-      {presenting &&
-        sheetProps &&
-        createPortal(
-          <div
-            className="lm-present"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Ficha para el cliente"
-          >
-            <button
-              ref={presentCloseRef}
-              type="button"
-              className="lm-present-close"
-              onClick={closePresent}
-            >
-              <X size={18} /> Cerrar
-            </button>
-            <ProductSheet {...sheetProps} variant="client" />
           </div>,
           document.body,
         )}
