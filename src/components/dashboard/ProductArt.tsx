@@ -14,6 +14,7 @@ type ArtKind =
   | 'umbrella'
   | 'globe'
   | 'fall'
+  | 'injury'
   | 'care'
   | 'ambulance'
   | 'plane'
@@ -97,6 +98,8 @@ function productArtKind(product: PortalProductDto): ArtKind {
   // Variantes familiares: el marketplace repite el ícono del producto individual.
   if (/funer|sepel/.test(text) && /familiar/.test(text)) return 'doveFamily';
   if (/salud/.test(text) && /familiar/.test(text)) return 'familyHealth';
+  // AP Individual comparte ícono con Accidentes Personales en el marketplace.
+  if (/accident/.test(text) && /individual/.test(text)) return 'injury';
   const fromLogo = LOGO_KIND.find(([re]) => re.test(logo));
   if (fromLogo) return fromLogo[1];
   if (line === 'autos') return 'car';
@@ -273,10 +276,18 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
         </>
       );
     case 'family':
-      // Combinado Familiar: padre, madre e hijo de la mano.
+      // Combinado Familiar: padre, madre e hijo bajo un techo (distinto de Salud Familiar).
       return (
         <>
           <path d="M20 176 H300" stroke={t.detail} strokeWidth="2" opacity=".35" />
+          <path
+            d="M40 72 L160 10 L280 72"
+            stroke={t.accent}
+            strokeWidth="9"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <g className="art-subject">
             <FamilyFigures t={t} />
           </g>
@@ -321,6 +332,54 @@ function Scene({ kind, t }: { kind: ArtKind; t: Theme }) {
           <g className="art-badge">
             <rect x="268" y="30" width="10" height="34" rx="5" fill={t.accent} />
             <circle cx="273" cy="78" r="6" fill={t.accent} />
+          </g>
+        </>
+      );
+    case 'injury':
+      // AP Individual: una persona con el brazo en cabestrillo y un escudo que la protege.
+      return (
+        <>
+          <path d="M40 176 H280" stroke={t.detail} strokeWidth="2" opacity=".35" />
+          <g className="art-subject">
+            <g className="art-sway">
+              <path d="M104 104 L92 150" stroke={t.ink} strokeWidth="12" strokeLinecap="round" />
+              <path
+                d="M110 92 H150 C156 92 160 96 160 102 V176 H100 V102 C100 96 104 92 110 92 Z"
+                fill={t.ink}
+              />
+              <circle cx="130" cy="70" r="17" fill={t.ink} />
+              <path d="M114 66 L146 60" stroke={t.light} strokeWidth="5" strokeLinecap="round" />
+              <path d="M124 116 L170 112 L150 140 Z" fill={t.accent} />
+              <path
+                d="M156 104 L164 126 L132 130"
+                stroke={t.detail}
+                strokeWidth="11"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          </g>
+          <path
+            className="art-blink"
+            d="M214 42 L206 34 M240 34 V22 M266 42 L274 34"
+            stroke={t.detail}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <g className="art-beat">
+            <path
+              d="M240 52 L276 64 V96 C276 122 260 140 240 150 C220 140 204 122 204 96 V64 Z"
+              fill={t.light}
+            />
+            <path
+              d="M224 98 L236 110 L258 84"
+              stroke={t.accent}
+              strokeWidth="8"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </g>
         </>
       );
@@ -777,6 +836,13 @@ function Backdrop({ kind, t }: { kind: ArtKind; t: Theme }) {
         <>
           <circle cx="66" cy="60" r="54" fill={t.soft} opacity=".7" />
           <circle cx="292" cy="170" r="64" fill={t.soft} opacity=".5" />
+        </>
+      );
+    case 'injury':
+      return (
+        <>
+          <circle cx="240" cy="96" r="70" fill={t.soft} opacity=".7" />
+          <ellipse cx="130" cy="230" rx="150" ry="70" fill={t.soft} opacity=".55" />
         </>
       );
     case 'boat':
