@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # QA — srv001qa · 121 · usuario proyect · https://nexusqa.exelixitech.com/portal-lm/
 set -euo pipefail
+export DEPLOY_ENTRY="deploy-qa.sh"
 export DEPLOY_ENV="QA (121)"
 export DEPLOY_BRANCH="${PORTAL_QA_BRANCH:-feat/portal-login-sis2000}"
 export PORTAL_BASE="/portal-lm/"

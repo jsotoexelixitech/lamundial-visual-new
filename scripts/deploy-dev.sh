@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Desarrollo — srv001 · 120 · usuario jsoto · https://cierrelmds.exelixitech.com/portal-lm/
 set -euo pipefail
+export DEPLOY_ENTRY="deploy-dev.sh"
 export DEPLOY_ENV="DESARROLLO (120)"
 export DEPLOY_BRANCH="${PORTAL_DEV_BRANCH:-feat/portal-login-sis2000}"
 export PORTAL_BASE="/portal-lm/"

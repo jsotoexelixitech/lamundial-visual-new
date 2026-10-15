@@ -2,6 +2,7 @@
 # Producción — Srv-Gcia-proyect · 172.30.149.75 · usuario proyect
 # https://marketplace.exelixitech.com — Apache (443 y :5190) sirve /var/www/marketplace.exelixitech.com/dist (base /).
 set -euo pipefail
+export DEPLOY_ENTRY="deploy-prod.sh"
 export PORTAL_PUBLISH_DIR="/var/www/marketplace.exelixitech.com/dist"
 export DEPLOY_ENV="PRODUCCIÓN (GCIA)"
 export DEPLOY_BRANCH="main"
