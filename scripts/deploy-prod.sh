@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Producción — Srv-Gcia-proyect · 172.30.149.75 · usuario proyect
-# Se sirve en la raíz de su propio subdominio (base /), detrás de Apache → 127.0.0.1:5190.
+# https://marketplace.exelixitech.com — Apache sirve /var/www/marketplace.exelixitech.com (base /).
 set -euo pipefail
+export PORTAL_PUBLISH_DIR="/var/www/marketplace.exelixitech.com"
 export DEPLOY_ENV="PRODUCCIÓN (GCIA)"
 export DEPLOY_BRANCH="main"
 export PORTAL_BASE="/"
