@@ -61,7 +61,8 @@ export function PortalShell() {
   const displayRole = profile?.user.role ?? storageUser?.role ?? 'Operador';
   const displayEmpresa = profile?.empresa.nombre ?? storageUser?.empresa ?? 'La Mundial de Seguros';
   const canal = profile?.canal;
-  const isAdmin = isPortalAdmin(storageUser ?? profile?.user ?? null);
+  // Entrando por SSO/iframe desde Sis2000 siempre es vista de marketplace, sea cual sea el rol.
+  const isAdmin = !isSsoSession() && isPortalAdmin(storageUser ?? profile?.user ?? null);
   const navItems = isAdmin ? [...NAV, ADMIN_NAV] : [...NAV];
 
   const handleLogout = () => {
@@ -69,7 +70,7 @@ export function PortalShell() {
     navigate('/login');
   };
 
-  // Operadores: solo el catálogo de emisión, como marketplace (sin menú lateral).
+  // Operadores y sesiones SSO: solo el catálogo de emisión, como marketplace (sin menú lateral).
   if (!isAdmin) {
     return (
       <div className="portal-app min-h-screen bg-[#F7F7F7] flex flex-col">
