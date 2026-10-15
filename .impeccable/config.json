@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "bounce-easing",
+        "value": "art-wobble",
+        "createdAt": "2026-09-30T16:31:27.460Z",
+        "reason": "agent: tambaleo literal de la persona que cae en la escena de Accidentes Personales, no easing de UI"
+      }
+    ]
+  }
+}

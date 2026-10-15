@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Car,
-  Building2,
-  Heart,
-  Package,
-  ArrowRight,
-  Loader2,
-  ExternalLink,
   AlertCircle,
-  ShieldCheck,
+  ArrowRight,
+  ExternalLink,
   Inbox,
+  Loader2,
+  Search,
+  SearchX,
+  X,
 } from 'lucide-react';
 import {
   getCurrentUser,
+  isSsoSession,
   getToken,
   ssoDelegate,
   registerAudit,
@@ -22,35 +22,27 @@ import {
 } from '@/lib/nexus-auth';
 import { buildFallbackModuleUrl, buildSsoPayload } from '@/lib/sso-launch';
 import { usePortalSession } from '@/context/PortalSessionContext';
+import { ProductSheet } from '@/components/dashboard/ProductSheet';
+import { LineArt, ProductArt } from '@/components/dashboard/ProductArt';
+import { VitrinaBackdrop } from '@/components/dashboard/VitrinaBackdrop';
+import { publicAsset } from '@/lib/public-asset';
+import {
+  PRODUCT_LINES,
+  PRODUCT_LINE_ORDER,
+  priceInfo,
+  productLine,
+  productTitle,
+  type ProductLineId,
+} from '@/components/dashboard/product-lines';
 
-function cardVisual(product: PortalProductDto) {
-  if (product.product === 'rcv') {
-    return {
-      icon: <Car size={26} strokeWidth={1.75} />,
-      accent: 'linear-gradient(135deg, #E84F51 0%, #B23F44 100%)',
-      tint: '#E84F51',
-    };
-  }
-  if (product.product === 'funerario') {
-    return {
-      icon: <Heart size={26} strokeWidth={1.75} />,
-      accent: 'linear-gradient(135deg, #2E6DBF 0%, #0F1A5A 100%)',
-      tint: '#2E6DBF',
-    };
-  }
-  if (product.product === 'patrimoniales') {
-    return {
-      icon: <Building2 size={26} strokeWidth={1.75} />,
-      accent: 'linear-gradient(135deg, #0F1A5A 0%, #091133 100%)',
-      tint: '#0F1A5A',
-    };
-  }
-  return {
-    icon: <Package size={26} strokeWidth={1.75} />,
-    accent: 'linear-gradient(135deg, #162A7F 0%, #0F1A5A 100%)',
-    tint: '#162A7F',
-  };
+function canalLabel(centidad?: string, citem?: string): string | null {
+  if (!citem) return null;
+  if (centidad === 'C') return `Canal ${citem}`;
+  if (centidad === 'G') return `Gestor ${citem}`;
+  return `Productor ${citem}`;
 }
+
+const normalize = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,21 +51,96 @@ export const DashboardPage: React.FC = () => {
   const { profile, products, productsLoading, productsError } = usePortalSession();
   const [launching, setLaunching] = useState<string | null>(null);
   const [launchError, setLaunchError] = useState('');
+  const [query, setQuery] = useState('');
+  const [lineFilter, setLineFilter] = useState<ProductLineId | 'all'>('all');
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const sheetCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!userId) navigate('/login');
+    if (!userId) navigate(isSsoSession() ? '/sso' : '/login');
   }, [userId, navigate]);
+
+  const lineCounts = useMemo(() => {
+    const counts = new Map<ProductLineId, number>();
+    for (const p of products) {
+      const id = productLine(p);
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    return counts;
+  }, [products]);
+
+  const groups = useMemo(() => {
+    const q = normalize(query.trim());
+    const visible = products.filter(
+      (p) =>
+        (lineFilter === 'all' || productLine(p) === lineFilter) &&
+        (!q ||
+          normalize(`${productTitle(p)} ${p.label} ${p.description} ${p.cproducto}`).includes(q)),
+    );
+    return PRODUCT_LINE_ORDER.map((id) => ({
+      line: PRODUCT_LINES[id],
+      items: visible
+        .filter((p) => productLine(p) === id)
+        .sort((a, b) => a.label.localeCompare(b.label, 'es')),
+    })).filter((g) => g.items.length > 0);
+  }, [products, query, lineFilter]);
+
+  const visibleProducts = useMemo(() => groups.flatMap((g) => g.items), [groups]);
+  const selected = products.find((p) => p.key === selectedKey);
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSheetOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sheetOpen]);
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    sheetCloseRef.current?.focus();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [sheetOpen]);
 
   if (!userId || !user) return null;
 
   const firstName = (profile?.user.nombre ?? user.nombre).split(' ')[0];
+  const canal = profile?.canal;
+  const canalText = user.canal || canalLabel(canal?.centidad, canal?.citem);
+  const onlineCount = products.filter((p) => p.launchMode !== 'sysip').length;
+
+  const openSheet = (product: PortalProductDto) => {
+    setSelectedKey(product.key);
+    setSheetOpen(true);
+  };
 
   const handleLaunch = async (product: PortalProductDto) => {
     setLaunching(product.key);
     setLaunchError('');
     try {
       const token = getToken();
-      if (!token) throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
+      if (!token) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.');
+
+      if (product.launchMode === 'sysip') {
+        if (!product.marketplaceUrl) throw new Error('Este producto no tiene enlace de emisión.');
+        window.open(product.marketplaceUrl, '_blank', 'noopener,noreferrer');
+        await registerAudit({
+          accion: `open_marketplace_${product.cproducto}`,
+          producto: product.cproducto,
+          detalle: {
+            cproducto: product.cproducto,
+            xform: product.xform,
+            launchMode: 'sysip',
+          },
+        }).catch(() => undefined);
+        return;
+      }
 
       const payload = buildSsoPayload(product);
       let url: string;
@@ -109,182 +176,255 @@ export const DashboardPage: React.FC = () => {
       await registerAudit({
         accion: `launch_${product.cproducto}`,
         producto: product.cproducto,
-        detalle: { target: payload.target, product: payload.product, cproducto: product.cproducto },
+        detalle: {
+          target: payload.target,
+          product: payload.product,
+          cproducto: product.cproducto,
+        },
       });
 
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err) {
-      setLaunchError(err instanceof Error ? err.message : 'No se pudo abrir el módulo.');
+      setLaunchError(err instanceof Error ? err.message : 'No se pudo abrir la emisión.');
     } finally {
       setLaunching(null);
     }
   };
 
+  const sheetProps = selected
+    ? {
+        product: selected,
+        busy: launching === selected.key,
+        disabled: launching !== null,
+        onLaunch: handleLaunch,
+      }
+    : null;
+
+  const summary = productsLoading
+    ? 'Cargando tu catálogo…'
+    : `${products.length} producto${products.length === 1 ? '' : 's'} habilitado${
+        products.length === 1 ? '' : 's'
+      }, ${onlineCount} con emisión en línea.`;
+
   return (
-    <div className="portal-page">
-      <div className="portal-page-header">
-        <div>
-          <p className="portal-page-eyebrow">Suscripción digital</p>
-          <h1 className="portal-page-title">Hola, {firstName}</h1>
-          <p className="portal-page-subtitle">
-            Elige el ramo que deseas emitir. Solo verás los productos habilitados para tu perfil y
-            tu canal comercial.
+    <div className="portal-page lm-desk">
+      <VitrinaBackdrop />
+      <header className="lm-desk-top">
+        <div className="min-w-0">
+          <h1 className="lm-desk-title">Hola, {firstName}</h1>
+          <p className="lm-desk-summary">
+            {canalText && <strong>{canalText}</strong>}
+            {canalText && profile?.empresa.nombre && <span aria-hidden> · </span>}
+            {profile?.empresa.nombre && <span>{profile.empresa.nombre}</span>}
+            {(canalText || profile?.empresa.nombre) && <span aria-hidden> — </span>}
+            <span>{summary}</span>
           </p>
         </div>
-      </div>
+        <label className="lm-search">
+          <Search size={17} aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar producto o código"
+            aria-label="Buscar producto"
+            disabled={productsLoading}
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery('')} aria-label="Limpiar búsqueda">
+              <X size={15} />
+            </button>
+          )}
+        </label>
+      </header>
 
-      <div className="portal-page-body">
-        {launchError && (
-          <div className="mb-6 flex gap-3 items-start rounded-xl border border-red-200 bg-red-50 px-4 py-3.5">
-            <AlertCircle size={18} className="text-[#E84F51] shrink-0 mt-0.5" />
-            <div className="text-sm text-[#991B1B]">
-              <p className="font-semibold">No se pudo abrir el flujo</p>
-              <p className="mt-0.5 font-medium text-[#B45356]">{launchError}</p>
+      {(launchError || productsError) && (
+        <div className="lm-desk-alerts">
+          {launchError && (
+            <div role="alert" className="lm-alert lm-alert--error">
+              <AlertCircle size={18} aria-hidden />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">No se pudo abrir la emisión</p>
+                <p>{launchError}</p>
+              </div>
+              <button type="button" onClick={() => setLaunchError('')} aria-label="Cerrar aviso">
+                <X size={16} />
+              </button>
             </div>
-          </div>
-        )}
-
-        {productsError && (
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            {productsError}
-          </div>
-        )}
-
-        <div className="flex items-end justify-between gap-4 mb-5">
-          <h2 className="font-display text-lg font-bold text-[#091133]">Productos disponibles</h2>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ACACAC]">
-            {productsLoading ? '…' : `${products.length} producto${products.length === 1 ? '' : 's'}`}
-          </span>
+          )}
+          {productsError && (
+            <div role="alert" className="lm-alert lm-alert--warn">
+              <AlertCircle size={18} aria-hidden />
+              <p className="min-w-0 flex-1">{productsError}</p>
+            </div>
+          )}
         </div>
+      )}
+
+      <div className="lm-desk-body">
+        <nav className="lm-rail" aria-label="Líneas de producto">
+          <button
+            type="button"
+            className="lm-rail-tab"
+            aria-pressed={lineFilter === 'all'}
+            onClick={() => setLineFilter('all')}
+          >
+            <span className="lm-rail-art lm-rail-art--all">
+              <img src={publicAsset('brand/mundial-isotipo.png')} alt="" aria-hidden />
+            </span>
+            <span className="lm-rail-text">
+              <span className="lm-rail-label">Todos</span>
+              <span className="lm-rail-count">{productsLoading ? '…' : products.length}</span>
+            </span>
+          </button>
+          {PRODUCT_LINE_ORDER.filter((id) => lineCounts.has(id)).map((id) => (
+            <button
+              key={id}
+              type="button"
+              className="lm-rail-tab"
+              aria-pressed={lineFilter === id}
+              onClick={() => setLineFilter(lineFilter === id ? 'all' : id)}
+            >
+              <span className="lm-rail-art">
+                <LineArt line={id} />
+              </span>
+              <span className="lm-rail-text">
+                <span className="lm-rail-label">{PRODUCT_LINES[id].label}</span>
+                <span className="lm-rail-count">{lineCounts.get(id)}</span>
+              </span>
+            </button>
+          ))}
+        </nav>
 
         {productsLoading && (
-          <div className="flex justify-center py-20">
-            <Loader2 size={36} className="animate-spin text-[#0F1A5A]" />
+          <div className="lm-gallery" aria-busy="true" aria-label="Cargando productos">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="lm-card-skeleton" />
+            ))}
           </div>
         )}
 
         {!productsLoading && products.length === 0 && !productsError && (
-          <div className="portal-panel rounded-2xl p-12 text-center">
-            <Inbox size={40} className="mx-auto text-[#ACACAC] mb-4" />
-            <p className="font-semibold text-[#091133]">Sin productos asignados</p>
-            <p className="text-sm text-[#777777] mt-2 max-w-md mx-auto">
-              No hay productos asignados a tu canal o tu perfil aún no tiene permisos. Contacta al
-              administrador de usuarios de tu empresa.
-            </p>
+          <div className="lm-empty">
+            <Inbox size={34} aria-hidden />
+            <p className="lm-empty-title">Tu canal aún no tiene productos</p>
+            <p>Contacta a Administración de Canales La Mundial para habilitarlos.</p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 pb-8">
-          {!productsLoading &&
-            products.map((product) => {
-              const style = cardVisual(product);
-              const busy = launching === product.key;
+        {!productsLoading && products.length > 0 && visibleProducts.length === 0 && (
+          <div className="lm-empty">
+            <SearchX size={32} aria-hidden />
+            <p className="lm-empty-title">Ningún producto coincide</p>
+            <button
+              type="button"
+              className="lm-empty-reset"
+              onClick={() => {
+                setQuery('');
+                setLineFilter('all');
+              }}
+            >
+              Ver todos los productos
+            </button>
+          </div>
+        )}
 
+        {!productsLoading && visibleProducts.length > 0 && (
+          <ul key={lineFilter} className="lm-gallery" aria-label="Productos disponibles">
+            {visibleProducts.map((p, i) => {
+              const price = priceInfo(p);
+              const title = productTitle(p);
+              const external = p.launchMode === 'sysip';
+              const line = PRODUCT_LINES[productLine(p)];
               return (
-                <article
-                  key={product.key}
-                  className="portal-panel group relative rounded-2xl overflow-hidden flex flex-col hover:shadow-[0_12px_32px_-12px_rgba(9,17,51,0.18)] hover:-translate-y-0.5 transition-all duration-200"
+                <li
+                  key={p.key}
+                  className="lm-card"
+                  data-line={line.id}
+                  style={{ '--i': Math.min(i, 11) } as React.CSSProperties}
                 >
-                  <div className="h-1.5 w-full" style={{ background: style.accent }} />
-
-                  <div className="p-5 sm:p-6 flex flex-col flex-1">
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div
-                        className="h-12 w-12 rounded-xl text-white grid place-items-center shadow-sm"
-                        style={{ background: style.accent }}
-                      >
-                        {style.icon}
-                      </div>
-                      <span
-                        className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em] bg-[#F0F2F8]"
-                        style={{ color: style.tint }}
-                      >
-                        {product.cproducto} · ramo {product.cramo}
+                  <div className="lm-card-stage">
+                    <ProductArt product={p} />
+                    {external && (
+                      <span className="lm-card-badge">
+                        <ExternalLink size={12} aria-hidden /> Marketplace
                       </span>
-                    </div>
-
-                    <h3 className="font-display text-lg font-bold text-[#091133] mb-1.5">
-                      {product.label}
-                    </h3>
-                    <p className="text-sm text-[#777777] leading-relaxed flex-1 line-clamp-3">
-                      {product.description}
-                    </p>
-
-                    {(product.mmontoInicial || product.xfraccionamiento) && (
-                      <div className="mt-3 space-y-1">
-                        {product.mmontoInicial && (
-                          <p className="text-sm font-semibold text-[#091133]">
-                            Desde {product.mmontoInicial}
-                          </p>
-                        )}
-                        {product.xfraccionamiento && (
-                          <p className="text-xs text-[#777777]">{product.xfraccionamiento}</p>
-                        )}
-                      </div>
                     )}
-
-                    {product.xurlPresentacion && (
-                      <a
-                        href={product.xurlPresentacion.trim()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#2E6DBF] hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Ver presentación
-                        <ExternalLink size={12} />
-                      </a>
-                    )}
-
-                    {product.marketplaceQr && (
-                      <img
-                        src={product.marketplaceQr}
-                        alt=""
-                        className="mt-3 h-20 w-20 rounded-lg border border-[#eceef4] object-contain bg-white"
-                      />
-                    )}
-
-                    <div className="mt-4 pt-3 border-t border-[#eceef4] flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ACACAC]">
-                      <ShieldCheck size={13} style={{ color: style.tint }} />
-                      {product.moduleLabel}
-                    </div>
-
-                    <button
-                      type="button"
-                      disabled={busy || launching !== null}
-                      onClick={() => handleLaunch(product)}
-                      className="mt-4 inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:brightness-105 active:scale-[0.99] disabled:opacity-50"
-                      style={{ background: style.accent }}
-                    >
-                      {busy ? (
-                        <>
-                          <Loader2 size={18} className="animate-spin" />
-                          Generando acceso…
-                        </>
-                      ) : (
-                        <>
-                          Abrir flujo
-                          <ArrowRight size={17} className="group-hover:translate-x-0.5 transition-transform" />
-                        </>
-                      )}
-                    </button>
                   </div>
-
-                  {busy && (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] pointer-events-none" />
-                  )}
-                </article>
+                  <div className="lm-card-body">
+                    <h3 className="lm-card-title">
+                      <button type="button" className="lm-card-open" onClick={() => openSheet(p)}>
+                        {title}
+                      </button>
+                    </h3>
+                    <p className="lm-card-meta">
+                      {line.label} · N.º {p.cproducto}
+                    </p>
+                    <div className="lm-card-foot">
+                      <span className="lm-card-price">
+                        <span className="lm-card-price-label">{price.label}</span>
+                        <span
+                          className="lm-card-price-value"
+                          data-kind={price.label === 'Desde' ? 'amount' : 'text'}
+                        >
+                          {price.value}
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        className="lm-card-emit"
+                        disabled={launching !== null}
+                        onClick={() => handleLaunch(p)}
+                        aria-label={`Emitir ${title}`}
+                      >
+                        {launching === p.key ? (
+                          <Loader2 size={16} className="animate-spin" aria-hidden />
+                        ) : (
+                          <>
+                            Emitir
+                            {external ? (
+                              <ExternalLink size={15} aria-hidden />
+                            ) : (
+                              <ArrowRight size={16} aria-hidden />
+                            )}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </li>
               );
             })}
-        </div>
-
-        <footer className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-[#e4e6ee] pt-5 text-xs text-[#ACACAC]">
-          <span className="flex items-center gap-1.5">
-            <ExternalLink size={12} />
-            Cada emisión se abre en una ventana nueva para continuar el proceso
-          </span>
-        </footer>
+          </ul>
+        )}
       </div>
+
+      {sheetOpen &&
+        sheetProps &&
+        createPortal(
+          <div className="lm-modal" role="dialog" aria-modal="true" aria-label="Ficha del producto">
+            <button
+              type="button"
+              className="lm-modal-backdrop"
+              aria-label="Cerrar ficha"
+              tabIndex={-1}
+              onClick={() => setSheetOpen(false)}
+            />
+            <div className="lm-modal-panel">
+              <button
+                ref={sheetCloseRef}
+                type="button"
+                className="lm-modal-close"
+                onClick={() => setSheetOpen(false)}
+                aria-label="Cerrar ficha"
+              >
+                <X size={18} />
+              </button>
+              <ProductSheet {...sheetProps} />
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };

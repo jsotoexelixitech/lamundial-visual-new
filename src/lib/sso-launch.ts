@@ -2,6 +2,7 @@ import type { ProductConfig } from './portal-config';
 import { portalConfig } from './portal-config';
 import type { PortalProductDto, SsoDelegatePayload } from './nexus-auth';
 import { getFlowMetadataOverrides } from './portal-sso-config';
+import { getCurrentUser } from './nexus-auth';
 
 export type LaunchProduct = ProductConfig | PortalProductDto;
 
@@ -11,11 +12,19 @@ export function getSsoDefaults(productKey?: string) {
     cproductor: String(import.meta.env.VITE_SSO_CPRODUCTOR ?? '80080').trim(),
     cusuario: String(import.meta.env.VITE_SSO_CUSUARIO ?? '4').trim(),
     centidad: String(import.meta.env.VITE_SSO_CENTIDAD ?? 'P').trim(),
-    citem: String(import.meta.env.VITE_SSO_CITEM ?? import.meta.env.VITE_SSO_CPRODUCTOR ?? '80080').trim(),
+    citem: String(
+      import.meta.env.VITE_SSO_CITEM ?? import.meta.env.VITE_SSO_CPRODUCTOR ?? '80080',
+    ).trim(),
   };
   if (!productKey) return env;
   const legacyKey =
-    productKey === 'patrimonial' ? 'patrimonial' : productKey === 'funerario' ? 'funerario' : productKey === 'rcv' ? 'rcv' : null;
+    productKey === 'patrimonial'
+      ? 'patrimonial'
+      : productKey === 'funerario'
+        ? 'funerario'
+        : productKey === 'rcv'
+          ? 'rcv'
+          : null;
   if (!legacyKey) return env;
   const o = getFlowMetadataOverrides(legacyKey);
   return {
@@ -24,6 +33,19 @@ export function getSsoDefaults(productKey?: string) {
     centidad: o.centidad?.trim() || env.centidad,
     citem: o.citem?.trim() || env.citem,
   };
+}
+
+/**
+ * Gestor como lo envía el marketplace SysIP: productor-gestor ("348-342") en cgestor y csubitem.
+ */
+function gestorFields(
+  cgestor: string | undefined,
+  parent: string,
+): Pick<SsoDelegatePayload, 'cgestor' | 'csubitem'> {
+  const g = String(cgestor ?? '').trim();
+  if (!g || g.includes('@')) return {};
+  const composed = g.includes('-') || !parent || parent === g ? g : `${parent}-${g}`;
+  return { cgestor: composed, csubitem: composed };
 }
 
 export function buildSsoPayload(product: LaunchProduct): SsoDelegatePayload {
@@ -38,21 +60,21 @@ export function buildSsoPayload(product: LaunchProduct): SsoDelegatePayload {
   const cramoFromProduct =
     isPortalDto && product.cramo != null && !Number.isNaN(Number(product.cramo))
       ? Number(product.cramo)
-      : product.defaultCramo ?? 18;
+      : (product.defaultCramo ?? 18);
 
   const flowCramo =
     !isPortalDto && 'key' in product
-      ? getFlowMetadataOverrides(
-          product.key as ProductConfig['key'],
-        ).cramo?.trim()
+      ? getFlowMetadataOverrides(product.key as ProductConfig['key']).cramo?.trim()
       : undefined;
   const cramo =
-    flowCramo && !Number.isNaN(Number(flowCramo))
-      ? Number(flowCramo)
-      : cramoFromProduct;
+    flowCramo && !Number.isNaN(Number(flowCramo)) ? Number(flowCramo) : cramoFromProduct;
+
+  // Rol Sis2000 del usuario que entró desde el backoffice (solo así llega crol).
+  const crol = String(getCurrentUser()?.crol ?? '').trim();
 
   const base: SsoDelegatePayload = {
     target: product.target,
+    ...(crol ? { crol } : {}),
     cproductor,
     cusuario,
     centidad,
@@ -69,6 +91,7 @@ export function buildSsoPayload(product: LaunchProduct): SsoDelegatePayload {
       ...(product.label ? { xproducto: product.label } : {}),
       ...(product.ccanalaltIn ? { ccanalalt_in: product.ccanalaltIn } : {}),
       ...(product.cscanalaltIn ? { cscanalalt_in: product.cscanalaltIn } : {}),
+      ...gestorFields(product.cgestor, citem),
     };
   }
 

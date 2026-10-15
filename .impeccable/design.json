@@ -1,0 +1,696 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-30T15:29:20.098Z",
+  "title": "Design System: La Mundial de Seguros — Vitrina de emisión",
+  "extensions": {
+    "colorMeta": {
+      "pennsylvania": {
+        "role": "primary",
+        "displayName": "Azul Pennsylvania",
+        "canonical": "#0F1A5A",
+        "tonalRamp": [
+          "#0B1342",
+          "#132172",
+          "#1B2FA2",
+          "#233DD2",
+          "#4C62E1",
+          "#7C8CE9",
+          "#B0BAF2",
+          "#E9ECFB"
+        ]
+      },
+      "pennsylvania-deep": {
+        "role": "primary",
+        "displayName": "Pennsylvania Profundo",
+        "canonical": "#091133",
+        "tonalRamp": [
+          "#0B1641",
+          "#142671",
+          "#1C35A0",
+          "#2545D0",
+          "#4D69E0",
+          "#7D91E8",
+          "#B1BDF1",
+          "#E9EDFB"
+        ]
+      },
+      "pennsylvania-bright": {
+        "role": "primary",
+        "displayName": "Pennsylvania Brillante",
+        "canonical": "#162A7F",
+        "tonalRamp": [
+          "#0B1641",
+          "#142571",
+          "#1C35A1",
+          "#2445D1",
+          "#4D69E0",
+          "#7D91E8",
+          "#B1BDF1",
+          "#E9EDFB"
+        ]
+      },
+      "imperial": {
+        "role": "secondary",
+        "displayName": "Rojo Imperial",
+        "canonical": "#E84F51",
+        "tonalRamp": [
+          "#44090A",
+          "#750F11",
+          "#A71618",
+          "#D91C1F",
+          "#E74648",
+          "#ED7879",
+          "#F4AEAF",
+          "#FCE8E9"
+        ]
+      },
+      "imperial-cta": {
+        "role": "secondary",
+        "displayName": "Imperial de Acción",
+        "canonical": "#D4403F",
+        "tonalRamp": [
+          "#3F0E0E",
+          "#6C1918",
+          "#9A2323",
+          "#C82E2D",
+          "#D95554",
+          "#E38382",
+          "#EEB4B4",
+          "#FAEAEA"
+        ]
+      },
+      "imperial-cta-hover": {
+        "role": "secondary",
+        "displayName": "Imperial Presionado",
+        "canonical": "#BF3534",
+        "tonalRamp": [
+          "#3C1110",
+          "#681D1C",
+          "#942928",
+          "#C03534",
+          "#D25C5B",
+          "#DE8787",
+          "#EBB7B7",
+          "#FAEBEB"
+        ]
+      },
+      "plata": {
+        "role": "tertiary",
+        "displayName": "Plata",
+        "canonical": "#ACACAC",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5E5E5E",
+          "#7A7A7A",
+          "#969696",
+          "#B3B3B3",
+          "#D1D1D1",
+          "#F2F2F2"
+        ]
+      },
+      "escaparate": {
+        "role": "neutral",
+        "displayName": "Escaparate",
+        "canonical": "#F4F5F8",
+        "tonalRamp": [
+          "#1E222F",
+          "#343B51",
+          "#495473",
+          "#5F6D96",
+          "#7F8BAE",
+          "#A2AAC3",
+          "#C7CCDB",
+          "#EFF1F5"
+        ]
+      },
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5E5E5E",
+          "#7A7A7A",
+          "#969696",
+          "#B3B3B3",
+          "#D1D1D1",
+          "#F2F2F2"
+        ]
+      },
+      "tinta-suave": {
+        "role": "neutral",
+        "displayName": "Tinta Suave",
+        "canonical": "#5E6275",
+        "tonalRamp": [
+          "#22242A",
+          "#3B3E4A",
+          "#545869",
+          "#6D7288",
+          "#8B8FA2",
+          "#AAADBB",
+          "#CCCED6",
+          "#F1F1F4"
+        ]
+      },
+      "filete": {
+        "role": "neutral",
+        "displayName": "Filete",
+        "canonical": "#E3E5EC",
+        "tonalRamp": [
+          "#1F222E",
+          "#363B4F",
+          "#4C5470",
+          "#636D92",
+          "#828BAA",
+          "#A4AAC1",
+          "#C8CCDA",
+          "#F0F1F5"
+        ]
+      },
+      "sobre-navy": {
+        "role": "neutral",
+        "displayName": "Sobre Navy",
+        "canonical": "#C9D1EE",
+        "tonalRamp": [
+          "#121B3A",
+          "#202F65",
+          "#2D4290",
+          "#3B56BA",
+          "#6078CD",
+          "#8B9CDA",
+          "#B9C4E9",
+          "#ECEEF9"
+        ]
+      },
+      "sobre-navy-suave": {
+        "role": "neutral",
+        "displayName": "Sobre Navy Suave",
+        "canonical": "#AFBBE4",
+        "tonalRamp": [
+          "#131C39",
+          "#213063",
+          "#30458D",
+          "#3E59B7",
+          "#637ACA",
+          "#8D9ED8",
+          "#BAC5E8",
+          "#ECEFF9"
+        ]
+      },
+      "azul-senal": {
+        "role": "neutral",
+        "displayName": "Azul Señal",
+        "canonical": "#2E6DBF",
+        "tonalRamp": [
+          "#0F233E",
+          "#1A3D6B",
+          "#255798",
+          "#3071C5",
+          "#568ED6",
+          "#84ACE1",
+          "#B5CDED",
+          "#EAF1FA"
+        ]
+      },
+      "escena-autos-suave": {
+        "role": "tertiary",
+        "displayName": "Escena Autos · plano",
+        "canonical": "#1C2A78",
+        "tonalRamp": [
+          "#0E163E",
+          "#19266C",
+          "#243699",
+          "#2E45C6",
+          "#5569D7",
+          "#8391E2",
+          "#B5BDEE",
+          "#EAEDFA"
+        ]
+      },
+      "escena-autos-detalle": {
+        "role": "tertiary",
+        "displayName": "Escena Autos · detalle",
+        "canonical": "#7FA7E0",
+        "tonalRamp": [
+          "#0F223E",
+          "#1A3B6B",
+          "#255498",
+          "#306DC5",
+          "#578BD6",
+          "#84AAE1",
+          "#B5CCED",
+          "#EAF1FA"
+        ]
+      },
+      "escena-personas": {
+        "role": "tertiary",
+        "displayName": "Escena Salud y personas",
+        "canonical": "#E4ECF9",
+        "tonalRamp": [
+          "#0E203F",
+          "#18386C",
+          "#22509A",
+          "#2D68C8",
+          "#5487D9",
+          "#82A7E3",
+          "#B4CAEE",
+          "#EAF0FA"
+        ]
+      },
+      "escena-personas-suave": {
+        "role": "tertiary",
+        "displayName": "Escena Salud y personas · plano",
+        "canonical": "#CCDBF2",
+        "tonalRamp": [
+          "#10213D",
+          "#1B3A6A",
+          "#265396",
+          "#326BC3",
+          "#5889D5",
+          "#85A9E0",
+          "#B6CBEC",
+          "#EBF1FA"
+        ]
+      },
+      "escena-viajes": {
+        "role": "tertiary",
+        "displayName": "Escena Viajes",
+        "canonical": "#D3E3F7",
+        "tonalRamp": [
+          "#0C2341",
+          "#143D70",
+          "#1D57A0",
+          "#2671CF",
+          "#4E8EDF",
+          "#7EADE7",
+          "#B1CEF1",
+          "#E9F1FB"
+        ]
+      },
+      "escena-viajes-suave": {
+        "role": "tertiary",
+        "displayName": "Escena Viajes · plano",
+        "canonical": "#B7CFEF",
+        "tonalRamp": [
+          "#0E233F",
+          "#183C6C",
+          "#22569A",
+          "#2D6FC8",
+          "#548DD9",
+          "#82ACE3",
+          "#B4CDEE",
+          "#EAF1FA"
+        ]
+      },
+      "escena-funerario": {
+        "role": "tertiary",
+        "displayName": "Escena Funerario",
+        "canonical": "#131A45",
+        "tonalRamp": [
+          "#11173C",
+          "#1D2768",
+          "#293894",
+          "#3548C0",
+          "#5B6CD2",
+          "#8793DE",
+          "#B7BEEB",
+          "#EBEDF9"
+        ]
+      },
+      "escena-funerario-suave": {
+        "role": "tertiary",
+        "displayName": "Escena Funerario · plano",
+        "canonical": "#222B62",
+        "tonalRamp": [
+          "#141939",
+          "#222B62",
+          "#313D8C",
+          "#3F50B6",
+          "#6472C9",
+          "#8D98D8",
+          "#BBC1E7",
+          "#ECEEF8"
+        ]
+      },
+      "escena-patrimoniales": {
+        "role": "tertiary",
+        "displayName": "Plata Patrimonial",
+        "canonical": "#EAEBF0",
+        "tonalRamp": [
+          "#20222D",
+          "#373B4D",
+          "#4F546E",
+          "#666D8F",
+          "#858BA8",
+          "#A6AABF",
+          "#C9CCD9",
+          "#F0F1F4"
+        ]
+      },
+      "escena-patrimoniales-suave": {
+        "role": "tertiary",
+        "displayName": "Plata Patrimonial · plano",
+        "canonical": "#D8DAE2",
+        "tonalRamp": [
+          "#21232C",
+          "#393C4C",
+          "#50566C",
+          "#68708C",
+          "#878DA6",
+          "#A7ACBE",
+          "#CACDD8",
+          "#F0F1F4"
+        ]
+      },
+      "error-fondo": {
+        "role": "neutral",
+        "displayName": "Error · fondo",
+        "canonical": "#FDECEC",
+        "tonalRamp": [
+          "#450707",
+          "#780D0D",
+          "#AB1212",
+          "#DD1717",
+          "#EB4242",
+          "#F07575",
+          "#F6ACAC",
+          "#FDE8E8"
+        ]
+      },
+      "error-tinta": {
+        "role": "neutral",
+        "displayName": "Error · tinta",
+        "canonical": "#8F2A2D",
+        "tonalRamp": [
+          "#3B1113",
+          "#661E20",
+          "#922B2E",
+          "#BD383C",
+          "#D05D61",
+          "#DC898B",
+          "#EAB8BA",
+          "#F9EBEC"
+        ]
+      },
+      "aviso-fondo": {
+        "role": "neutral",
+        "displayName": "Aviso · fondo",
+        "canonical": "#FFF7E6",
+        "tonalRamp": [
+          "#4D3400",
+          "#855A00",
+          "#BD8000",
+          "#F5A600",
+          "#FFBC2E",
+          "#FFCE66",
+          "#FFE2A3",
+          "#FFF7E5"
+        ]
+      },
+      "aviso-tinta": {
+        "role": "neutral",
+        "displayName": "Aviso · tinta",
+        "canonical": "#7A4B00",
+        "tonalRamp": [
+          "#4D2F00",
+          "#855200",
+          "#BD7400",
+          "#F59600",
+          "#FFAE2E",
+          "#FFC466",
+          "#FFDCA3",
+          "#FFF5E5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Título del producto en el modo \"Mostrar al cliente\"."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título de la ficha en modal u hoja inferior."
+      },
+      "greeting": {
+        "displayName": "Saludo",
+        "purpose": "\"Hola, {nombre}\" en el encabezado de la vitrina."
+      },
+      "price": {
+        "displayName": "Precio",
+        "purpose": "Monto \"Desde\" en la ficha, cifras tabulares."
+      },
+      "price-card": {
+        "displayName": "Precio en tarjeta",
+        "purpose": "Monto \"Desde\" en la tarjeta (1.15rem en móvil)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Nombre del producto en tarjeta (0.875rem en móvil)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Resumen del canal, alertas, textos operativos."
+      },
+      "body-ficha": {
+        "displayName": "Body ficha",
+        "purpose": "Descripción del producto en la ficha, máx. 46ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Meta \"Línea · N.º\" y conteos de pestaña."
+      },
+      "label-strong": {
+        "displayName": "Label fuerte",
+        "purpose": "Etiqueta \"Desde\"/\"Precio\" en tarjeta."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "Emitir en tarjeta y etiquetas de pestaña."
+      }
+    },
+    "shadows": [
+      {
+        "name": "reposo",
+        "value": "0 1px 2px rgba(9, 17, 51, 0.05)",
+        "purpose": "Tarjetas y pestañas en reposo."
+      },
+      {
+        "name": "tarjeta-hover",
+        "value": "0 22px 40px -24px rgba(9, 17, 51, 0.5)",
+        "purpose": "Tarjeta al hover, con translateY(-4px)."
+      },
+      {
+        "name": "pestana-hover",
+        "value": "0 8px 18px -12px rgba(9, 17, 51, 0.35)",
+        "purpose": "Pestaña de línea al hover."
+      },
+      {
+        "name": "pestana-activa",
+        "value": "0 12px 24px -14px rgba(9, 17, 51, 0.6)",
+        "purpose": "Pestaña de línea seleccionada."
+      },
+      {
+        "name": "ficha",
+        "value": "0 24px 48px -24px rgba(9, 17, 51, 0.55)",
+        "purpose": "Panel Pennsylvania de la ficha."
+      },
+      {
+        "name": "brillo-emitir",
+        "value": "0 8px 16px -10px rgba(212, 64, 63, 0.9)",
+        "purpose": "Debajo de Emitir en tarjeta."
+      },
+      {
+        "name": "brillo-cta",
+        "value": "0 12px 24px -12px rgba(212, 64, 63, 0.85)",
+        "purpose": "Debajo del CTA Emitir de la ficha."
+      },
+      {
+        "name": "foco-buscador",
+        "value": "0 0 0 3px rgba(46, 109, 191, 0.18)",
+        "purpose": "Halo del buscador enfocado."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-vitrina",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Curva única del mundo: transiciones, entradas y hover."
+      },
+      {
+        "name": "card-in",
+        "value": "0.55s cubic-bezier(0.16, 1, 0.3, 1); delay calc(var(--i) * 45ms), índice tope 11",
+        "purpose": "Entrada escalonada de tarjetas desde translateY(14px) scale(0.98) blur(4px)."
+      },
+      {
+        "name": "card-hover",
+        "value": "0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Elevación de tarjeta; el sujeto de la escena usa 0.5s."
+      },
+      {
+        "name": "rail-tab",
+        "value": "0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Cambios de estado de pestañas."
+      },
+      {
+        "name": "ficha-in",
+        "value": "0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Entrada de la ficha en modal (desde blur 3px) u hoja inferior (desde translateY(100%))."
+      },
+      {
+        "name": "present-fade",
+        "value": "0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Fundido del modo \"Mostrar al cliente\"."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.4s linear infinite",
+        "purpose": "Esqueletos de carga."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact",
+        "value": "480px"
+      },
+      {
+        "name": "sheet",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón Emitir (tarjeta)",
+      "kind": "button",
+      "refersTo": "button-emit",
+      "description": "Única acción roja de la vitrina; abre la emisión en pestaña nueva.",
+      "html": "<button type=\"button\" class=\"ds-btn-emit\">Emitir <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-btn-emit{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;min-width:5.75rem;min-height:2.5rem;padding:0 .95rem;border:0;border-radius:.75rem;font-family:Poppins,system-ui,sans-serif;font-size:.875rem;font-weight:600;color:#fff;background:#d4403f;box-shadow:0 8px 16px -10px rgba(212,64,63,.9);cursor:pointer;transition:background-color .2s ease,transform .2s cubic-bezier(0.16, 1, 0.3, 1)}.ds-btn-emit:hover{background:#bf3534;transform:translateX(2px)}.ds-btn-emit:focus-visible{outline:2px solid #0f1a5a;outline-offset:2px}.ds-btn-emit:disabled{opacity:.55;cursor:not-allowed}"
+    },
+    {
+      "name": "CTA Emitir (ficha)",
+      "kind": "button",
+      "refersTo": "button-cta",
+      "description": "Botón principal de la ficha sobre Pennsylvania, a ancho completo.",
+      "html": "<div class=\"ds-cta-wrap\"><button type=\"button\" class=\"ds-btn-cta\">Emitir <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button></div>",
+      "css": ".ds-cta-wrap{padding:1.5rem;background:#0f1a5a;border-radius:1.25rem}.ds-btn-cta{display:flex;width:100%;align-items:center;justify-content:center;gap:.6rem;height:3.4rem;padding:0 1.5rem;border:0;border-radius:.85rem;background:#d4403f;color:#fff;font-family:Poppins,system-ui,sans-serif;font-size:16px;font-weight:700;box-shadow:0 12px 24px -12px rgba(212,64,63,.85);cursor:pointer;transition:background .15s,transform .15s cubic-bezier(0.16, 1, 0.3, 1),box-shadow .2s}.ds-btn-cta:hover{background:#bf3534;transform:translateY(-1px);box-shadow:0 16px 28px -12px rgba(232,79,81,.9)}.ds-btn-cta:active{transform:translateY(0)}.ds-btn-cta:focus-visible{outline:3px solid #fff;outline-offset:3px}"
+    },
+    {
+      "name": "Enlace de ficha",
+      "kind": "button",
+      "refersTo": "button-ficha-link",
+      "description": "Acción secundaria sobre Pennsylvania: Ver presentación, Mostrar al cliente.",
+      "html": "<div class=\"ds-link-wrap\"><a href=\"#\" class=\"ds-ficha-link\">Ver presentación <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 3h6v6\"/><path d=\"M10 14 21 3\"/><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/></svg></a></div>",
+      "css": ".ds-link-wrap{padding:1.25rem;background:#0f1a5a;border-radius:1.25rem}.ds-ficha-link{display:inline-flex;align-items:center;gap:.4rem;height:2.25rem;padding:0 .85rem;border-radius:.6rem;border:1px solid rgba(255,255,255,.24);color:#fff;font-family:Poppins,system-ui,sans-serif;font-size:13px;font-weight:600;text-decoration:none;transition:background .15s,border-color .15s}.ds-ficha-link:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.4)}.ds-ficha-link:focus-visible{outline:2px solid #2e6dbf;outline-offset:2px}"
+    },
+    {
+      "name": "Buscador",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Búsqueda por nombre o código en el encabezado.",
+      "html": "<label class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input type=\"search\" placeholder=\"Buscar producto o código\" /></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:.55rem;height:2.75rem;width:20rem;padding:0 .9rem;border:1px solid #d9dce5;border-radius:.75rem;background:#fff;color:#8a8fa3;transition:border-color .15s,box-shadow .15s}.ds-search:focus-within{border-color:#2e6dbf;box-shadow:0 0 0 3px rgba(46,109,191,.18)}.ds-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:Poppins,system-ui,sans-serif;font-size:.9rem;color:#091133;caret-color:#e84f51}.ds-search input::placeholder{color:#6f7488}"
+    },
+    {
+      "name": "Pestaña de línea",
+      "kind": "nav",
+      "refersTo": "rail-tab",
+      "description": "Filtro por línea comercial con su escena y conteo; activa en Pennsylvania.",
+      "html": "<div class=\"ds-rail\"><button type=\"button\" class=\"ds-rail-tab\" aria-pressed=\"true\"><span class=\"ds-rail-art\"><svg viewBox=\"0 0 320 200\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\" style=\"display:block;width:100%;height:100%\"><rect width=\"320\" height=\"200\" fill=\"#0F1A5A\"/><circle cx=\"252\" cy=\"58\" r=\"62\" fill=\"#1C2A78\" opacity=\".7\"/><circle cx=\"40\" cy=\"190\" r=\"74\" fill=\"#1C2A78\" opacity=\".55\"/><path d=\"M18 116 H50 M28 132 H54 M14 148 H46\" stroke=\"#7FA7E0\" stroke-width=\"4\" stroke-linecap=\"round\" opacity=\".7\"/><g class=\"ds-art-subject\"><ellipse cx=\"166\" cy=\"168\" rx=\"116\" ry=\"6\" fill=\"#070D33\" opacity=\".45\"/><path d=\"M58 150 V126 C58 118 64 113 72 112 L104 108 L132 84 C137 80 143 78 150 78 H204 C212 78 218 81 223 87 L242 108 L262 112 C270 114 274 120 274 128 V150 Z\" fill=\"#FFFFFF\"/><rect x=\"58\" y=\"128\" width=\"216\" height=\"6\" fill=\"#E84F51\"/><circle cx=\"104\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"104\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/><circle cx=\"226\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"226\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/></g></svg></span><span class=\"ds-rail-text\"><span>Autos</span><span class=\"ds-rail-count\">1</span></span></button><button type=\"button\" class=\"ds-rail-tab\" aria-pressed=\"false\"><span class=\"ds-rail-art\"><svg viewBox=\"0 0 320 200\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\" style=\"display:block;width:100%;height:100%\"><rect width=\"320\" height=\"200\" fill=\"#0F1A5A\"/><circle cx=\"252\" cy=\"58\" r=\"62\" fill=\"#1C2A78\" opacity=\".7\"/><circle cx=\"40\" cy=\"190\" r=\"74\" fill=\"#1C2A78\" opacity=\".55\"/><path d=\"M18 116 H50 M28 132 H54 M14 148 H46\" stroke=\"#7FA7E0\" stroke-width=\"4\" stroke-linecap=\"round\" opacity=\".7\"/><g class=\"ds-art-subject\"><ellipse cx=\"166\" cy=\"168\" rx=\"116\" ry=\"6\" fill=\"#070D33\" opacity=\".45\"/><path d=\"M58 150 V126 C58 118 64 113 72 112 L104 108 L132 84 C137 80 143 78 150 78 H204 C212 78 218 81 223 87 L242 108 L262 112 C270 114 274 120 274 128 V150 Z\" fill=\"#FFFFFF\"/><rect x=\"58\" y=\"128\" width=\"216\" height=\"6\" fill=\"#E84F51\"/><circle cx=\"104\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"104\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/><circle cx=\"226\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"226\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/></g></svg></span><span class=\"ds-rail-text\"><span>Autos</span><span class=\"ds-rail-count\">1</span></span></button></div>",
+      "css": ".ds-rail{display:flex;gap:.75rem}.ds-rail-tab{flex:0 0 11rem;display:flex;flex-direction:column;gap:.55rem;padding:.45rem .45rem .6rem;border-radius:1rem;text-align:left;font-family:Poppins,system-ui,sans-serif;color:#091133;background:#fff;border:1px solid #e3e5ec;box-shadow:0 1px 2px rgba(9,17,51,.04);cursor:pointer;transition:background-color .25s cubic-bezier(0.16, 1, 0.3, 1),border-color .25s cubic-bezier(0.16, 1, 0.3, 1),box-shadow .25s cubic-bezier(0.16, 1, 0.3, 1),transform .25s cubic-bezier(0.16, 1, 0.3, 1)}.ds-rail-tab:hover{border-color:#c3cbe2;box-shadow:0 8px 18px -12px rgba(9,17,51,.35);transform:translateY(-1px)}.ds-rail-tab[aria-pressed=\"true\"]{color:#fff;background:#0f1a5a;border-color:#0f1a5a;box-shadow:0 12px 24px -14px rgba(9,17,51,.6)}.ds-rail-tab:focus-visible{outline:2px solid #2e6dbf;outline-offset:2px}.ds-rail-art{display:block;aspect-ratio:16/9;overflow:hidden;border-radius:.7rem}.ds-rail-text{display:flex;justify-content:space-between;align-items:baseline;padding-inline:.35rem;font-size:.875rem;font-weight:600}.ds-rail-count{font-size:.75rem;font-weight:500;color:#5e6275;font-variant-numeric:tabular-nums}.ds-rail-tab[aria-pressed=\"true\"] .ds-rail-count{color:#c9d1ee}"
+    },
+    {
+      "name": "Tarjeta de producto",
+      "kind": "card",
+      "refersTo": "product-card",
+      "description": "Escena 16:10, nombre, línea y N.º, precio en serifa y Emitir.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-stage\"><svg viewBox=\"0 0 320 200\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\" style=\"display:block;width:100%;height:100%\"><rect width=\"320\" height=\"200\" fill=\"#0F1A5A\"/><circle cx=\"252\" cy=\"58\" r=\"62\" fill=\"#1C2A78\" opacity=\".7\"/><circle cx=\"40\" cy=\"190\" r=\"74\" fill=\"#1C2A78\" opacity=\".55\"/><path d=\"M18 116 H50 M28 132 H54 M14 148 H46\" stroke=\"#7FA7E0\" stroke-width=\"4\" stroke-linecap=\"round\" opacity=\".7\"/><g class=\"ds-art-subject\"><ellipse cx=\"166\" cy=\"168\" rx=\"116\" ry=\"6\" fill=\"#070D33\" opacity=\".45\"/><path d=\"M58 150 V126 C58 118 64 113 72 112 L104 108 L132 84 C137 80 143 78 150 78 H204 C212 78 218 81 223 87 L242 108 L262 112 C270 114 274 120 274 128 V150 Z\" fill=\"#FFFFFF\"/><rect x=\"58\" y=\"128\" width=\"216\" height=\"6\" fill=\"#E84F51\"/><circle cx=\"104\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"104\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/><circle cx=\"226\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"226\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/></g></svg><span class=\"ds-badge\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 3h6v6\"/><path d=\"M10 14 21 3\"/><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/></svg> Marketplace</span></div><div class=\"ds-card-body\"><h3 class=\"ds-card-title\">RCV Externo</h3><p class=\"ds-card-meta\">Autos · N.º 24</p><div class=\"ds-card-foot\"><span class=\"ds-card-price\"><span class=\"ds-card-price-label\">Desde</span><span class=\"ds-card-price-value\">33€</span></span><button type=\"button\" class=\"ds-card-emit\">Emitir <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button></div></div></article>",
+      "css": ".ds-card{width:17rem;display:flex;flex-direction:column;overflow:hidden;border-radius:1.1rem;background:#fff;border:1px solid #e3e5ec;box-shadow:0 1px 2px rgba(9,17,51,.05);font-family:Poppins,system-ui,sans-serif;animation:ds-card-in .55s cubic-bezier(0.16, 1, 0.3, 1) both;transition:transform .35s cubic-bezier(0.16, 1, 0.3, 1),box-shadow .35s cubic-bezier(0.16, 1, 0.3, 1),border-color .35s cubic-bezier(0.16, 1, 0.3, 1)}.ds-card:hover{transform:translateY(-4px);border-color:#c9d1e6;box-shadow:0 22px 40px -24px rgba(9,17,51,.5)}.ds-card:focus-within{border-color:#2e6dbf}.ds-card-stage{position:relative;aspect-ratio:16/10;overflow:hidden}.ds-art-subject{transform-box:fill-box;transform-origin:50% 100%;transition:transform .5s cubic-bezier(0.16, 1, 0.3, 1)}.ds-card:hover .ds-art-subject{transform:translateY(-4px) scale(1.03)}.ds-badge{position:absolute;top:.6rem;left:.6rem;display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .55rem;border-radius:9999px;font-size:11px;font-weight:600;color:#0f1a5a;background:rgba(255,255,255,.94);box-shadow:0 2px 6px rgba(9,17,51,.15)}.ds-card-body{padding:.9rem 1rem 1rem}.ds-card-title{margin:0;font-size:1rem;font-weight:600;line-height:1.3;color:#091133}.ds-card-meta{margin:.2rem 0 0;font-size:.75rem;color:#5e6275}.ds-card-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:.75rem;padding-top:.9rem}.ds-card-price{display:grid;line-height:1.15}.ds-card-price-label{font-size:.6875rem;font-weight:600;color:#5e6275}.ds-card-price-value{font-family:'Libre Baskerville',Georgia,serif;font-size:1.35rem;font-weight:700;color:#0f1a5a;font-variant-numeric:tabular-nums}.ds-card-emit{display:inline-flex;align-items:center;gap:.35rem;min-height:2.5rem;padding:0 .95rem;border:0;border-radius:.75rem;font:600 .875rem Poppins,system-ui,sans-serif;color:#fff;background:#d4403f;box-shadow:0 8px 16px -10px rgba(212,64,63,.9);cursor:pointer;transition:background-color .2s ease,transform .2s cubic-bezier(0.16, 1, 0.3, 1)}.ds-card-emit:hover{background:#bf3534;transform:translateX(2px)}.ds-card-emit:focus-visible{outline:2px solid #0f1a5a;outline-offset:2px}@keyframes ds-card-in{from{opacity:0;transform:translateY(14px) scale(.98);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}@media (prefers-reduced-motion:reduce){.ds-card{animation:none;transition:none}.ds-card:hover{transform:none}}"
+    },
+    {
+      "name": "Ficha del producto",
+      "kind": "custom",
+      "refersTo": "ficha",
+      "description": "Panel Pennsylvania con escena a sangre, título y precio en Baskerville y CTA Emitir; modal, hoja inferior o modo cliente.",
+      "html": "<article class=\"ds-ficha\"><div class=\"ds-ficha-art\"><svg viewBox=\"0 0 320 200\" preserveAspectRatio=\"xMidYMid slice\" aria-hidden=\"true\" style=\"display:block;width:100%;height:100%\"><rect width=\"320\" height=\"200\" fill=\"#0F1A5A\"/><circle cx=\"252\" cy=\"58\" r=\"62\" fill=\"#1C2A78\" opacity=\".7\"/><circle cx=\"40\" cy=\"190\" r=\"74\" fill=\"#1C2A78\" opacity=\".55\"/><path d=\"M18 116 H50 M28 132 H54 M14 148 H46\" stroke=\"#7FA7E0\" stroke-width=\"4\" stroke-linecap=\"round\" opacity=\".7\"/><g class=\"ds-art-subject\"><ellipse cx=\"166\" cy=\"168\" rx=\"116\" ry=\"6\" fill=\"#070D33\" opacity=\".45\"/><path d=\"M58 150 V126 C58 118 64 113 72 112 L104 108 L132 84 C137 80 143 78 150 78 H204 C212 78 218 81 223 87 L242 108 L262 112 C270 114 274 120 274 128 V150 Z\" fill=\"#FFFFFF\"/><rect x=\"58\" y=\"128\" width=\"216\" height=\"6\" fill=\"#E84F51\"/><circle cx=\"104\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"104\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/><circle cx=\"226\" cy=\"152\" r=\"18\" fill=\"#070D33\"/><circle cx=\"226\" cy=\"152\" r=\"8\" fill=\"#7FA7E0\"/></g></svg></div><h2 class=\"ds-ficha-title\">RCV Externo</h2><p class=\"ds-ficha-meta\">Autos · Producto N.º 24</p><p class=\"ds-ficha-desc\">Responsabilidad Civil de Vehículos</p><div class=\"ds-ficha-price\"><span class=\"ds-ficha-price-label\">Desde</span><span class=\"ds-ficha-price-value\">33€</span><span class=\"ds-ficha-note\">Pago único anual</span></div><button type=\"button\" class=\"ds-ficha-cta\">Emitir <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button></article>",
+      "css": ".ds-ficha{--pad:2rem;width:min(100%,38rem);overflow:hidden;padding:var(--pad);border-radius:1.25rem;color:#fff;font-family:Poppins,system-ui,sans-serif;background:radial-gradient(120% 90% at 100% 0%,#162a7f 0%,transparent 55%),#0f1a5a;box-shadow:0 24px 48px -24px rgba(9,17,51,.55);animation:ds-ficha-in .4s cubic-bezier(0.16, 1, 0.3, 1) both}.ds-ficha-art{margin:calc(var(--pad)*-1);margin-bottom:1.25rem;aspect-ratio:2/1;overflow:hidden}.ds-ficha-title{margin:.25rem 0 0;font-family:'Libre Baskerville',Georgia,serif;font-size:2.4rem;font-weight:700;line-height:1.1;letter-spacing:-.01em}.ds-ficha-meta{margin:.5rem 0 0;font-size:13px;font-weight:600;color:#afbbe4}.ds-ficha-desc{margin:.65rem 0 0;max-width:46ch;font-size:15px;line-height:1.55;color:#c9d1ee}.ds-ficha-price{display:grid;gap:.2rem;margin-top:1.75rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,.14)}.ds-ficha-price-label{font-size:12.5px;font-weight:600;color:#afbbe4}.ds-ficha-price-value{font-family:'Libre Baskerville',Georgia,serif;font-size:2.8rem;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}.ds-ficha-note{font-size:14px;color:#c9d1ee}.ds-ficha-cta{display:flex;width:100%;margin-top:1.75rem;align-items:center;justify-content:center;gap:.6rem;height:3.4rem;border:0;border-radius:.85rem;background:#d4403f;color:#fff;font:700 16px Poppins,system-ui,sans-serif;box-shadow:0 12px 24px -12px rgba(212,64,63,.85);cursor:pointer;transition:background .15s,transform .15s cubic-bezier(0.16, 1, 0.3, 1)}.ds-ficha-cta:hover{background:#bf3534;transform:translateY(-1px)}.ds-ficha-cta:focus-visible{outline:3px solid #fff;outline-offset:3px}@keyframes ds-ficha-in{from{opacity:.35;transform:translateY(6px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}@media (prefers-reduced-motion:reduce){.ds-ficha{animation:none}}"
+    },
+    {
+      "name": "Barra marketplace",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Barra superior de operadores: logotipo, usuario y canal, cerrar sesión; sin menú lateral.",
+      "html": "<header class=\"ds-market\"><strong class=\"ds-market-brand\">La Mundial de Seguros</strong><div class=\"ds-market-user\"><span class=\"ds-market-id\"><span class=\"ds-market-name\">Oriana Silva</span><span class=\"ds-market-canal\">Canal 27</span></span></div></header>",
+      "css": ".ds-market{position:relative;display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.85rem 1.5rem;background:#fff;border-bottom:1px solid #e3e5ec;font-family:Poppins,system-ui,sans-serif}.ds-market::before{content:'';position:absolute;inset:0 0 auto;height:3px;background:linear-gradient(90deg,#0f1a5a,#2e6dbf 55%,#e84f51)}.ds-market-brand{color:#0f1a5a;font-size:1rem;font-weight:700}.ds-market-id{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25}.ds-market-name{font-size:.875rem;font-weight:600;color:#091133}.ds-market-canal{font-size:.75rem;color:#5e6275}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El escaparate por líneas",
+    "overview": "La vitrina es el mundo del catálogo de operadores (`/dashboard` del portal). Cada línea comercial (Autos, Salud y personas, Viajes, Funerario, Patrimoniales) tiene su propio escenario de color, y cada producto es una tarjeta con una escena ilustrada propia: geometría plana en blanco, Azul Pennsylvania y un único acento Rojo Imperial, dibujada en SVG en línea. El operador recorre el escaparate por pestañas ilustradas, abre la ficha del producto sobre un panel Pennsylvania y pulsa Emitir; la misma ficha se amplía a pantalla completa para mostrarla al cliente.\n\nLa densidad es de catálogo comercial, no de tarifario: pocas palabras por tarjeta (nombre, línea y N.º, precio, Emitir), la escena ocupa la mitad superior en proporción 16:10 y el precio se canta en serifa. El fondo es un plata azulado muy claro (#F4F5F8) sobre el que las tarjetas blancas descansan con un filete de 1px y una sombra casi imperceptible que solo crece al pasar el cursor. El movimiento es breve y con una sola curva de desaceleración: las tarjetas entran escalonadas y se elevan al hover; las escenas responden levantando su sujeto.\n\nRechazos confirmados por el usuario en el build: la lista larga tipo tarifario con ficha fija y los iconos planos del marketplace. Nunca aparecen nombres internos de la plataforma en la interfaz.\n\nAlcance: las pantallas de login y administración (menú lateral) son anteriores a este mundo y siguen llevando Inter/DM Sans, easing con rebote y texto con degradado; no forman parte de este sistema ni deben tomarse como referencia.",
+    "keyCharacteristics": [
+      "Escena SVG propia por producto, teñida por línea comercial; nunca fotos ni iconos sueltos.",
+      "Rojo Imperial reservado a la acción de emitir y a un solo acento dentro de cada ilustración.",
+      "Poppins para todo lo operativo; Libre Baskerville solo para saludo, título de ficha y precio.",
+      "Superficies blancas con filete sobre plata azulada; sombras tintadas en Pennsylvania que aparecen como respuesta.",
+      "Una sola curva de movimiento, cubic-bezier(0.16, 1, 0.3, 1), con entrada escalonada de tarjetas."
+    ],
+    "rules": [
+      {
+        "name": "The Un Solo Rojo Rule",
+        "body": "Imperial es la acción. En la interfaz solo rellena Emitir (#D4403F con texto blanco); dentro de cada escena aparece una única forma Imperial. Nada decorativo más en rojo.",
+        "section": "colors"
+      },
+      {
+        "name": "The Escenario por Línea Rule",
+        "body": "El color de una escena lo decide su línea comercial, no el producto: dos productos de la misma línea comparten telón y se distinguen por el sujeto y el plano de fondo.",
+        "section": "colors"
+      },
+      {
+        "name": "The Precio en Serifa Rule",
+        "body": "Libre Baskerville solo para saludo, título de ficha y montos. Cualquier otro texto, incluidos botones y etiquetas, es Poppins.",
+        "section": "typography"
+      },
+      {
+        "name": "The Cifras Alineadas Rule",
+        "body": "Precios, números de producto y conteos llevan `font-variant-numeric: tabular-nums`.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sombra Tintada Rule",
+        "body": "Ninguna sombra es gris ni negra: la base es siempre rgba(9,17,51,…), salvo el brillo Imperial debajo de Emitir.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Elevación como Respuesta Rule",
+        "body": "En reposo la galería es plana; solo el hover, la pestaña activa y los paneles superpuestos ganan profundidad.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** dar a cada producto nuevo una escena SVG de 320×200 con el tema de su línea: fondo, plano suave, sujeto en blanco/tinta y una sola forma Imperial.",
+      "**Do** rellenar Emitir con #D4403F (hover #BF3534) y texto blanco; es el único botón rojo.",
+      "**Do** escribir precios y títulos de ficha en Libre Baskerville 700 con cifras tabulares, y todo lo demás en Poppins.",
+      "**Do** tintar todas las sombras con rgba(9,17,51,…) y reservar la elevación para hover, pestaña activa y paneles.",
+      "**Do** usar cubic-bezier(0.16, 1, 0.3, 1) y respetar prefers-reduced-motion.",
+      "**Do** mantener la ficha como un solo componente con variantes modal, hoja inferior y cliente."
+    ],
+    "donts": [
+      "**Don't** volver a la lista larga tipo tarifario con ficha fija; el usuario la rechazó.",
+      "**Don't** representar productos con iconos planos sueltos del marketplace ni con fotografía inventada.",
+      "**Don't** usar #E84F51 como relleno de botón con texto blanco (no llega a AA); para acción usa Imperial de Acción.",
+      "**Don't** mostrar nombres internos de la plataforma en tarjetas, fichas o avisos.",
+      "**Don't** tomar el login ni el panel de administración como referencia: Inter, rebotes y texto en degradado son de un mundo anterior."
+    ]
+  }
+}

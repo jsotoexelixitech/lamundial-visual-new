@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Lock, Car, Heart, Building2 } from 'lucide-react';
 import { login, getCurrentUser } from '@/lib/nexus-auth';
 import { MundialBrand } from '@/components/brand/MundialBrand';
@@ -192,9 +192,14 @@ export const LoginPage: React.FC = () => {
               </form>
             </div>
 
-            <div className="mt-6 border-t border-white/5 px-8 sm:px-10 py-4 flex items-center gap-2 text-[11px] text-fog-veil">
-              <Lock size={13} className="text-blueprint-blue" />
-              Conexión cifrada · acceso auditado
+            <div className="mt-6 border-t border-white/5 px-8 sm:px-10 py-4 flex items-center justify-between text-[11px] text-fog-veil">
+              <span className="inline-flex items-center gap-2">
+                <Lock size={13} className="text-blueprint-blue" />
+                Conexión cifrada · acceso auditado
+              </span>
+              <Link to="/login-pasarela" className="text-amber-400 hover:underline font-medium">
+                Acceso Pasarela / Gestor →
+              </Link>
             </div>
           </div>
 
