@@ -54,12 +54,34 @@ if ! grep -qF "src=\"${VITE_APP_BASE%/}/assets/" dist/index.html; then
 fi
 echo "✔ Bundle verificado para $DEPLOY_ENV"
 
-# 6. PM2 (portal-lamundial sirve ./dist en :5190).
-if pm2 describe portal-lamundial > /dev/null 2>&1; then
-  pm2 reload ecosystem.config.cjs --update-env
+# 6. Publicar.
+if [ -n "${PORTAL_PUBLISH_DIR:-}" ]; then
+  # Apache sirve la carpeta estática (patrón /var/www/<subdominio> del servidor); sin PM2.
+  if [ ! -w "$PORTAL_PUBLISH_DIR" ]; then
+    echo "ERROR: sin permiso de escritura en $PORTAL_PUBLISH_DIR (dueño: $(stat -c %U "$PORTAL_PUBLISH_DIR" 2>/dev/null))."
+    echo "       Infra debe dejarla como las demás: chown -R $(whoami):$(whoami) $PORTAL_PUBLISH_DIR"
+    exit 1
+  fi
+  if command -v rsync > /dev/null 2>&1; then
+    rsync -a --delete dist/ "$PORTAL_PUBLISH_DIR/"
+  else
+    find "$PORTAL_PUBLISH_DIR" -mindepth 1 -delete
+    cp -a dist/. "$PORTAL_PUBLISH_DIR/"
+  fi
+  echo "✔ Publicado en $PORTAL_PUBLISH_DIR"
+  # El proceso PM2 del portal ya no se usa en este ambiente (Apache ocupa el puerto).
+  if pm2 describe portal-lamundial > /dev/null 2>&1; then
+    pm2 delete portal-lamundial
+    pm2 save
+  fi
 else
-  pm2 start ecosystem.config.cjs
+  # PM2 (portal-lamundial sirve ./dist en :5190).
+  if pm2 describe portal-lamundial > /dev/null 2>&1; then
+    pm2 reload ecosystem.config.cjs --update-env
+  else
+    pm2 start ecosystem.config.cjs
+  fi
+  pm2 save
 fi
-pm2 save
 
 echo "✔ Portal $DEPLOY_ENV desplegado: $(git log -1 --format='%h %s')"
