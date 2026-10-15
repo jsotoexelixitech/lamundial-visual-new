@@ -17,7 +17,13 @@ if [ "$current_branch" != "$DEPLOY_BRANCH" ]; then
   echo "       Cambiar con: git checkout $DEPLOY_BRANCH"
   exit 1
 fi
+head_before="$(git rev-parse HEAD)"
 git pull --ff-only origin "$DEPLOY_BRANCH"
+# Si el pull trajo cambios, relanzar con los scripts recién bajados (no con los ya cargados).
+if [ "$(git rev-parse HEAD)" != "$head_before" ] && [ -z "${DEPLOY_REEXEC:-}" ] && [ -n "${DEPLOY_ENTRY:-}" ]; then
+  echo "↻ Código actualizado: relanzando $DEPLOY_ENTRY con la versión nueva"
+  DEPLOY_REEXEC=1 exec bash "scripts/$DEPLOY_ENTRY"
+fi
 
 # 2. Limpiar variables heredadas del shell (p. ej. tras `source` de otro .env).
 for v in $(compgen -e | grep -E '^VITE_' || true); do unset "$v"; done
@@ -57,6 +63,7 @@ echo "✔ Bundle verificado para $DEPLOY_ENV"
 # 6. Publicar.
 if [ -n "${PORTAL_PUBLISH_DIR:-}" ]; then
   # Apache sirve la carpeta estática (patrón /var/www/<subdominio> del servidor); sin PM2.
+  mkdir -p "$PORTAL_PUBLISH_DIR" 2>/dev/null || true
   if [ ! -w "$PORTAL_PUBLISH_DIR" ]; then
     echo "ERROR: sin permiso de escritura en $PORTAL_PUBLISH_DIR (dueño: $(stat -c %U "$PORTAL_PUBLISH_DIR" 2>/dev/null))."
     echo "       Infra debe dejarla como las demás: chown -R $(whoami):$(whoami) $PORTAL_PUBLISH_DIR"
