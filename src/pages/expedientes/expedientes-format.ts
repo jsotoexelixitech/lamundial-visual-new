@@ -68,7 +68,10 @@ export function urlDocumento(ref?: string | null): string | null {
   }
   if (!trimmed.includes('/')) return null;
 
-  const path = conPrefijoOcr(trimmed.startsWith('/') ? trimmed : `/${trimmed}`);
+  // Sin "/" inicial es una ruta relativa a EXPEDIENTES_ROOT ({empresa}/{cédula}/...), que OCR sirve en /ocr/files/.
+  const path = trimmed.startsWith('/')
+    ? conPrefijoOcr(trimmed)
+    : `/ocr/files/${trimmed.split('/').map(encodeURIComponent).join('/')}`;
   return `${origenOcr()}${path}`;
 }
 
