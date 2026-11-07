@@ -869,3 +869,133 @@ textarea.mx-input {
   outline: 2px solid #2e6dbf;
   outline-offset: 1px;
 }
+
+/* ── Validación automática con IA ── */
+.mx-req--ilegible {
+  background: #fff1e6;
+  color: #9a3412;
+}
+
+.mx-req--revisar {
+  background: #fff7e6;
+  color: #7a4b00;
+  border: 1px dashed #e0b25c;
+}
+
+.mx-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.4rem;
+  font-size: 0.8rem;
+  color: #091133;
+  cursor: pointer;
+}
+
+.mx-check input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #0f1a5a;
+}
+
+.mx-doc-card {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.mx-diag-resumen {
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  border: 1px solid transparent;
+}
+
+.mx-diag-resumen--ok {
+  background: #e7f6ee;
+  color: #146c43;
+  border-color: #c4e8d4;
+}
+
+.mx-diag-resumen--error {
+  background: #fdecec;
+  color: #8f2a2d;
+  border-color: #f6d0d1;
+}
+
+.mx-diag-resumen--warn {
+  background: #fff7e6;
+  color: #7a4b00;
+  border-color: #f4e0b5;
+}
+
+.mx-diag-resumen--info {
+  background: #eef4fc;
+  color: #1e3d6b;
+  border-color: #d5e3f6;
+}
+
+.mx-diag-wrap {
+  overflow-x: auto;
+  border: 1px solid #eceef4;
+  border-radius: 0.65rem;
+}
+
+.mx-diag {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+}
+
+.mx-diag th {
+  background: #f7f8fb;
+  color: #5e6275;
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.45rem 0.6rem;
+  white-space: nowrap;
+}
+
+.mx-diag td {
+  padding: 0.45rem 0.6rem;
+  border-top: 1px solid #eceef4;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  color: #091133;
+}
+
+.mx-diag td.mx-diag-dato {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mx-diag td.mx-diag-marca {
+  white-space: nowrap;
+}
+
+.mx-diag tr.mx-diag-no td {
+  background: #fdecec;
+}
+
+.mx-diag tr.mx-diag-no td.mx-diag-doc {
+  color: #8f2a2d;
+  font-weight: 600;
+}
+
+.mx-diag-si {
+  color: #146c43;
+}
+
+.mx-diag-falla {
+  color: #8f2a2d;
+}
+
+.mx-excepcion {
+  display: grid;
+  gap: 0.4rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed #dfe3ec;
+}

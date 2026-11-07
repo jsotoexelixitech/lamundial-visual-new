@@ -159,6 +159,7 @@ export const MonitorExpedientesPage: React.FC = () => {
                 <BandejaExpedientes
                   estadoDoc="incompleto"
                   recargaKey={recargaKey}
+                  modoValidacion={modoValidacion}
                   onAbrir={(expId) => setParam('exp', expId)}
                 />
               )}
@@ -166,6 +167,7 @@ export const MonitorExpedientesPage: React.FC = () => {
                 <BandejaExpedientes
                   estadoDoc="completo"
                   recargaKey={recargaKey}
+                  modoValidacion={modoValidacion}
                   onAbrir={(expId) => setParam('exp', expId)}
                 />
               )}
@@ -173,6 +175,7 @@ export const MonitorExpedientesPage: React.FC = () => {
                 <BandejaExpedientes
                   estadoDoc="sin_informacion"
                   recargaKey={recargaKey}
+                  modoValidacion={modoValidacion}
                   onAbrir={(expId) => setParam('exp', expId)}
                 />
               )}

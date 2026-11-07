@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BellOff, CheckCircle2, ExternalLink, Loader2, X } from 'lucide-react';
+import { BellOff, CheckCircle2, ExternalLink, Loader2, UserCheck, X, XCircle } from 'lucide-react';
 import {
   isExpedientesError,
   obtenerExpediente,
@@ -13,11 +13,14 @@ import {
 } from '@/lib/expedientes-api';
 import { AvisoError, Cargando, ChipDocumental, ChipPago, ChipRequisito } from './expedientes-ui';
 import {
+  esActorIa,
+  estadoVisual,
   etiquetaArea,
   etiquetaProducto,
   etiquetaRequisito,
   fechaCorta,
   fechaHora,
+  nivelConfianza,
   numero,
   textoNoEnviar,
   urlDocumento,
@@ -32,6 +35,8 @@ const EVENTOS: Record<string, string> = {
   documento_recibido: 'Documento recibido',
   requisito_validado: 'Documento validado',
   requisito_observado: 'Documento observado',
+  documento_analizado: 'Documento analizado por IA',
+  diagnostico_ia: 'Análisis con IA',
   estado_documental: 'Cambio de estado documental',
   recordatorio: 'Recordatorio',
   cadencia_agotada: 'Recordatorios terminados',
@@ -116,8 +121,10 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
     await cargar();
   };
 
+  // Sin dato, la validación por defecto es automática (IA).
   const modo = det?.validacion ?? modoValidacion;
-  const puedeValidar = esAdmin && modo === 'manual';
+  // Validar u observar a mano: solo administradores; con validación automática, como excepción.
+  const puedeValidar = esAdmin;
 
   return (
     <>
@@ -224,22 +231,22 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
               <section className="mx-panel" aria-labelledby="mx-req-titulo">
                 <div className="mx-panel-head">
                   <h3 id="mx-req-titulo" className="mx-h2">Documentos</h3>
-                  {modo && (
-                    <span className="text-xs mx-muted">
-                      Validación {modo === 'manual' ? 'manual' : 'automática'}
-                    </span>
-                  )}
+                  <span className="text-xs mx-muted">
+                    {modo === 'manual' ? 'Validación manual' : 'Validación automática con IA'}
+                  </span>
                 </div>
                 {det.requisitos.length === 0 ? (
                   <p className="px-4 py-4 mx-muted">Este producto no tiene requisitos configurados.</p>
                 ) : (
                   <ul className="mx-lista">
                     {det.requisitos.map((r) => (
-                      <RequisitoFila
+                      <TarjetaDocumento
                         key={r.tipo}
                         expId={det.id}
                         req={r}
                         producto={det.producto}
+                        modo={modo}
+                        eventos={det.eventos}
                         puedeValidar={puedeValidar}
                         onHecho={(m) => void trasCambio(m)}
                       />
@@ -367,36 +374,84 @@ function EventoFila({ ev, producto }: { ev: ExpedienteEvento; producto: string }
         </p>
         <span className="text-xs mx-muted whitespace-nowrap">{fechaHora(ev.fecha ?? ev.createdAt)}</span>
       </div>
-      {ev.actor && <p className="mx-sub">Por {ev.actor === 'auto' ? 'validación automática' : ev.actor}</p>}
+      {ev.actor && (
+        <p className="mx-sub">
+          {esActorIa(ev.actor)
+            ? 'Por la validación automática con IA'
+            : `Por ${ev.actor}${ev.tipo === 'requisito_validado' || ev.tipo === 'requisito_observado' ? ' (manual)' : ''}`}
+        </p>
+      )}
       {ev.motivo && <p className="text-xs mt-1">{ev.motivo}</p>}
       {typeof ev.detalle === 'string' && ev.detalle && <p className="text-xs mt-1 mx-muted">{ev.detalle}</p>}
     </li>
   );
 }
 
+/** Último validar/observar registrado para un documento (para saber quién lo hizo). */
+function ultimaDecision(tipo: string, eventos: ExpedienteEvento[]): ExpedienteEvento | null {
+  let ultimo: ExpedienteEvento | null = null;
+  let clave = -Infinity;
+  eventos.forEach((e, i) => {
+    if (e.requisito !== tipo) return;
+    if (e.tipo !== 'requisito_validado' && e.tipo !== 'requisito_observado') return;
+    const t = Date.parse(e.fecha ?? e.createdAt ?? '');
+    // Sin fecha, vale el orden de llegada.
+    const k = Number.isNaN(t) ? i : t;
+    if (k >= clave) {
+      clave = k;
+      ultimo = e;
+    }
+  });
+  return ultimo;
+}
+
+const TONO_RESULTADO: Record<string, 'ok' | 'error' | 'warn' | 'info'> = {
+  coincide: 'ok',
+  no_coincide: 'error',
+  ilegible: 'error',
+  sin_certeza: 'warn',
+  error_tecnico: 'info',
+};
+
+const TEXTO_RESULTADO: Record<string, string> = {
+  coincide: 'todo coincide con la póliza',
+  no_coincide: 'no coincide con la póliza',
+  ilegible: 'no se pudo leer el documento',
+  sin_certeza: 'sin certeza, hay que revisarlo',
+  error_tecnico: 'no se pudo analizar todavía',
+};
+
 /**
- * Un documento del expediente: cargado o no (como la mesa técnica), enlace para verlo si hay
- * `ref` y, solo con validación manual, validar u observar. No se piden ni se cargan documentos
- * desde aquí.
+ * Un documento del expediente: enlace para verlo, diagnóstico de la IA campo por campo
+ * (póliza contra documento) y, solo para administradores y como excepción, validar u observar
+ * a mano. No se piden ni se cargan documentos desde aquí.
  */
-function RequisitoFila({
+function TarjetaDocumento({
   expId,
   req,
   producto,
+  modo,
+  eventos,
   puedeValidar,
   onHecho,
 }: {
   expId: number | string;
   req: Requisito;
   producto: string;
+  modo?: ModoValidacion;
+  eventos: ExpedienteEvento[];
   puedeValidar: boolean;
   onHecho: (mensaje: string) => void;
 }) {
-  const [modo, setModo] = useState<'nada' | 'validar' | 'observar'>('nada');
+  const [accion, setAccion] = useState<'nada' | 'validar' | 'observar'>('nada');
   const [motivo, setMotivo] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const nombre = etiquetaRequisito(req.tipo, producto);
+  const decision = ultimaDecision(req.tipo, eventos);
+  const actor = req.actor ?? decision?.actor ?? null;
+  const visual = estadoVisual({ ...req, actor }, modo);
+  const diag = req.diagnostico ?? null;
   // Cargado o no, como la mesa técnica; sin_informacion u otro estado: no se sabe.
   const cargado =
     !!req.ref || req.estado === 'recibido' || req.estado === 'observado' || req.estado === 'validado';
@@ -407,13 +462,17 @@ function RequisitoFila({
       : 'Sin información de carga';
   const url = urlDocumento(req.ref);
   const motivoOk = motivo.trim().length >= MOTIVO_MIN;
+  const confianza = nivelConfianza(diag?.confianza);
+  const manual = !!actor && !esActorIa(actor);
+  const automatica = modo !== 'manual';
+  const fechaDecision = decision?.fecha ?? decision?.createdAt ?? null;
 
-  const ejecutar = async (accion: () => Promise<void>, mensaje: string) => {
+  const ejecutar = async (fn: () => Promise<void>, mensaje: string) => {
     setEnviando(true);
     setError('');
     try {
-      await accion();
-      setModo('nada');
+      await fn();
+      setAccion('nada');
       setMotivo('');
       onHecho(mensaje);
     } catch (err) {
@@ -423,76 +482,208 @@ function RequisitoFila({
     }
   };
 
+  const puedeValidarEste = puedeValidar && (req.estado === 'recibido' || req.estado === 'observado');
+  const puedeObservarEste = puedeValidar && (req.estado === 'recibido' || req.estado === 'validado');
+
   return (
-    <li>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <li className="mx-doc-card">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold">{nombre}</span>
-            <ChipRequisito tipo={req.tipo} producto={producto} estado={req.estado} soloEstado />
+            <ChipRequisito
+              tipo={req.tipo}
+              producto={producto}
+              estado={req.estado}
+              diagnostico={diag}
+              actor={actor}
+              modo={modo}
+              soloEstado
+            />
           </div>
           <p className="mx-sub">
             {textoCarga}
             {cargado && !url ? ' · sin enlace para verlo' : ''}
           </p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
-          {url && (
-            <a
-              className="mx-btn mx-btn--ghost mx-btn--sm"
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Ver ${nombre} (se abre en otra pestaña)`}
-            >
-              <ExternalLink size={14} aria-hidden />
-              Ver documento
-            </a>
-          )}
-          {puedeValidar && (req.estado === 'recibido' || req.estado === 'observado') && modo === 'nada' && (
-            <button type="button" className="mx-btn mx-btn--ok mx-btn--sm" onClick={() => setModo('validar')}>
-              Validar
-            </button>
-          )}
-          {puedeValidar && req.estado === 'recibido' && modo === 'nada' && (
-            <button type="button" className="mx-btn mx-btn--warn mx-btn--sm" onClick={() => setModo('observar')}>
-              Observar
-            </button>
-          )}
-        </div>
+        {url && (
+          <a
+            className="mx-btn mx-btn--ghost mx-btn--sm"
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Ver ${nombre} (se abre en otra pestaña)`}
+          >
+            <ExternalLink size={14} aria-hidden />
+            Ver documento
+          </a>
+        )}
       </div>
 
-      {req.motivo && (req.estado === 'observado' || req.estado === 'recibido') && (
-        <p className="text-xs mt-1.5 text-[#8F2A2D]">Motivo: {req.motivo}</p>
+      {(visual === 'validado_manual' || (visual === 'observado' && manual)) && (
+        <p className="text-xs font-semibold text-[#3c4260] flex items-center gap-1.5">
+          <UserCheck size={14} aria-hidden />
+          {visual === 'validado_manual' ? 'Validado manualmente' : 'Observado manualmente'}
+          {manual ? ` por ${actor}` : ''}
+          {fechaDecision ? ` · ${fechaHora(fechaDecision)}` : ''}
+        </p>
       )}
 
-      {modo === 'validar' && (
-        <div className="mx-aviso mx-aviso--info mt-2 flex-col">
-          <p>¿Confirmas que el documento es legible y coincide con los datos de la póliza?</p>
+      {diag ? (
+        <div className="grid gap-2">
+          {diag.resultado && (
+            <p className="text-xs font-semibold text-[#091133]">
+              Validación con IA:{' '}
+              {TEXTO_RESULTADO[diag.resultado] ?? diag.resultado.replace(/_/g, ' ')}
+            </p>
+          )}
+          {diag.resumen && (
+            <p
+              className={`mx-diag-resumen mx-diag-resumen--${TONO_RESULTADO[diag.resultado ?? ''] ?? 'info'}`}
+            >
+              {diag.resumen}
+            </p>
+          )}
+          {diag.campos.length > 0 && (
+            <div className="mx-diag-wrap">
+              <table className="mx-diag">
+                <caption className="sr-only">Comparación de {nombre} con la póliza</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Dato</th>
+                    <th scope="col">En la póliza</th>
+                    <th scope="col">En el documento</th>
+                    <th scope="col" aria-label="¿Coincide?">
+                      ✓ ✗
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diag.campos.map((c, i) => (
+                    <tr
+                      key={`${c.campo}-${i}`}
+                      className={c.coincide === false ? 'mx-diag-no' : undefined}
+                    >
+                      <td className="mx-diag-dato">{c.etiqueta}</td>
+                      <td>{c.enPoliza ?? <span className="mx-muted">—</span>}</td>
+                      <td className="mx-diag-doc">
+                        {c.enDocumento ?? <span className="mx-muted">No se leyó</span>}
+                      </td>
+                      <td className="mx-diag-marca">
+                        {c.coincide === true ? (
+                          <span className="mx-diag-si inline-flex items-center gap-1">
+                            <CheckCircle2 size={15} aria-hidden />
+                            <span className="sr-only">Coincide</span>
+                          </span>
+                        ) : c.coincide === false ? (
+                          <span className="mx-diag-falla inline-flex items-center gap-1 font-semibold">
+                            <XCircle size={15} aria-hidden />
+                            No coincide
+                          </span>
+                        ) : (
+                          <span className="mx-muted">sin dato en la póliza</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {(diag.analizadoEn || confianza) && (
+            <p className="mx-sub">
+              {diag.analizadoEn ? `Analizado el ${fechaHora(diag.analizadoEn)}` : 'Analizado'}
+              {confianza ? ` · Confianza ${confianza}` : ''}
+            </p>
+          )}
+        </div>
+      ) : (
+        cargado &&
+        automatica &&
+        req.estado === 'recibido' && (
+          <p className="mx-sub">La IA todavía no termina de revisar este documento.</p>
+        )
+      )}
+
+      {req.motivo &&
+        req.motivo !== diag?.resumen &&
+        (req.estado === 'observado' || req.estado === 'recibido') && (
+          <p className="text-xs text-[#8F2A2D]">Motivo: {req.motivo}</p>
+        )}
+
+      {(puedeValidarEste || puedeObservarEste) && accion === 'nada' && (
+        <div className="mx-excepcion">
+          {automatica && (
+            <p className="text-xs mx-muted">
+              Solo administradores, como excepción: queda registrado como validación manual a tu
+              nombre, distinta de la IA.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-1.5">
+            {puedeValidarEste && (
+              <button
+                type="button"
+                className="mx-btn mx-btn--ok mx-btn--sm"
+                onClick={() => setAccion('validar')}
+              >
+                {automatica ? 'Validar a mano' : 'Validar'}
+              </button>
+            )}
+            {puedeObservarEste && (
+              <button
+                type="button"
+                className="mx-btn mx-btn--warn mx-btn--sm"
+                onClick={() => setAccion('observar')}
+              >
+                {automatica ? 'Observar a mano' : 'Observar'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {accion === 'validar' && (
+        <div className="mx-aviso mx-aviso--info flex-col">
+          <p>
+            ¿Confirmas que el documento es legible y coincide con los datos de la póliza? Quedará
+            como validado manualmente.
+          </p>
           <div className="flex gap-2 mt-1">
             <button
               type="button"
               className="mx-btn mx-btn--primary mx-btn--sm"
               disabled={enviando}
-              onClick={() => void ejecutar(() => validarRequisito(expId, req.tipo), `${nombre}: validado.`)}
+              onClick={() =>
+                void ejecutar(
+                  () => validarRequisito(expId, req.tipo),
+                  `${nombre}: validado manualmente.`,
+                )
+              }
             >
               {enviando && <Loader2 size={14} className="animate-spin" aria-hidden />}
               Confirmar validación
             </button>
-            <button type="button" className="mx-btn mx-btn--ghost mx-btn--sm" onClick={() => setModo('nada')}>
+            <button
+              type="button"
+              className="mx-btn mx-btn--ghost mx-btn--sm"
+              onClick={() => setAccion('nada')}
+            >
               Cancelar
             </button>
           </div>
         </div>
       )}
 
-      {modo === 'observar' && (
+      {accion === 'observar' && (
         <form
-          className="mt-2 grid gap-2"
+          className="grid gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             if (!motivoOk) return;
-            void ejecutar(() => observarRequisito(expId, req.tipo, motivo), `${nombre}: observado.`);
+            void ejecutar(
+              () => observarRequisito(expId, req.tipo, motivo),
+              `${nombre}: observado manualmente.`,
+            );
           }}
         >
           <label className="mx-field">
@@ -508,7 +699,11 @@ function RequisitoFila({
             />
           </label>
           <div className="flex gap-2">
-            <button type="submit" className="mx-btn mx-btn--warn mx-btn--sm" disabled={!motivoOk || enviando}>
+            <button
+              type="submit"
+              className="mx-btn mx-btn--warn mx-btn--sm"
+              disabled={!motivoOk || enviando}
+            >
               {enviando && <Loader2 size={14} className="animate-spin" aria-hidden />}
               Guardar observación
             </button>
@@ -516,7 +711,7 @@ function RequisitoFila({
               type="button"
               className="mx-btn mx-btn--ghost mx-btn--sm"
               onClick={() => {
-                setModo('nada');
+                setAccion('nada');
                 setMotivo('');
               }}
             >
@@ -527,7 +722,7 @@ function RequisitoFila({
       )}
 
       {error && (
-        <p className="text-xs mt-1.5 text-[#8F2A2D]" role="alert">
+        <p className="text-xs text-[#8F2A2D]" role="alert">
           {error}
         </p>
       )}

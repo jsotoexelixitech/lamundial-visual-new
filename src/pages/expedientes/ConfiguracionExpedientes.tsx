@@ -240,10 +240,12 @@ function FormConfig({
               onChange={() => setValidacion('automatica')}
             />
             <span>
-              <span className="font-semibold">Automática</span>
+              <span className="font-semibold">Automática con IA (por defecto)</span>
               <span className="mx-sub">
-                El sistema lee el documento y lo compara con la póliza (documento, nombre y, si
-                aplica, placa o serial). Si no hay certeza, queda por validar.
+                La IA lee cada documento y lo compara con la póliza campo por campo (documento,
+                nombre y, si aplica, placa o serial). Si algo no coincide, queda errado con la
+                explicación; si no hay certeza, queda para revisar. Un administrador puede validar u
+                observar a mano como excepción.
               </span>
             </span>
           </label>

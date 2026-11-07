@@ -1,6 +1,126 @@
 // Etiquetas y formato del monitor de expedientes (sin componentes).
 import { portalConfig } from '@/lib/portal-config';
-import type { AlcanceExclusion, ExclusionAplicada } from '@/lib/expedientes-api';
+import type {
+  AlcanceExclusion,
+  ExclusionAplicada,
+  ModoValidacion,
+  Requisito,
+} from '@/lib/expedientes-api';
+
+// ─── Validación automática con IA ──────────────────────────────────────────
+
+/** `ia` (o `auto`, validación automática anterior) = la validó el sistema, no una persona. */
+export function esActorIa(actor?: string | null): boolean {
+  const a = (actor ?? '').trim().toLowerCase();
+  return a === 'ia' || a === 'auto';
+}
+
+/**
+ * Estado que se muestra de un documento, combinando su estado y el diagnóstico de la IA:
+ * - validado: por IA si el actor es `ia` o la IA dio `coincide`; si no, a mano.
+ * - no_coincide → errado · ilegible → ilegible · sin_certeza → revisar.
+ * - recibido sin diagnóstico o con error_tecnico → analizando (con validación manual: por validar).
+ * - observado sin resultado de la IA = observado a mano.
+ */
+export type EstadoVisual =
+  | 'faltante'
+  | 'validado_ia'
+  | 'validado_manual'
+  | 'errado'
+  | 'ilegible'
+  | 'revisar'
+  | 'analizando'
+  | 'por_validar'
+  | 'observado'
+  | 'sin_informacion'
+  | 'otro';
+
+export function estadoVisual(
+  req: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>,
+  modo?: ModoValidacion,
+): EstadoVisual {
+  const resultado = req.diagnostico?.resultado ?? null;
+  switch (req.estado) {
+    case 'faltante':
+      return 'faltante';
+    case 'sin_informacion':
+      return 'sin_informacion';
+    case 'validado':
+      if (req.actor) return esActorIa(req.actor) ? 'validado_ia' : 'validado_manual';
+      return resultado === 'coincide' ? 'validado_ia' : 'validado_manual';
+    case 'observado':
+    case 'recibido':
+      if (resultado === 'no_coincide') return 'errado';
+      if (resultado === 'ilegible') return 'ilegible';
+      if (req.estado === 'observado') return 'observado';
+      if (resultado === 'sin_certeza') return 'revisar';
+      if (modo === 'manual' && !resultado) return 'por_validar';
+      return 'analizando';
+    default:
+      return 'otro';
+  }
+}
+
+/** Documento con problema: errado, ilegible u observado (filtro «Con documentos errados»). */
+export function esDocumentoErrado(req: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>): boolean {
+  const v = estadoVisual(req);
+  return v === 'errado' || v === 'ilegible' || v === 'observado';
+}
+
+/** Confianza en lenguaje simple. Acepta 0–1, 0–100 o el texto alta/media/baja. */
+export function nivelConfianza(c?: number | string | null): 'alta' | 'media' | 'baja' | null {
+  if (c === null || c === undefined || c === '') return null;
+  if (typeof c === 'string') {
+    const t = c.trim().toLowerCase();
+    if (t === 'alta' || t === 'high') return 'alta';
+    if (t === 'media' || t === 'medium') return 'media';
+    if (t === 'baja' || t === 'low') return 'baja';
+    const n = Number(t.replace('%', '').replace(',', '.'));
+    return Number.isFinite(n) ? nivelConfianza(n) : null;
+  }
+  if (!Number.isFinite(c)) return null;
+  const v = c > 1 ? c / 100 : c;
+  if (v >= 0.85) return 'alta';
+  if (v >= 0.6) return 'media';
+  return 'baja';
+}
+
+/** Nombre corto con artículo para el asegurado: «La cédula», «El RIF»… (femenino = «Cárgala»). */
+const DOC_ASEGURADO: Record<string, { nombre: string; fem: boolean; a: string }> = {
+  cedula: { nombre: 'La cédula', fem: true, a: 'al titular de la póliza' },
+  cedula_titular: { nombre: 'La cédula', fem: true, a: 'al titular de la póliza' },
+  cedula_beneficiario: { nombre: 'La cédula', fem: true, a: 'al beneficiario de la póliza' },
+  rif: { nombre: 'El RIF', fem: false, a: 'al titular de la póliza' },
+  licencia: { nombre: 'La licencia', fem: true, a: 'al titular de la póliza' },
+  pasaporte: { nombre: 'El pasaporte', fem: false, a: 'al titular de la póliza' },
+  certificado: { nombre: 'El certificado médico', fem: false, a: 'al asegurado de la póliza' },
+};
+
+/**
+ * Motivo simple para el asegurado en la página pública. Nunca usa el resumen de la IA ni
+ * datos de la póliza: solo el tipo de documento y el resultado. null = usar el texto general.
+ */
+export function motivoParaAsegurado(
+  tipo: string,
+  producto: string | null | undefined,
+  resultado: string | null | undefined,
+): string | null {
+  const t = tipo.toLowerCase();
+  const rcv = (producto ?? '').toLowerCase() === 'rcv';
+  const doc =
+    rcv && t === 'certificado'
+      ? { nombre: 'El certificado de circulación', fem: false, a: 'al vehículo de la póliza' }
+      : (DOC_ASEGURADO[t] ?? { nombre: 'El documento', fem: false, a: 'a los datos de la póliza' });
+  const cargalo = doc.fem ? 'Cárgala' : 'Cárgalo';
+  if (resultado === 'no_coincide') {
+    return `${doc.nombre} no corresponde ${doc.a}. ${cargalo} de nuevo.`;
+  }
+  if (resultado === 'ilegible') {
+    const nombre = doc.nombre.charAt(0).toLowerCase() + doc.nombre.slice(1);
+    return `No pudimos leer bien ${nombre}. ${cargalo} de nuevo con una foto clara, con buena luz y donde se vea completo.`;
+  }
+  return null;
+}
 
 // ─── Documentos (mismo criterio que la mesa técnica de Emisión) ────────────
 

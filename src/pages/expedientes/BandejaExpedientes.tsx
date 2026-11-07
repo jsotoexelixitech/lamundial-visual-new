@@ -6,6 +6,7 @@ import {
   type EstadoDocumental,
   type ExpedienteItem,
   type ExpedientesError,
+  type ModoValidacion,
   type PaginaExpedientes,
   isExpedientesError,
   ExpedientesError as ExpError,
@@ -21,6 +22,7 @@ import {
 import {
   OPCIONES_AREA,
   OPCIONES_PRODUCTO,
+  esDocumentoErrado,
   etiquetaArea,
   etiquetaProducto,
   fechaCorta,
@@ -38,6 +40,8 @@ interface FiltrosUI {
   vendedor: string;
   q: string;
   agrupar: Agrupacion;
+  /** Solo pólizas con algún documento errado (no coincide, ilegible u observado). */
+  conErrores: boolean;
 }
 
 const FILTROS_INICIALES: FiltrosUI = {
@@ -49,6 +53,7 @@ const FILTROS_INICIALES: FiltrosUI = {
   vendedor: '',
   q: '',
   agrupar: 'poliza',
+  conErrores: false,
 };
 
 const TAMANOS = [25, 50, 100];
@@ -86,9 +91,11 @@ interface Props {
   /** Cambia cuando hay que volver a consultar (Actualizar, validación, carga…). */
   recargaKey: number;
   onAbrir: (id: string) => void;
+  /** Modo de validación (si se conoce): con manual, lo recibido sin análisis queda «Por validar». */
+  modoValidacion?: ModoValidacion;
 }
 
-export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
+export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidacion }: Props) {
   const [filtros, setFiltros] = useState<FiltrosUI>(FILTROS_INICIALES);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -101,6 +108,8 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
   const q = useDebounced(filtros.q);
   const vendedor = useDebounced(filtros.vendedor);
   const { estadoPago, area, producto, desde, hasta, agrupar } = filtros;
+  // El filtro de errados solo aplica a los incompletos (un expediente completo no tiene errados).
+  const conErrores = estadoDoc === 'incompleto' && filtros.conErrores;
 
   useEffect(() => {
     const n = ++peticion.current;
@@ -116,6 +125,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
       vendedor,
       q,
       agrupar,
+      conErrores,
       page,
       pageSize,
     })
@@ -130,7 +140,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
       .finally(() => {
         if (n === peticion.current) setCargando(false);
       });
-  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, page, pageSize, recargaKey, reintento]);
+  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, page, pageSize, recargaKey, reintento]);
 
   const cambiar = <K extends keyof FiltrosUI>(k: K, v: FiltrosUI[K]) => {
     setFiltros((p) => ({ ...p, [k]: v }));
@@ -142,7 +152,11 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
     [filtros],
   );
 
-  const items = useMemo(() => datos?.items ?? [], [datos]);
+  // Si Nexus aún no filtra por `conErrores`, se filtra también la página recibida.
+  const items = useMemo(() => {
+    const lista = datos?.items ?? [];
+    return conErrores ? lista.filter((it) => it.requisitos.some(esDocumentoErrado)) : lista;
+  }, [datos, conErrores]);
   const total = datos?.total ?? 0;
   const paginas = Math.max(1, Math.ceil(total / pageSize));
   const desdeN = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -288,6 +302,20 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
             <option value="asegurado">Por asegurado</option>
           </select>
         </label>
+        {estadoDoc === 'incompleto' && (
+          <div className="mx-field">
+            <span>Validación con IA</span>
+            <label className="mx-check" htmlFor={`${idPrefijo}-errados`}>
+              <input
+                id={`${idPrefijo}-errados`}
+                type="checkbox"
+                checked={filtros.conErrores}
+                onChange={(e) => cambiar('conErrores', e.target.checked)}
+              />
+              Con documentos errados
+            </label>
+          </div>
+        )}
       </div>
 
       {error ? (
@@ -342,11 +370,13 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
                           </td>
                         </tr>
                         {lista.map((it) => (
-                          <Fila key={it.id} it={it} onAbrir={onAbrir} />
+                          <Fila key={it.id} it={it} onAbrir={onAbrir} modo={modoValidacion} />
                         ))}
                       </React.Fragment>
                     ))
-                  : items.map((it) => <Fila key={it.id} it={it} onAbrir={onAbrir} />)}
+                  : items.map((it) => (
+                      <Fila key={it.id} it={it} onAbrir={onAbrir} modo={modoValidacion} />
+                    ))}
               </tbody>
             </table>
           </div>
@@ -403,7 +433,15 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
   );
 }
 
-function Fila({ it, onAbrir }: { it: ExpedienteItem; onAbrir: (id: string) => void }) {
+function Fila({
+  it,
+  onAbrir,
+  modo,
+}: {
+  it: ExpedienteItem;
+  onAbrir: (id: string) => void;
+  modo?: ModoValidacion;
+}) {
   const abrir = () => onAbrir(String(it.id));
   const cambios =
     typeof it.cambiosDetectados === 'number'
@@ -447,7 +485,16 @@ function Fila({ it, onAbrir }: { it: ExpedienteItem; onAbrir: (id: string) => vo
             <span className="mx-muted">—</span>
           ) : (
             it.requisitos.map((r) => (
-              <ChipRequisito key={r.tipo} tipo={r.tipo} producto={it.producto} estado={r.estado} motivo={r.motivo} />
+              <ChipRequisito
+                key={r.tipo}
+                tipo={r.tipo}
+                producto={it.producto}
+                estado={r.estado}
+                motivo={r.motivo}
+                diagnostico={r.diagnostico}
+                actor={r.actor}
+                modo={modo}
+              />
             ))
           )}
         </div>

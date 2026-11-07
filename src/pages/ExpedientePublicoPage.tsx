@@ -22,8 +22,17 @@ import {
   type ExpedientesErrorKind,
   type Requisito,
 } from '@/lib/expedientes-api';
-import { etiquetaRequisito } from './expedientes/expedientes-format';
+import { etiquetaRequisito, motivoParaAsegurado } from './expedientes/expedientes-format';
 import './expedientes/expedientes.css';
+
+/** Tras subir un archivo, la IA lo revisa: se vuelve a consultar en silencio para mostrar el resultado. */
+const SONDEOS_MS = [6_000, 15_000, 30_000, 60_000];
+
+/** Resultado de la IA que obliga a cargar el documento de nuevo. */
+function hayQueRepetir(r: Requisito): boolean {
+  const res = r.diagnostico?.resultado;
+  return r.estado !== 'validado' && (res === 'no_coincide' || res === 'ilegible');
+}
 
 type EstadoPagina =
   | { tipo: 'cargando' }
@@ -71,6 +80,24 @@ export const ExpedientePublicoPage: React.FC = () => {
     void cargar();
   }, [cargar]);
 
+  // Consulta silenciosa: si falla, se deja la pantalla como está.
+  const sondeos = useRef<number[]>([]);
+  const limpiarSondeos = () => {
+    sondeos.current.forEach((t) => window.clearTimeout(t));
+    sondeos.current = [];
+  };
+  useEffect(() => limpiarSondeos, []);
+  const sondear = useCallback(() => {
+    limpiarSondeos();
+    sondeos.current = SONDEOS_MS.map((ms) =>
+      window.setTimeout(() => {
+        obtenerExpedientePublico(token)
+          .then((data) => setEstado({ tipo: 'listo', data }))
+          .catch(() => undefined);
+      }, ms),
+    );
+  }, [token]);
+
   return (
     <div className="mx-pub">
       <div className="max-w-[38rem] mx-auto">
@@ -91,7 +118,10 @@ export const ExpedientePublicoPage: React.FC = () => {
           <Expediente
             token={token}
             data={estado.data}
-            onSubido={() => cargar(true)}
+            onSubido={async () => {
+              await cargar(true);
+              sondear();
+            }}
             onEnlaceCaido={(kind) => setEstado({ tipo: 'error', kind })}
           />
         )}
@@ -163,8 +193,12 @@ function Expediente({
   onEnlaceCaido: (kind: ExpedientesErrorKind) => void;
 }) {
   const [aviso, setAviso] = useState('');
-  const pendientes = data.requisitos.filter((r) => r.estado === 'faltante' || r.estado === 'observado');
-  const recibidos = data.requisitos.filter((r) => r.estado === 'recibido' || r.estado === 'validado');
+  const pendientes = data.requisitos.filter(
+    (r) => r.estado === 'faltante' || r.estado === 'observado' || hayQueRepetir(r),
+  );
+  const recibidos = data.requisitos.filter(
+    (r) => (r.estado === 'recibido' || r.estado === 'validado') && !hayQueRepetir(r),
+  );
   const primerNombre = (data.nombre ?? '').trim().split(/\s+/)[0] ?? '';
 
   const trasSubir = async (nombreDoc: string) => {
@@ -235,13 +269,22 @@ function Expediente({
               <li key={r.tipo} className="mx-pub-doc">
                 <div className="flex items-center justify-between gap-3">
                   <span className="font-semibold">{etiquetaRequisito(r.tipo, r.producto ?? data.producto)}</span>
-                  <span className="mx-req mx-req--recibido">
-                    <Hourglass size={12} aria-hidden />
-                    Recibido
-                  </span>
+                  {r.estado === 'validado' ? (
+                    <span className="mx-req mx-req--validado">
+                      <CheckCircle2 size={12} aria-hidden />
+                      Aprobado
+                    </span>
+                  ) : (
+                    <span className="mx-req mx-req--recibido">
+                      <Hourglass size={12} aria-hidden />
+                      Recibido
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-[#5E6275]">
-                  Lo estamos revisando. No tienes que hacer nada más con este documento.
+                  {r.estado === 'validado'
+                    ? 'Revisado. No tienes que hacer nada más con este documento.'
+                    : 'Lo estamos revisando. No tienes que hacer nada más con este documento.'}
                 </p>
               </li>
             ))}
@@ -270,6 +313,9 @@ function DocumentoPendiente({
   const inputRef = useRef<HTMLInputElement>(null);
   const nombre = etiquetaRequisito(req.tipo, producto);
   const subiendo = pct !== null;
+  const repetir = req.estado === 'observado' || hayQueRepetir(req);
+  // Motivo simple, sin datos de la póliza: nunca el resumen de la IA ni el motivo interno.
+  const motivoSimple = motivoParaAsegurado(req.tipo, producto, req.diagnostico?.resultado);
 
   const subir = async (file: File | undefined) => {
     if (!file) return;
@@ -309,7 +355,7 @@ function DocumentoPendiente({
     <li className="mx-pub-doc">
       <div className="flex items-center justify-between gap-3">
         <span className="font-semibold">{nombre}</span>
-        {req.estado === 'observado' ? (
+        {repetir ? (
           <span className="mx-req mx-req--observado">
             <AlertCircle size={12} aria-hidden />
             Envíalo de nuevo
@@ -318,16 +364,16 @@ function DocumentoPendiente({
           <span className="mx-req mx-req--faltante">Pendiente</span>
         )}
       </div>
-      {req.estado === 'observado' && (
-        <p className="text-xs text-[#5E6275]">
-          No pudimos revisar bien el que nos enviaste. Por favor, envía una imagen nueva donde se lea
-          todo el documento.
+      {repetir && (
+        <p className={`text-xs ${motivoSimple ? 'font-semibold text-[#8F2A2D]' : 'text-[#5E6275]'}`}>
+          {motivoSimple ??
+            'No pudimos revisar bien el que nos enviaste. Por favor, envía una imagen nueva donde se lea todo el documento.'}
         </p>
       )}
 
       <label className="mx-pub-upload" aria-disabled={subiendo}>
         {subiendo ? <Loader2 size={18} className="animate-spin" aria-hidden /> : <FileUp size={18} aria-hidden />}
-        {subiendo ? `Enviando… ${pct} %` : 'Subir foto o PDF'}
+        {subiendo ? `Enviando… ${pct} %` : repetir ? 'Subir de nuevo' : 'Subir foto o PDF'}
         <input
           ref={inputRef}
           type="file"

@@ -1,6 +1,7 @@
 /**
  * Monitor de expedientes Marketplace — cliente de Nexus (`/api/expedientes`).
- * Contrato: .antigravity/MONITOR-EXPEDIENTES-CONTRATO.md (v1, 7-nov-2026).
+ * Contrato: .antigravity/MONITOR-EXPEDIENTES-CONTRATO.md (v1.1, 7-nov-2026) + `diagnostico` de la IA
+ * por requisito (validación automática contra la póliza).
  *
  * - Rutas internas: sesión del portal (JWT de Nexus en sessionStorage), igual que /api/portal/*.
  * - Rutas públicas (/publico/:token): sin sesión; el enlace firmado es la única credencial.
@@ -29,6 +30,36 @@ export type AreaExpediente = string;
 export type ModoValidacion = 'manual' | 'automatica';
 export type Agrupacion = 'poliza' | 'asegurado';
 
+/** Resultado de la validación automática con IA de un documento contra la póliza. */
+export type ResultadoDiagnostico =
+  | 'coincide'
+  | 'no_coincide'
+  | 'ilegible'
+  | 'sin_certeza'
+  | 'error_tecnico'
+  | OtroEstado;
+
+/** Un dato comparado: lo que dice la póliza y lo que leyó la IA en el documento. */
+export interface CampoDiagnostico {
+  campo: string;
+  etiqueta: string;
+  enPoliza: string | null;
+  enDocumento: string | null;
+  /** null = la póliza no tiene ese dato para comparar. */
+  coincide: boolean | null;
+}
+
+/** Diagnóstico de la IA. En la bandeja llegan solo `resultado` y `resumen`; en el detalle, completo. */
+export interface Diagnostico {
+  analizadoEn: string | null;
+  proveedor: string | null;
+  /** 0–1 (o 0–100) o texto (alta/media/baja). */
+  confianza: number | string | null;
+  resultado: ResultadoDiagnostico | null;
+  campos: CampoDiagnostico[];
+  resumen: string | null;
+}
+
 export interface Requisito {
   tipo: TipoRequisito;
   estado: EstadoRequisito;
@@ -37,6 +68,10 @@ export interface Requisito {
   ref?: string | null;
   /** Solo en el enlace público: producto de la póliza que pide este documento. */
   producto?: string | null;
+  /** Validación automática con IA (null si todavía no se analizó). */
+  diagnostico?: Diagnostico | null;
+  /** Quién validó u observó: `ia` (o `auto`) = automática; otro valor = usuario. */
+  actor?: string | null;
 }
 
 export interface AseguradoResumen {
@@ -131,6 +166,10 @@ export interface Indicadores {
   intentos: number;
   recuperados: number;
   aseguradosUnicos: number;
+  /** Validación automática con IA. */
+  validadosIa: number;
+  conErrores: number;
+  analizando: number;
 }
 
 export interface AlcanceConfig {
@@ -220,6 +259,8 @@ export interface FiltrosBandeja {
   vendedor?: string;
   q?: string;
   agrupar?: Agrupacion;
+  /** Solo pólizas con algún documento errado. Se envía como `conErrores=true`. */
+  conErrores?: boolean;
   page: number;
   pageSize: number;
 }
@@ -443,6 +484,61 @@ function refDe(r: Record<string, unknown>, documentos?: Record<string, unknown>)
   );
 }
 
+/** Valor de un dato comparado, como texto (números y fechas tal cual llegan). */
+function valorCampo(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'string') return v.trim() || null;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return null;
+  }
+}
+
+function normalizarCampos(raw: unknown): CampoDiagnostico[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((c): c is Record<string, unknown> => !!c && typeof c === 'object')
+    .map((c) => {
+      const campo = String(c.campo ?? '');
+      return {
+        campo,
+        etiqueta: texto(c.etiqueta) ?? (campo ? campo.replace(/_/g, ' ') : 'Dato'),
+        enPoliza: valorCampo(c.enPoliza),
+        enDocumento: valorCampo(c.enDocumento),
+        coincide: typeof c.coincide === 'boolean' ? c.coincide : null,
+      };
+    });
+}
+
+/**
+ * `diagnostico` del requisito (también acepta `resultado`/`resumen` sueltos en el requisito).
+ * Sin resultado ni resumen = todavía no se analizó (null).
+ */
+function normalizarDiagnostico(r: Record<string, unknown>): Diagnostico | null {
+  const d = (r.diagnostico && typeof r.diagnostico === 'object' ? r.diagnostico : null) as
+    | Record<string, unknown>
+    | null;
+  const resultado = texto(d?.resultado ?? r.resultado)?.toLowerCase() ?? null;
+  const resumen = texto(d?.resumen ?? r.resumen);
+  if (!resultado && !resumen) return null;
+  const conf = d?.confianza;
+  return {
+    analizadoEn: texto(d?.analizadoEn),
+    proveedor: texto(d?.proveedor),
+    confianza:
+      typeof conf === 'number' && Number.isFinite(conf)
+        ? conf
+        : typeof conf === 'string' && conf.trim()
+          ? conf.trim()
+          : null,
+    resultado,
+    campos: normalizarCampos(d?.campos),
+    resumen,
+  };
+}
+
 function normalizarRequisitos(raw: unknown, documentos?: unknown): Requisito[] {
   if (!Array.isArray(raw)) return [];
   const docs =
@@ -454,6 +550,8 @@ function normalizarRequisitos(raw: unknown, documentos?: unknown): Requisito[] {
       estado: estadoDe(r.estado),
       motivo: typeof r.motivo === 'string' ? r.motivo : null,
       ref: refDe(r, docs),
+      diagnostico: normalizarDiagnostico(r),
+      actor: texto(r.actor) ?? texto(r.validadoPor),
     }));
 }
 
@@ -513,9 +611,10 @@ function exclusionesAplicadas(raw: unknown): ExclusionAplicada[] {
 
 export async function listarExpedientes(f: FiltrosBandeja): Promise<PaginaExpedientes> {
   try {
+    const { conErrores, ...resto } = f;
     const { data } = await api.get(BASE, {
       headers: authHeaders(),
-      params: limpiarParams(f),
+      params: limpiarParams({ ...resto, conErrores: conErrores ? 'true' : undefined }),
     });
     const raw = unwrap<unknown>(data);
     if (Array.isArray(raw)) {
@@ -561,6 +660,9 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       intentos: num(r.intentos),
       recuperados: num(r.recuperados),
       aseguradosUnicos: num(r.aseguradosUnicos),
+      validadosIa: num(r.validadosIa ?? r.validadosIA ?? r.validadosPorIa),
+      conErrores: num(r.conErrores ?? r.errados),
+      analizando: num(r.analizando ?? r.enAnalisis),
     };
   } catch (err) {
     throw toExpedientesError(err, 'coleccion');
@@ -621,7 +723,7 @@ export async function observarRequisito(
 
 const CONFIG_POR_DEFECTO: ExpedientesConfig = {
   alcance: { canales: true, gestores: true, productores: false, desconocida: true },
-  validacion: 'manual',
+  validacion: 'automatica',
   cadenciaDias: [0, 3, 7, 14],
   destinatariosResumen: [],
   horaDiaria: '08:00',
@@ -643,7 +745,8 @@ function normalizarConfig(raw: Record<string, unknown>): ExpedientesConfig {
       productores: alc.productores ?? CONFIG_POR_DEFECTO.alcance.productores,
       desconocida: alc.desconocida ?? CONFIG_POR_DEFECTO.alcance.desconocida,
     },
-    validacion: val === 'automatica' ? 'automatica' : 'manual',
+    // Por defecto, validación automática con IA.
+    validacion: val === 'manual' ? 'manual' : 'automatica',
     cadenciaDias: Array.isArray(raw.cadenciaDias)
       ? raw.cadenciaDias.map((d) => num(d)).filter((d) => d >= 0)
       : CONFIG_POR_DEFECTO.cadenciaDias,
