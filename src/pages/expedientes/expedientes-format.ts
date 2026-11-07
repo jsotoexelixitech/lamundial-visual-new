@@ -1,5 +1,6 @@
 // Etiquetas y formato del monitor de expedientes (sin componentes).
 import { portalConfig } from '@/lib/portal-config';
+import type { AlcanceExclusion, ExclusionAplicada } from '@/lib/expedientes-api';
 
 // ─── Documentos (mismo criterio que la mesa técnica de Emisión) ────────────
 
@@ -104,6 +105,32 @@ export function etiquetaArea(a: string): string {
   if (v === 'P' || v.startsWith('PRODUCTOR')) return 'Productor';
   if (v === 'DESCONOCIDA') return 'Sin dato del vendedor';
   return a || '—';
+}
+
+// ─── Exclusiones «No enviar» ───────────────────────────────────────────────
+
+/** Tipos de exclusión, en el orden del selector de Configuración. */
+export const OPCIONES_EXCLUSION: { value: AlcanceExclusion; label: string; plural: string }[] = [
+  { value: 'asegurado', label: 'Asegurado', plural: 'Asegurados' },
+  { value: 'poliza', label: 'Póliza', plural: 'Pólizas' },
+  { value: 'canal', label: 'Canal', plural: 'Canales' },
+  { value: 'gestor', label: 'Gestor', plural: 'Gestores' },
+  { value: 'intermediario', label: 'Intermediario', plural: 'Intermediarios' },
+];
+
+export function etiquetaAlcanceExclusion(a: string): string {
+  return OPCIONES_EXCLUSION.find((o) => o.value === a)?.label ?? (a || '—');
+}
+
+/**
+ * Texto corto de por qué no se envía: «canal 45», «gestor 12», «intermediario 80080».
+ * En asegurado y póliza el valor es la misma fila: basta el alcance.
+ */
+export function textoNoEnviar(x?: Pick<ExclusionAplicada, 'alcance' | 'valor'> | null): string {
+  if (!x) return '';
+  const etiqueta = etiquetaAlcanceExclusion(x.alcance).toLowerCase();
+  if (x.alcance === 'asegurado' || x.alcance === 'poliza' || !x.valor) return etiqueta;
+  return `${etiqueta} ${x.valor}`;
 }
 
 // ─── Formato ───────────────────────────────────────────────────────────────

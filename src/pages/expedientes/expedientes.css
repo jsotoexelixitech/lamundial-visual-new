@@ -769,3 +769,103 @@ textarea.mx-input {
   background: #eef0f6;
   color: #3c4260;
 }
+
+/* ── Resumen del encabezado (visible en todas las pestañas) ── */
+.mx-resumen {
+  margin-top: 0.9rem;
+}
+
+.mx-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
+  gap: 0.5rem;
+  transition: opacity 0.15s ease;
+}
+
+.mx-resumen-item {
+  min-width: 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.mx-resumen-item dt {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.68);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mx-resumen-item dd {
+  margin: 0.05rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.mx-resumen-nota {
+  margin-top: 0.35rem;
+  font-size: 0.66rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Exclusiones: selección múltiple ── */
+.mx-excl-opciones {
+  max-height: 16rem;
+  overflow-y: auto;
+  border: 1px solid #e3e6ef;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.mx-excl-opciones > ul > li + li {
+  border-top: 1px solid #eceef4;
+}
+
+.mx-excl-opcion {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.mx-excl-opcion:hover {
+  background: #f7f8fb;
+}
+
+.mx-excl-opcion input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.mx-excl-opcion.is-off {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.mx-excl-opcion.is-off:hover {
+  background: transparent;
+}
+
+.mx-chip-quitar {
+  display: inline-grid;
+  place-items: center;
+  margin-left: 0.1rem;
+  padding: 0.05rem;
+  border-radius: 9999px;
+  color: inherit;
+}
+
+.mx-chip-quitar:hover {
+  background: rgba(9, 17, 51, 0.1);
+}
+
+.mx-chip-quitar:focus-visible {
+  outline: 2px solid #2e6dbf;
+  outline-offset: 1px;
+}

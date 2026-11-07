@@ -63,6 +63,8 @@ export interface ExpedienteItem {
   ultimoEnvio?: string | null;
   proximoEnvio?: string | null;
   noEnviar: boolean;
+  /** Exclusiones que detienen los correos, la más específica primero (p. ej. canal 45). */
+  noEnviarPor: ExclusionAplicada[];
   /** Fase 2: true o cantidad de cambios contra Sis2000. */
   cambiosDetectados?: boolean | number | null;
   emitidaEn?: string | null;
@@ -165,7 +167,16 @@ export interface ConfigConHistorial {
   cambios: CambioConfig[];
 }
 
-export type AlcanceExclusion = 'asegurado' | 'poliza';
+/** canal = ccanalalt · gestor = cgestor · intermediario = cproductor. */
+export type TipoActor = 'canal' | 'gestor' | 'intermediario';
+export type AlcanceExclusion = 'asegurado' | 'poliza' | TipoActor;
+export const ALCANCES_EXCLUSION: AlcanceExclusion[] = [
+  'asegurado',
+  'poliza',
+  'canal',
+  'gestor',
+  'intermediario',
+];
 
 export interface Exclusion {
   id: number | string;
@@ -174,6 +185,28 @@ export interface Exclusion {
   motivo: string;
   actor?: string | null;
   createdAt?: string | null;
+}
+
+/** Por qué una póliza no recibe correos (bandeja y detalle). */
+export interface ExclusionAplicada {
+  id?: number | string;
+  alcance: AlcanceExclusion;
+  valor: string;
+  motivo?: string | null;
+}
+
+/** Canal, gestor o intermediario presente en los expedientes guardados. */
+export interface Actor {
+  tipo: TipoActor;
+  valor: string;
+  nombre: string | null;
+  polizas: number;
+  excluido: boolean;
+}
+
+export interface ResultadoLote {
+  creadas: number;
+  omitidas: { valor: string; motivo: string }[];
 }
 
 export interface FiltrosBandeja {
@@ -450,6 +483,7 @@ function normalizarItem(raw: Record<string, unknown>): ExpedienteItem {
     ultimoEnvio: (raw.ultimoEnvio as string | null | undefined) ?? null,
     proximoEnvio: (raw.proximoEnvio as string | null | undefined) ?? null,
     noEnviar: Boolean(raw.noEnviar),
+    noEnviarPor: exclusionesAplicadas(raw.noEnviarPor),
     cambiosDetectados: (raw.cambiosDetectados as boolean | number | null | undefined) ?? null,
     emitidaEn: (raw.emitidaEn as string | null | undefined) ?? null,
   };
@@ -457,6 +491,22 @@ function normalizarItem(raw: Record<string, unknown>): ExpedienteItem {
 
 function arreglo<T>(raw: unknown): T[] {
   return Array.isArray(raw) ? (raw as T[]) : [];
+}
+
+function alcanceDe(v: unknown): AlcanceExclusion {
+  const s = String(v ?? '').toLowerCase();
+  return (ALCANCES_EXCLUSION as string[]).includes(s) ? (s as AlcanceExclusion) : 'asegurado';
+}
+
+function exclusionesAplicadas(raw: unknown): ExclusionAplicada[] {
+  return arreglo<unknown>(raw)
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === 'object')
+    .map((x) => ({
+      id: x.id as number | string | undefined,
+      alcance: alcanceDe(x.alcance),
+      valor: String(x.valor ?? ''),
+      motivo: texto(x.motivo),
+    }));
 }
 
 // ─── Monitor (sesión del portal) ───────────────────────────────────────────
@@ -637,9 +687,12 @@ export async function guardarConfig(config: ExpedientesConfig, motivo: string): 
   }
 }
 
-export async function listarExclusiones(): Promise<Exclusion[]> {
+export async function listarExclusiones(alcance?: AlcanceExclusion): Promise<Exclusion[]> {
   try {
-    const { data } = await api.get(`${BASE}/exclusiones`, { headers: authHeaders() });
+    const { data } = await api.get(`${BASE}/exclusiones`, {
+      headers: authHeaders(),
+      params: limpiarParams({ alcance }),
+    });
     const raw = unwrap<unknown>(data);
     const lista = Array.isArray(raw)
       ? raw
@@ -648,7 +701,7 @@ export async function listarExclusiones(): Promise<Exclusion[]> {
       .filter((e): e is Record<string, unknown> => !!e && typeof e === 'object')
       .map((e) => ({
         id: e.id as number | string,
-        alcance: e.alcance === 'poliza' ? 'poliza' : 'asegurado',
+        alcance: alcanceDe(e.alcance),
         valor: String(e.valor ?? e.documento ?? e.cnpoliza ?? ''),
         motivo: String(e.motivo ?? ''),
         actor: (e.actor as string | null | undefined) ?? null,
@@ -677,6 +730,75 @@ export async function crearExclusion(
       },
       { headers: authHeaders() },
     );
+  } catch (err) {
+    throw toExpedientesError(err, 'coleccion');
+  }
+}
+
+/** Selección múltiple: un motivo común; Nexus crea una exclusión propia por valor. */
+export async function crearExclusionesLote(
+  alcance: AlcanceExclusion,
+  valores: string[],
+  motivo: string,
+): Promise<ResultadoLote> {
+  try {
+    const { data } = await api.post(
+      `${BASE}/exclusiones/lote`,
+      {
+        alcance,
+        valores: valores.map((v) => v.trim()).filter(Boolean),
+        motivo: motivo.trim(),
+      },
+      { headers: authHeaders() },
+    );
+    const r = (unwrap<Record<string, unknown>>(data) ?? {}) as Record<string, unknown>;
+    return {
+      creadas: arreglo<unknown>(r.creadas).length,
+      omitidas: arreglo<Record<string, unknown>>(r.omitidas).map((o) => ({
+        valor: String(o?.valor ?? ''),
+        motivo: String(o?.motivo ?? ''),
+      })),
+    };
+  } catch (err) {
+    throw toExpedientesError(err, 'coleccion');
+  }
+}
+
+/** Canales, gestores o intermediarios presentes en los expedientes (Nexus no consulta Sis2000). */
+export async function listarActores(tipo: TipoActor): Promise<Actor[]> {
+  try {
+    const { data } = await api.get(`${BASE}/actores`, {
+      headers: authHeaders(),
+      params: { tipo },
+    });
+    return arreglo<Record<string, unknown>>(unwrap<unknown>(data))
+      .filter((a) => !!a && typeof a === 'object' && !!texto(a.valor))
+      .map((a) => ({
+        tipo,
+        valor: String(a.valor).trim(),
+        nombre: texto(a.nombre),
+        polizas: num(a.polizas),
+        excluido: Boolean(a.excluido),
+      }));
+  } catch (err) {
+    throw toExpedientesError(err, 'coleccion');
+  }
+}
+
+/** Búsqueda en todas las pólizas (sin filtro de estado) para elegir asegurados o pólizas. */
+export async function buscarExpedientes(q: string, pageSize = 50): Promise<ExpedienteItem[]> {
+  try {
+    const { data } = await api.get(BASE, {
+      headers: authHeaders(),
+      params: limpiarParams({ q, page: 1, pageSize }),
+    });
+    const raw = unwrap<unknown>(data);
+    const lista = Array.isArray(raw)
+      ? raw
+      : arreglo<unknown>((raw as Record<string, unknown> | null)?.items);
+    return lista
+      .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object')
+      .map(normalizarItem);
   } catch (err) {
     throw toExpedientesError(err, 'coleccion');
   }

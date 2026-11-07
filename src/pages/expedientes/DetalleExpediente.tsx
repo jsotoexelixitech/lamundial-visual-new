@@ -19,6 +19,7 @@ import {
   fechaCorta,
   fechaHora,
   numero,
+  textoNoEnviar,
   urlDocumento,
 } from './expedientes-format';
 
@@ -142,6 +143,7 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
                     <span className="mx-chip mx-chip--neutral">
                       <BellOff size={12} aria-hidden />
                       No enviar
+                      {det.noEnviarPor[0] && ` · ${textoNoEnviar(det.noEnviarPor[0])}`}
                     </span>
                   )}
                 </div>
@@ -249,7 +251,19 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
               {det.noEnviar && (
                 <div className="mx-aviso mx-aviso--warn">
                   <BellOff size={18} aria-hidden className="shrink-0 mt-0.5" />
-                  <p>Los recordatorios de esta póliza están detenidos por una exclusión.</p>
+                  <div>
+                    <p>Los recordatorios de esta póliza están detenidos por una exclusión.</p>
+                    {det.noEnviarPor.length > 0 && (
+                      <ul className="mt-1 text-xs grid gap-0.5">
+                        {det.noEnviarPor.map((x, i) => (
+                          <li key={x.id ?? i}>
+                            <span className="font-semibold">{textoNoEnviar(x)}</span>
+                            {x.motivo ? `: ${x.motivo}` : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               )}
 

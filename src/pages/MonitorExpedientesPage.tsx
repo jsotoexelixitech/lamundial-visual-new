@@ -8,23 +8,27 @@ import { BandejaExpedientes } from './expedientes/BandejaExpedientes';
 import { IndicadoresExpedientes } from './expedientes/IndicadoresExpedientes';
 import { ConfiguracionExpedientes } from './expedientes/ConfiguracionExpedientes';
 import { DetalleExpediente } from './expedientes/DetalleExpediente';
+import { ResumenExpedientes } from './expedientes/ResumenExpedientes';
 import './expedientes/expedientes.css';
 
 type TabId = 'incompletos' | 'completos' | 'sin_informacion' | 'indicadores' | 'configuracion';
 
+/** Indicadores es la primera pestaña y la que se abre por defecto. */
 const TABS: { id: TabId; label: string; Icon: typeof FileWarning; admin?: boolean }[] = [
+  { id: 'indicadores', label: 'Indicadores', Icon: BarChart3 },
   { id: 'incompletos', label: 'Incompletos', Icon: FileWarning },
   { id: 'completos', label: 'Completos', Icon: CheckCircle2 },
   { id: 'sin_informacion', label: 'Sin información', Icon: CircleHelp },
-  { id: 'indicadores', label: 'Indicadores', Icon: BarChart3 },
   { id: 'configuracion', label: 'Configuración', Icon: Settings2, admin: true },
 ];
+const TAB_INICIAL: TabId = 'indicadores';
 
 /**
  * Monitor de expedientes Marketplace (solo lectura).
  * Visual nueva para abrir desde Sis2000 por SSO (iframe): sin menú ni encabezado del portal,
  * a ancho completo. Entrada: /sso?nexus_token=…&next=/monitor-expedientes
- * Parámetros: ?tab=incompletos|completos|sin_informacion|indicadores|configuracion · ?exp=<id> abre el detalle.
+ * Parámetros: ?tab=indicadores|incompletos|completos|sin_informacion|configuracion · ?exp=<id> abre el detalle.
+ * El encabezado muestra un resumen compacto en todas las pestañas.
  */
 export const MonitorExpedientesPage: React.FC = () => {
   const user = getCurrentUser();
@@ -37,7 +41,7 @@ export const MonitorExpedientesPage: React.FC = () => {
 
   const tabsVisibles = TABS.filter((t) => !t.admin || esAdmin);
   const pedido = params.get('tab') as TabId | null;
-  const tab: TabId = tabsVisibles.some((t) => t.id === pedido) ? (pedido as TabId) : 'incompletos';
+  const tab: TabId = tabsVisibles.some((t) => t.id === pedido) ? (pedido as TabId) : TAB_INICIAL;
   const detalleId = params.get('exp');
 
   // Las pestañas se montan la primera vez que se abren y luego conservan sus filtros.
@@ -116,6 +120,9 @@ export const MonitorExpedientesPage: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {/* Sin filtros globales en la página: el resumen es el acumulado del monitor. */}
+        <ResumenExpedientes recargaKey={recargaKey} />
 
         <div className="mx-tabs" role="tablist" aria-label="Secciones del monitor">
           {tabsVisibles.map(({ id, label, Icon }, i) => (

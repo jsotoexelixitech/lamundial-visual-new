@@ -1,20 +1,31 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BellOff, BellRing, CheckCircle2, Loader2, Plus, Search, X } from 'lucide-react';
 import {
-  crearExclusion,
+  buscarExpedientes,
+  crearExclusionesLote,
   eliminarExclusion,
   guardarConfig,
   isExpedientesError,
+  listarActores,
   listarExclusiones,
   obtenerConfig,
   ExpedientesError,
+  type Actor,
   type AlcanceExclusion,
   type CambioConfig,
   type Exclusion,
+  type ExpedienteItem,
   type ExpedientesConfig,
+  type TipoActor,
 } from '@/lib/expedientes-api';
 import { AvisoError, Cargando } from './expedientes-ui';
-import { etiquetaProducto, etiquetaRequisito, fechaHora } from './expedientes-format';
+import {
+  OPCIONES_EXCLUSION,
+  etiquetaAlcanceExclusion,
+  etiquetaProducto,
+  etiquetaRequisito,
+  fechaHora,
+} from './expedientes-format';
 
 const MOTIVO_MIN = 5;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -379,17 +390,96 @@ function HistorialCambios({ cambios }: { cambios: CambioConfig[] }) {
   );
 }
 
+// ─── Exclusiones «No enviar» ───────────────────────────────────────────────
+
+const ES_ACTOR = (t: AlcanceExclusion): t is TipoActor =>
+  t === 'canal' || t === 'gestor' || t === 'intermediario';
+
+/** Opción elegible en el buscador de exclusiones. */
+interface Candidato {
+  valor: string;
+  titulo: string;
+  detalle: string;
+  excluido: boolean;
+}
+
+const MAX_CANDIDATOS = 100;
+
+function useDebounced<T>(value: T, ms = 350): T {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = window.setTimeout(() => setV(value), ms);
+    return () => window.clearTimeout(t);
+  }, [value, ms]);
+  return v;
+}
+
+const pluralPolizas = (n: number) => `${n} ${n === 1 ? 'póliza' : 'pólizas'}`;
+
+/** Asegurados o pólizas únicos de una búsqueda en los expedientes. */
+function candidatosDeExpedientes(items: ExpedienteItem[], tipo: 'asegurado' | 'poliza'): Candidato[] {
+  const mapa = new Map<string, Candidato & { polizas: number }>();
+  for (const it of items) {
+    const excluidoPor = (a: AlcanceExclusion) => it.noEnviarPor.some((x) => x.alcance === a);
+    if (tipo === 'poliza') {
+      if (!it.cnpoliza || mapa.has(it.cnpoliza)) continue;
+      mapa.set(it.cnpoliza, {
+        valor: it.cnpoliza,
+        titulo: it.cnpoliza,
+        detalle: [etiquetaProducto(it.producto), it.asegurado.nombre].filter(Boolean).join(' · '),
+        excluido: excluidoPor('poliza'),
+        polizas: 1,
+      });
+      continue;
+    }
+    const doc = it.asegurado.documento;
+    if (!doc) continue;
+    const previo = mapa.get(doc);
+    if (previo) {
+      previo.polizas++;
+      previo.detalle = `${it.asegurado.nombre ?? 'Sin nombre'} · ${pluralPolizas(previo.polizas)}`;
+      previo.excluido = previo.excluido || excluidoPor('asegurado');
+      continue;
+    }
+    mapa.set(doc, {
+      valor: doc,
+      titulo: doc,
+      detalle: `${it.asegurado.nombre ?? 'Sin nombre'} · ${pluralPolizas(1)}`,
+      excluido: excluidoPor('asegurado'),
+      polizas: 1,
+    });
+  }
+  return [...mapa.values()];
+}
+
 function Exclusiones() {
+  // Lista de exclusiones activas
   const [lista, setLista] = useState<Exclusion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<ExpedientesError | null>(null);
-  const [alcance, setAlcance] = useState<AlcanceExclusion>('asegurado');
-  const [valor, setValor] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState<AlcanceExclusion | ''>('');
+  const [quitando, setQuitando] = useState<string | null>(null);
+  const [motivoQuitar, setMotivoQuitar] = useState('');
+  const [errLista, setErrLista] = useState('');
+  const [reactivando, setReactivando] = useState(false);
+
+  // Formulario de selección múltiple
+  const [tipo, setTipo] = useState<AlcanceExclusion>('canal');
+  const [busqueda, setBusqueda] = useState('');
+  const [seleccion, setSeleccion] = useState<Map<string, string>>(() => new Map());
   const [motivo, setMotivo] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [errForm, setErrForm] = useState('');
-  const [quitando, setQuitando] = useState<string | null>(null);
-  const [motivoQuitar, setMotivoQuitar] = useState('');
+  const [resultado, setResultado] = useState('');
+
+  // Candidatos: actores (una carga por tipo) o búsqueda de asegurados/pólizas
+  const [actores, setActores] = useState<Actor[]>([]);
+  const [expedientes, setExpedientes] = useState<ExpedienteItem[]>([]);
+  const [buscando, setBuscando] = useState(false);
+  const [errBusqueda, setErrBusqueda] = useState<ExpedientesError | null>(null);
+  const [recarga, setRecarga] = useState(0);
+  const peticion = useRef(0);
+  const q = useDebounced(busqueda.trim());
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -407,78 +497,293 @@ function Exclusiones() {
     void cargar();
   }, [cargar]);
 
-  const agregar = async (e: React.FormEvent) => {
+  // Canal, gestor o intermediario: una carga por tipo; el buscador filtra en pantalla.
+  // Asegurado o póliza: búsqueda en Nexus con el texto escrito.
+  const qBusqueda = ES_ACTOR(tipo) ? '' : q;
+  useEffect(() => {
+    const n = ++peticion.current;
+    const vigente = () => n === peticion.current;
+    setErrBusqueda(null);
+    if (!ES_ACTOR(tipo) && qBusqueda.length < 2) {
+      setExpedientes([]);
+      setBuscando(false);
+      return;
+    }
+    setBuscando(true);
+    const carga = ES_ACTOR(tipo)
+      ? listarActores(tipo).then((r) => {
+          if (vigente()) setActores(r);
+        })
+      : buscarExpedientes(qBusqueda).then((r) => {
+          if (vigente()) setExpedientes(r);
+        });
+    carga
+      .catch((err: unknown) => {
+        if (vigente()) setErrBusqueda(aError(err, 'No se pudo cargar la lista.'));
+      })
+      .finally(() => {
+        if (vigente()) setBuscando(false);
+      });
+  }, [tipo, qBusqueda, recarga]);
+
+  const candidatos: Candidato[] = useMemo(() => {
+    if (ES_ACTOR(tipo)) {
+      const t = busqueda.trim().toLowerCase();
+      return actores
+        .filter((a) => !t || a.valor.toLowerCase().includes(t) || (a.nombre ?? '').toLowerCase().includes(t))
+        .map((a) => ({
+          valor: a.valor,
+          titulo: a.nombre ? `${a.valor} · ${a.nombre}` : a.valor,
+          detalle: pluralPolizas(a.polizas),
+          excluido: a.excluido,
+        }));
+    }
+    return candidatosDeExpedientes(expedientes, tipo as 'asegurado' | 'poliza');
+  }, [tipo, actores, expedientes, busqueda]);
+
+  const visibles = candidatos.slice(0, MAX_CANDIDATOS);
+  const elegibles = visibles.filter((c) => !c.excluido);
+  const textoLibre = busqueda.trim();
+  const puedeAgregarLibre =
+    textoLibre.length > 0 &&
+    !seleccion.has(textoLibre) &&
+    !candidatos.some((c) => c.valor.toLowerCase() === textoLibre.toLowerCase());
+  const opcion = OPCIONES_EXCLUSION.find((o) => o.value === tipo)!;
+  const listaFiltrada = filtroTipo ? lista.filter((x) => x.alcance === filtroTipo) : lista;
+
+  const cambiarTipo = (t: AlcanceExclusion) => {
+    setTipo(t);
+    setBusqueda('');
+    setSeleccion(new Map());
+    setActores([]);
+    setExpedientes([]);
+    setErrForm('');
+  };
+
+  const alternar = (c: Pick<Candidato, 'valor' | 'titulo'>) =>
+    setSeleccion((prev) => {
+      const n = new Map(prev);
+      if (n.has(c.valor)) n.delete(c.valor);
+      else n.set(c.valor, c.titulo);
+      return n;
+    });
+
+  const todosVisiblesElegidos = elegibles.length > 0 && elegibles.every((c) => seleccion.has(c.valor));
+  const alternarTodos = () =>
+    setSeleccion((prev) => {
+      const n = new Map(prev);
+      if (todosVisiblesElegidos) elegibles.forEach((c) => n.delete(c.valor));
+      else elegibles.forEach((c) => n.set(c.valor, c.titulo));
+      return n;
+    });
+
+  const excluir = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!valor.trim() || motivo.trim().length < MOTIVO_MIN) return;
+    if (seleccion.size === 0 || motivo.trim().length < MOTIVO_MIN) return;
     setGuardando(true);
     setErrForm('');
+    setResultado('');
     try {
-      await crearExclusion(alcance, valor, motivo);
-      setValor('');
+      const r = await crearExclusionesLote(tipo, [...seleccion.keys()], motivo);
+      const partes = [
+        r.creadas === 1 ? '1 exclusión creada.' : `${r.creadas} exclusiones creadas.`,
+        ...r.omitidas.map((o) => `${o.valor}: ${o.motivo}`),
+      ];
+      setResultado(partes.join(' '));
+      setSeleccion(new Map());
       setMotivo('');
+      setRecarga((n) => n + 1);
       await cargar();
     } catch (err) {
-      setErrForm(isExpedientesError(err) ? err.message : 'No se pudo guardar la exclusión.');
+      setErrForm(isExpedientesError(err) ? err.message : 'No se pudieron guardar las exclusiones.');
     } finally {
       setGuardando(false);
     }
   };
 
-  const quitar = async (id: string) => {
+  const reactivar = async (id: string) => {
     if (motivoQuitar.trim().length < MOTIVO_MIN) return;
-    setGuardando(true);
-    setErrForm('');
+    setReactivando(true);
+    setErrLista('');
     try {
       await eliminarExclusion(id, motivoQuitar);
       setQuitando(null);
       setMotivoQuitar('');
+      setRecarga((n) => n + 1);
       await cargar();
     } catch (err) {
-      setErrForm(isExpedientesError(err) ? err.message : 'No se pudo quitar la exclusión.');
+      setErrLista(isExpedientesError(err) ? err.message : 'No se pudo reactivar el envío.');
     } finally {
-      setGuardando(false);
+      setReactivando(false);
     }
   };
+
+  const ayudaBusqueda = ES_ACTOR(tipo)
+    ? `Código o nombre del ${opcion.label.toLowerCase()}. La lista sale de las pólizas registradas en el monitor.`
+    : tipo === 'asegurado'
+      ? 'Cédula, RIF o nombre (mínimo 2 caracteres).'
+      : 'Número de póliza, cédula o nombre del asegurado (mínimo 2 caracteres).';
 
   return (
     <section className="mx-panel min-w-0" aria-labelledby="mx-excl-titulo">
       <div className="mx-panel-head">
         <div>
-          <h2 id="mx-excl-titulo" className="mx-h2">Clientes excluidos de recordatorios</h2>
+          <h2 id="mx-excl-titulo" className="mx-h2">Exclusiones de recordatorios</h2>
           <p className="text-xs mx-muted mt-0.5">
-            Excluir solo detiene los correos. El expediente sigue visible con su estado documental.
+            Excluir solo detiene los correos. Las pólizas siguen visibles con su estado documental.
           </p>
         </div>
       </div>
 
-      <form className="grid gap-3 p-4 border-b border-[#eceef4]" onSubmit={(e) => void agregar(e)}>
+      <form className="grid gap-3 p-4 border-b border-[#eceef4]" onSubmit={(e) => void excluir(e)}>
         <div className="grid gap-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
-          <label className="mx-field" htmlFor="mx-excl-alcance">
-            <span>Alcance</span>
+          <label className="mx-field" htmlFor="mx-excl-tipo">
+            <span>Excluir por</span>
             <select
-              id="mx-excl-alcance"
+              id="mx-excl-tipo"
               className="mx-input"
-              value={alcance}
-              onChange={(e) => setAlcance(e.target.value as AlcanceExclusion)}
+              value={tipo}
+              onChange={(e) => cambiarTipo(e.target.value as AlcanceExclusion)}
             >
-              <option value="asegurado">Asegurado</option>
-              <option value="poliza">Póliza</option>
+              {OPCIONES_EXCLUSION.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
             </select>
           </label>
-          <label className="mx-field" htmlFor="mx-excl-valor">
-            <span>{alcance === 'asegurado' ? 'Cédula o RIF' : 'Número de póliza'}</span>
-            <input
-              id="mx-excl-valor"
-              className="mx-input"
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              placeholder={alcance === 'asegurado' ? 'V12345678' : 'Número de póliza'}
-              maxLength={40}
-            />
+          <label className="mx-field" htmlFor="mx-excl-buscar">
+            <span>Buscar</span>
+            <span className="relative block">
+              <Search
+                size={14}
+                aria-hidden
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8a8fa3] pointer-events-none"
+              />
+              <input
+                id="mx-excl-buscar"
+                type="search"
+                className="mx-input w-full pl-8"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder={ES_ACTOR(tipo) ? 'Código o nombre' : 'Escribe para buscar'}
+                maxLength={60}
+                aria-describedby="mx-excl-buscar-ayuda"
+                autoComplete="off"
+              />
+            </span>
+            <span id="mx-excl-buscar-ayuda" className="mx-sub">
+              {ayudaBusqueda}
+            </span>
           </label>
         </div>
+
+        <fieldset className="grid gap-1.5 min-w-0">
+          <legend className="sr-only">{opcion.plural} para excluir</legend>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="mx-label">
+              {opcion.plural}
+              {candidatos.length > 0 && ` · ${candidatos.length}`}
+            </span>
+            {elegibles.length > 1 && (
+              <button type="button" className="mx-link text-xs" onClick={alternarTodos}>
+                {todosVisiblesElegidos ? 'Quitar los visibles' : 'Elegir todos los visibles'}
+              </button>
+            )}
+          </div>
+          <div className="mx-excl-opciones" aria-busy={buscando}>
+            {errBusqueda ? (
+              <p className="p-3 text-xs text-[#8F2A2D]" role="alert">
+                {errBusqueda.message}
+              </p>
+            ) : buscando && candidatos.length === 0 ? (
+              <p className="p-3 text-xs mx-muted flex items-center gap-2">
+                <Loader2 size={14} className="animate-spin" aria-hidden />
+                Buscando…
+              </p>
+            ) : visibles.length === 0 ? (
+              <p className="p-3 text-xs mx-muted">
+                {ES_ACTOR(tipo)
+                  ? busqueda.trim()
+                    ? 'Ningún valor coincide.'
+                    : 'Todavía no hay pólizas con este dato.'
+                  : q.length < 2
+                    ? 'Escribe al menos 2 caracteres para buscar.'
+                    : 'Sin resultados.'}
+              </p>
+            ) : (
+              <ul>
+                {visibles.map((c) => (
+                  <li key={c.valor}>
+                    <label className={`mx-excl-opcion ${c.excluido ? 'is-off' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={c.excluido || seleccion.has(c.valor)}
+                        disabled={c.excluido}
+                        onChange={() => alternar(c)}
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-medium truncate">{c.titulo}</span>
+                        <span className="mx-sub">
+                          {c.detalle}
+                          {c.excluido && ' · ya excluido'}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          {candidatos.length > MAX_CANDIDATOS && (
+            <p className="mx-sub">
+              Se muestran {MAX_CANDIDATOS} de {candidatos.length}. Afina la búsqueda para ver el resto.
+            </p>
+          )}
+          {puedeAgregarLibre && (
+            <div>
+              <button
+                type="button"
+                className="mx-btn mx-btn--ghost mx-btn--sm"
+                onClick={() => {
+                  alternar({ valor: textoLibre, titulo: textoLibre });
+                  setBusqueda('');
+                }}
+              >
+                <Plus size={14} aria-hidden />
+                Agregar «{textoLibre}» aunque no esté en la lista
+              </button>
+            </div>
+          )}
+        </fieldset>
+
+        {seleccion.size > 0 && (
+          <div className="grid gap-1.5">
+            <span className="mx-label">
+              Seleccionados · {seleccion.size}
+            </span>
+            <ul className="flex flex-wrap gap-1.5" aria-label="Valores seleccionados">
+              {[...seleccion].map(([valor, titulo]) => (
+                <li key={valor}>
+                  <span className="mx-chip mx-chip--neutral">
+                    {titulo}
+                    <button
+                      type="button"
+                      className="mx-chip-quitar"
+                      onClick={() => alternar({ valor, titulo })}
+                      aria-label={`Quitar ${titulo} de la selección`}
+                    >
+                      <X size={12} aria-hidden />
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <label className="mx-field" htmlFor="mx-excl-motivo">
-          <span>Motivo (obligatorio)</span>
+          <span>Motivo (obligatorio, común para todos)</span>
           <textarea
             id="mx-excl-motivo"
             className="mx-input"
@@ -486,7 +791,7 @@ function Exclusiones() {
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             maxLength={300}
-            placeholder="Ej.: el cliente entregará los documentos en la oficina"
+            placeholder="Ej.: el canal entregará los documentos en la oficina"
           />
         </label>
         {errForm && (
@@ -494,17 +799,50 @@ function Exclusiones() {
             {errForm}
           </p>
         )}
-        <div>
+        {resultado && (
+          <p className="text-xs text-[#1f6b45]" role="status">
+            {resultado}
+          </p>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
             className="mx-btn mx-btn--primary mx-btn--sm"
-            disabled={guardando || !valor.trim() || motivo.trim().length < MOTIVO_MIN}
+            disabled={guardando || seleccion.size === 0 || motivo.trim().length < MOTIVO_MIN}
           >
-            {guardando ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Plus size={14} aria-hidden />}
-            Agregar exclusión
+            {guardando ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <BellOff size={14} aria-hidden />}
+            {seleccion.size > 1 ? `Excluir ${seleccion.size} seleccionados` : 'Excluir seleccionado'}
           </button>
+          {seleccion.size > 0 && motivo.trim().length < MOTIVO_MIN && (
+            <span className="text-xs mx-muted">Escribe el motivo para poder excluir.</span>
+          )}
         </div>
       </form>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3">
+        <h3 className="mx-label">Exclusiones activas</h3>
+        <label className="flex items-center gap-1.5" htmlFor="mx-excl-filtro">
+          <span className="text-xs">Tipo</span>
+          <select
+            id="mx-excl-filtro"
+            className="mx-input mx-input--sm"
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value as AlcanceExclusion | '')}
+          >
+            <option value="">Todos ({lista.length})</option>
+            {OPCIONES_EXCLUSION.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.plural} ({lista.filter((x) => x.alcance === o.value).length})
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {errLista && (
+        <p className="px-4 pt-2 text-xs text-[#8F2A2D]" role="alert">
+          {errLista}
+        </p>
+      )}
 
       {error ? (
         <div className="p-4">
@@ -512,18 +850,20 @@ function Exclusiones() {
         </div>
       ) : cargando ? (
         <Cargando texto="Cargando exclusiones…" />
-      ) : lista.length === 0 ? (
-        <p className="px-4 py-4 mx-muted">No hay clientes excluidos.</p>
+      ) : listaFiltrada.length === 0 ? (
+        <p className="px-4 py-4 mx-muted">
+          {filtroTipo ? 'No hay exclusiones activas de este tipo.' : 'No hay exclusiones activas.'}
+        </p>
       ) : (
         <ul className="mx-lista">
-          {lista.map((x) => {
+          {listaFiltrada.map((x) => {
             const id = String(x.id);
             return (
               <li key={id}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-semibold break-words">
-                      {x.alcance === 'poliza' ? 'Póliza' : 'Asegurado'} {x.valor}
+                      {etiquetaAlcanceExclusion(x.alcance)} {x.valor}
                     </p>
                     <p className="text-xs mt-0.5 break-words">{x.motivo}</p>
                     <p className="mx-sub">
@@ -538,10 +878,11 @@ function Exclusiones() {
                       onClick={() => {
                         setQuitando(id);
                         setMotivoQuitar('');
+                        setErrLista('');
                       }}
                     >
-                      <Trash2 size={14} aria-hidden />
-                      Quitar
+                      <BellRing size={14} aria-hidden />
+                      Reactivar envíos
                     </button>
                   )}
                 </div>
@@ -561,10 +902,11 @@ function Exclusiones() {
                       <button
                         type="button"
                         className="mx-btn mx-btn--primary mx-btn--sm"
-                        disabled={guardando || motivoQuitar.trim().length < MOTIVO_MIN}
-                        onClick={() => void quitar(id)}
+                        disabled={reactivando || motivoQuitar.trim().length < MOTIVO_MIN}
+                        onClick={() => void reactivar(id)}
                       >
-                        Quitar exclusión
+                        {reactivando && <Loader2 size={14} className="animate-spin" aria-hidden />}
+                        Reactivar
                       </button>
                       <button
                         type="button"

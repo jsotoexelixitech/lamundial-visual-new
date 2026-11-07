@@ -26,6 +26,7 @@ import {
   fechaCorta,
   fechaBreve,
   numero,
+  textoNoEnviar,
 } from './expedientes-format';
 
 interface FiltrosUI {
@@ -465,12 +466,23 @@ function Fila({ it, onAbrir }: { it: ExpedienteItem; onAbrir: (id: string) => vo
               : fechaBreve(it.proximoEnvio)}
         </span>
       </td>
-      <td>
+      <td className="whitespace-nowrap">
         {it.noEnviar ? (
-          <span className="mx-chip mx-chip--neutral">
-            <BellOff size={12} aria-hidden />
-            No enviar
-          </span>
+          <>
+            <span
+              className="mx-chip mx-chip--neutral"
+              title={it.noEnviarPor[0]?.motivo ?? undefined}
+            >
+              <BellOff size={12} aria-hidden />
+              No enviar
+              {it.noEnviarPor[0] && ` · ${textoNoEnviar(it.noEnviarPor[0])}`}
+            </span>
+            {it.noEnviarPor.length > 1 && (
+              <span className="mx-sub">
+                y {it.noEnviarPor.length - 1} exclusión{it.noEnviarPor.length > 2 ? 'es' : ''} más
+              </span>
+            )}
+          </>
         ) : (
           <span className="mx-muted">—</span>
         )}
