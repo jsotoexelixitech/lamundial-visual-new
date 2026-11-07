@@ -1,5 +1,17 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BellOff, ChevronLeft, ChevronRight, Eye, PencilLine, RotateCcw } from 'lucide-react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  BellOff,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Eye,
+  PencilLine,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+  XCircle,
+} from 'lucide-react';
 import {
   listarExpedientes,
   type Agrupacion,
@@ -12,11 +24,15 @@ import {
   ExpedientesError as ExpError,
 } from '@/lib/expedientes-api';
 import {
+  Actualizando,
   AvisoError,
-  Cargando,
+  ChipDatosCambiados,
   ChipDocumental,
   ChipPago,
   ChipRequisito,
+  Esqueleto,
+  LeyendaEstados,
+  LineaPendiente,
   Vacio,
 } from './expedientes-ui';
 import {
@@ -28,7 +44,9 @@ import {
   fechaCorta,
   fechaBreve,
   numero,
+  ordenarRequisitos,
   textoNoEnviar,
+  tonoDocumental,
 } from './expedientes-format';
 
 interface FiltrosUI {
@@ -80,6 +98,13 @@ const TEXTOS: Record<string, { titulo: string; descripcion: string; vacio: strin
   },
 };
 
+/** El panel de filtros arranca abierto en escritorio y cerrado en el móvil. */
+const ESCRITORIO = '(min-width: 1024px)';
+const esEscritorio = () =>
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia(ESCRITORIO).matches
+    : true;
+
 function useDebounced<T>(value: T, ms = 400): T {
   const [v, setV] = useState(value);
   useEffect(() => {
@@ -106,7 +131,9 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<ExpedientesError | null>(null);
   const [reintento, setReintento] = useState(0);
+  const [panelAbierto, setPanelAbierto] = useState(esEscritorio);
   const peticion = useRef(0);
+  const panelId = useId();
 
   const q = useDebounced(filtros.q);
   const vendedor = useDebounced(filtros.vendedor);
@@ -157,6 +184,15 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
     () => JSON.stringify({ ...filtros, agrupar: 'poliza' }) !== JSON.stringify(FILTROS_INICIALES),
     [filtros],
   );
+  // Filtros del panel (la búsqueda y los botones de errados/datos cambiados están a la vista).
+  const activosPanel = [
+    filtros.estadoPago,
+    filtros.area,
+    filtros.producto,
+    filtros.desde,
+    filtros.hasta,
+    filtros.vendedor.trim(),
+  ].filter(Boolean).length;
 
   // Si Nexus aún no filtra por `conErrores` / `datosModificados`, se filtra también la página recibida.
   const items = useMemo(() => {
@@ -186,10 +222,23 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
   const idPrefijo = `mx-f-${estadoDoc}`;
   const textos = TEXTOS[estadoDoc] ?? TEXTOS.incompleto;
 
+  const tituloGrupo = (lista: ExpedienteItem[]) => (
+    <>
+      <span className="font-semibold">{lista[0].asegurado.nombre || 'Asegurado sin nombre'}</span>
+      {lista[0].asegurado.documento && (
+        <span className="mx-muted"> · {lista[0].asegurado.documento}</span>
+      )}
+      <span className="mx-muted">
+        {' '}
+        · {lista.length} {lista.length === 1 ? 'póliza' : 'pólizas'}
+      </span>
+    </>
+  );
+
   return (
     <div className="mx-panel">
       <div className="mx-panel-head">
-        <div>
+        <div className="min-w-0">
           <h2 className="mx-h2">{textos.titulo}</h2>
           <p className="text-xs mx-muted mt-0.5">{textos.descripcion}</p>
         </div>
@@ -208,161 +257,195 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
         )}
       </div>
 
-      <div className="mx-filtros" role="search">
-        <label className="mx-field" htmlFor={`${idPrefijo}-q`}>
-          <span>Cédula o póliza</span>
-          <input
-            id={`${idPrefijo}-q`}
-            className="mx-input"
-            type="search"
-            placeholder="Buscar"
-            value={filtros.q}
-            onChange={(e) => cambiar('q', e.target.value)}
-          />
-        </label>
-        <label className="mx-field" htmlFor={`${idPrefijo}-pago`}>
-          <span>Estado de pago</span>
-          <select
-            id={`${idPrefijo}-pago`}
-            className="mx-input"
-            value={filtros.estadoPago}
-            onChange={(e) => cambiar('estadoPago', e.target.value as FiltrosUI['estadoPago'])}
-          >
-            <option value="">Todos</option>
-            <option value="pagada">Pagada</option>
-            <option value="pendiente">Pendiente de pago</option>
-          </select>
-        </label>
-        <label className="mx-field" htmlFor={`${idPrefijo}-area`}>
-          <span>Área</span>
-          <select
-            id={`${idPrefijo}-area`}
-            className="mx-input"
-            value={filtros.area}
-            onChange={(e) => cambiar('area', e.target.value)}
-          >
-            <option value="">Todas</option>
-            {OPCIONES_AREA.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="mx-field" htmlFor={`${idPrefijo}-producto`}>
-          <span>Producto</span>
-          <select
-            id={`${idPrefijo}-producto`}
-            className="mx-input"
-            value={filtros.producto}
-            onChange={(e) => cambiar('producto', e.target.value)}
-          >
-            <option value="">Todos</option>
-            {OPCIONES_PRODUCTO.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="mx-field" htmlFor={`${idPrefijo}-desde`}>
-          <span>Emitida desde</span>
-          <input
-            id={`${idPrefijo}-desde`}
-            className="mx-input"
-            type="date"
-            value={filtros.desde}
-            max={filtros.hasta || undefined}
-            onChange={(e) => cambiar('desde', e.target.value)}
-          />
-        </label>
-        <label className="mx-field" htmlFor={`${idPrefijo}-hasta`}>
-          <span>Emitida hasta</span>
-          <input
-            id={`${idPrefijo}-hasta`}
-            className="mx-input"
-            type="date"
-            value={filtros.hasta}
-            min={filtros.desde || undefined}
-            onChange={(e) => cambiar('hasta', e.target.value)}
-          />
-        </label>
-        <label className="mx-field" htmlFor={`${idPrefijo}-vendedor`}>
-          <span>Vendedor</span>
-          <input
-            id={`${idPrefijo}-vendedor`}
-            className="mx-input"
-            type="search"
-            placeholder="Usuario o código"
-            value={filtros.vendedor}
-            onChange={(e) => cambiar('vendedor', e.target.value)}
-          />
-        </label>
-        <label className="mx-field" htmlFor={`${idPrefijo}-agrupar`}>
-          <span>Agrupar</span>
-          <select
-            id={`${idPrefijo}-agrupar`}
-            className="mx-input"
-            value={filtros.agrupar}
-            onChange={(e) => cambiar('agrupar', e.target.value as Agrupacion)}
-          >
-            <option value="poliza">Por póliza</option>
-            <option value="asegurado">Por asegurado</option>
-          </select>
-        </label>
-        {estadoDoc === 'incompleto' && (
-          <div className="mx-field">
-            <span>Validación con IA</span>
-            <label className="mx-check" htmlFor={`${idPrefijo}-errados`}>
+      <div role="search">
+        <div className="mx-toolbar">
+          <div className="mx-toolbar-fila">
+            <label className="mx-buscar" htmlFor={`${idPrefijo}-q`}>
+              <span className="sr-only">Cédula o póliza</span>
+              <Search size={16} aria-hidden />
               <input
-                id={`${idPrefijo}-errados`}
-                type="checkbox"
-                checked={filtros.conErrores}
-                onChange={(e) => cambiar('conErrores', e.target.checked)}
+                id={`${idPrefijo}-q`}
+                className="mx-input"
+                type="search"
+                placeholder="Buscar por cédula o póliza"
+                value={filtros.q}
+                onChange={(e) => cambiar('q', e.target.value)}
               />
-              Con documentos errados
             </label>
-            <label className="mx-check" htmlFor={`${idPrefijo}-modificados`}>
-              <input
-                id={`${idPrefijo}-modificados`}
-                type="checkbox"
-                checked={filtros.datosModificados}
-                onChange={(e) => cambiar('datosModificados', e.target.checked)}
-              />
-              Datos cambiados
-            </label>
+            <button
+              type="button"
+              className="mx-btn mx-btn--ghost"
+              aria-expanded={panelAbierto}
+              aria-controls={panelId}
+              onClick={() => setPanelAbierto((a) => !a)}
+            >
+              <SlidersHorizontal size={15} aria-hidden />
+              Filtros
+              {activosPanel > 0 && (
+                <span className="mx-badge" aria-label={`${activosPanel} activos`}>
+                  {activosPanel}
+                </span>
+              )}
+              {panelAbierto ? <ChevronUp size={15} aria-hidden /> : <ChevronDown size={15} aria-hidden />}
+            </button>
           </div>
-        )}
+
+          <div className="mx-toolbar-fila">
+            {estadoDoc === 'incompleto' && (
+              <div className="mx-toolbar-fila" role="group" aria-label="Validación con IA">
+                <button
+                  type="button"
+                  className="mx-toggle mx-toggle--rojo"
+                  aria-pressed={filtros.conErrores}
+                  onClick={() => cambiar('conErrores', !filtros.conErrores)}
+                >
+                  <XCircle size={14} aria-hidden />
+                  Con documentos errados
+                </button>
+                <button
+                  type="button"
+                  className="mx-toggle mx-toggle--violeta"
+                  aria-pressed={filtros.datosModificados}
+                  onClick={() => cambiar('datosModificados', !filtros.datosModificados)}
+                >
+                  <PencilLine size={14} aria-hidden />
+                  Datos cambiados
+                </button>
+              </div>
+            )}
+            <div className="mx-segmento" role="group" aria-label="Agrupar">
+              <button
+                type="button"
+                aria-pressed={filtros.agrupar === 'poliza'}
+                onClick={() => cambiar('agrupar', 'poliza')}
+              >
+                Por póliza
+              </button>
+              <button
+                type="button"
+                aria-pressed={filtros.agrupar === 'asegurado'}
+                onClick={() => cambiar('agrupar', 'asegurado')}
+              >
+                Por asegurado
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id={panelId} className="mx-filtros" hidden={!panelAbierto}>
+          <label className="mx-field" htmlFor={`${idPrefijo}-pago`}>
+            <span>Estado de pago</span>
+            <select
+              id={`${idPrefijo}-pago`}
+              className="mx-input"
+              value={filtros.estadoPago}
+              onChange={(e) => cambiar('estadoPago', e.target.value as FiltrosUI['estadoPago'])}
+            >
+              <option value="">Todos</option>
+              <option value="pagada">Pagada</option>
+              <option value="pendiente">Pendiente de pago</option>
+            </select>
+          </label>
+          <label className="mx-field" htmlFor={`${idPrefijo}-area`}>
+            <span>Área</span>
+            <select
+              id={`${idPrefijo}-area`}
+              className="mx-input"
+              value={filtros.area}
+              onChange={(e) => cambiar('area', e.target.value)}
+            >
+              <option value="">Todas</option>
+              {OPCIONES_AREA.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="mx-field" htmlFor={`${idPrefijo}-producto`}>
+            <span>Producto</span>
+            <select
+              id={`${idPrefijo}-producto`}
+              className="mx-input"
+              value={filtros.producto}
+              onChange={(e) => cambiar('producto', e.target.value)}
+            >
+              <option value="">Todos</option>
+              {OPCIONES_PRODUCTO.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="mx-field" htmlFor={`${idPrefijo}-vendedor`}>
+            <span>Vendedor</span>
+            <input
+              id={`${idPrefijo}-vendedor`}
+              className="mx-input"
+              type="search"
+              placeholder="Usuario o código"
+              value={filtros.vendedor}
+              onChange={(e) => cambiar('vendedor', e.target.value)}
+            />
+          </label>
+          <label className="mx-field" htmlFor={`${idPrefijo}-desde`}>
+            <span>Emitida desde</span>
+            <input
+              id={`${idPrefijo}-desde`}
+              className="mx-input"
+              type="date"
+              value={filtros.desde}
+              max={filtros.hasta || undefined}
+              onChange={(e) => cambiar('desde', e.target.value)}
+            />
+          </label>
+          <label className="mx-field" htmlFor={`${idPrefijo}-hasta`}>
+            <span>Emitida hasta</span>
+            <input
+              id={`${idPrefijo}-hasta`}
+              className="mx-input"
+              type="date"
+              value={filtros.hasta}
+              min={filtros.desde || undefined}
+              onChange={(e) => cambiar('hasta', e.target.value)}
+            />
+          </label>
+        </div>
       </div>
+
+      <LeyendaEstados />
 
       {error ? (
         <div className="px-4 pb-4">
           <AvisoError error={error} onReintentar={() => setReintento((n) => n + 1)} />
         </div>
       ) : cargando && !datos ? (
-        <Cargando texto="Cargando expedientes…" />
+        <Esqueleto filas={3} texto="Cargando expedientes…" />
       ) : items.length === 0 ? (
-        <Vacio
-          titulo={
-            hayFiltros ? 'Ningún expediente coincide con los filtros' : textos.vacio
-          }
-          texto={hayFiltros ? 'Prueba con otros filtros o límpialos.' : undefined}
-        />
+        <>
+          {cargando && <Actualizando />}
+          <Vacio
+            titulo={hayFiltros ? 'Ningún expediente coincide con los filtros' : textos.vacio}
+            texto={hayFiltros ? 'Prueba con otros filtros o límpialos.' : undefined}
+          />
+        </>
       ) : (
         <>
-          <div className="mx-table-wrap" aria-busy={cargando}>
+          {cargando && <Actualizando />}
+
+          {/* Escritorio: tabla */}
+          <div className="mx-table-wrap hidden lg:block" aria-busy={cargando}>
             <table className="mx-table">
               <caption className="sr-only">{textos.titulo}</caption>
               <thead>
                 <tr>
                   <th scope="col">Póliza / producto</th>
                   <th scope="col">Asegurado</th>
-                  <th scope="col">Área / vendedor</th>
-                  <th scope="col">Pago / expediente</th>
+                  <th scope="col">Estado</th>
                   <th scope="col">Documentos</th>
+                  <th scope="col">Área / vendedor</th>
                   <th scope="col">Recordatorios</th>
-                  <th scope="col">No enviar</th>
-                  <th scope="col">Cambios</th>
                   <th scope="col">
                     <span className="sr-only">Acciones</span>
                   </th>
@@ -373,18 +456,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
                   ? grupos.map(([k, lista]) => (
                       <React.Fragment key={k}>
                         <tr className="mx-grupo">
-                          <td colSpan={9}>
-                            <span className="font-semibold">
-                              {lista[0].asegurado.nombre || 'Asegurado sin nombre'}
-                            </span>
-                            {lista[0].asegurado.documento && (
-                              <span className="mx-muted"> · {lista[0].asegurado.documento}</span>
-                            )}
-                            <span className="mx-muted">
-                              {' '}
-                              · {lista.length} {lista.length === 1 ? 'póliza' : 'pólizas'}
-                            </span>
-                          </td>
+                          <td colSpan={7}>{tituloGrupo(lista)}</td>
                         </tr>
                         {lista.map((it) => (
                           <Fila key={it.id} it={it} onAbrir={onAbrir} modo={modoValidacion} />
@@ -398,11 +470,37 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
             </table>
           </div>
 
+          {/* Móvil y pantallas medianas: tarjetas */}
+          <ul
+            className={`mx-cards mx-cards--movil ${cargando ? 'opacity-60' : ''}`}
+            aria-label={textos.titulo}
+            aria-busy={cargando}
+          >
+            {grupos
+              ? grupos.map(([k, lista]) => (
+                  <li key={k} className="mx-cards-grupo">
+                    <p className="mx-grupo-tit">{tituloGrupo(lista)}</p>
+                    <ul className="mx-cards">
+                      {lista.map((it) => (
+                        <li key={it.id} className="min-w-0">
+                          <Tarjeta it={it} onAbrir={onAbrir} modo={modoValidacion} />
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))
+              : items.map((it) => (
+                  <li key={it.id} className="min-w-0">
+                    <Tarjeta it={it} onAbrir={onAbrir} modo={modoValidacion} />
+                  </li>
+                ))}
+          </ul>
+
           <div className="mx-paginacion">
             <span className="mx-num">
               {numero(desdeN)}–{numero(hastaN)} de {numero(total)}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="mx-paginacion-ctrl">
               <label className="flex items-center gap-1.5" htmlFor={`${idPrefijo}-size`}>
                 <span className="text-xs">Por página</span>
                 <select
@@ -421,27 +519,29 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
                   ))}
                 </select>
               </label>
-              <button
-                type="button"
-                className="mx-btn mx-btn--ghost mx-btn--sm"
-                disabled={page <= 1 || cargando}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                aria-label="Página anterior"
-              >
-                <ChevronLeft size={15} aria-hidden />
-              </button>
-              <span className="mx-num text-xs">
-                Página {page} de {paginas}
-              </span>
-              <button
-                type="button"
-                className="mx-btn mx-btn--ghost mx-btn--sm"
-                disabled={page >= paginas || cargando}
-                onClick={() => setPage((p) => p + 1)}
-                aria-label="Página siguiente"
-              >
-                <ChevronRight size={15} aria-hidden />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="mx-btn mx-btn--ghost mx-btn--sm"
+                  disabled={page <= 1 || cargando}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  aria-label="Página anterior"
+                >
+                  <ChevronLeft size={16} aria-hidden />
+                </button>
+                <span className="mx-num text-xs whitespace-nowrap">
+                  Página {page} de {paginas}
+                </span>
+                <button
+                  type="button"
+                  className="mx-btn mx-btn--ghost mx-btn--sm"
+                  disabled={page >= paginas || cargando}
+                  onClick={() => setPage((p) => p + 1)}
+                  aria-label="Página siguiente"
+                >
+                  <ChevronRight size={16} aria-hidden />
+                </button>
+              </div>
             </div>
           </div>
         </>
@@ -450,22 +550,69 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
   );
 }
 
-/**
- * v1.3: la póliza se emitió con datos distintos a los que el OCR leyó del documento
- * (se cambiaron a mano en el formulario). Distinto de «Errado» (documento que no coincide).
- */
-function ChipDatosCambiados({ it }: { it: ExpedienteItem }) {
-  const resumen = it.requisitos.find((r) => r.diagnostico?.resultado === 'datos_modificados')
-    ?.diagnostico?.resumen;
+// ─── Piezas compartidas por la fila y la tarjeta ───────────────────────────
+
+function cantidadCambios(it: ExpedienteItem): number {
+  return typeof it.cambiosDetectados === 'number'
+    ? it.cambiosDetectados
+    : it.cambiosDetectados
+      ? 1
+      : 0;
+}
+
+/** Cambios detectados en Sis2000 respecto a la póliza emitida (antes columna «Cambios»). */
+function ChipCambios({ it }: { it: ExpedienteItem }) {
+  const n = cantidadCambios(it);
+  if (n <= 0) return null;
   return (
-    <span
-      className="mx-chip mx-chip--modificado"
-      title={resumen ?? 'Datos cambiados en el formulario respecto al documento'}
-    >
-      <PencilLine size={13} aria-hidden />
-      Datos cambiados
+    <span className="mx-chip mx-chip--alerta" title="Cambios detectados respecto a la póliza emitida">
+      {n === 1 ? 'Cambio detectado' : `${n} cambios detectados`}
     </span>
   );
+}
+
+/** Exclusión de recordatorios (antes columna «No enviar»). */
+function ChipNoEnviar({ it }: { it: ExpedienteItem }) {
+  if (!it.noEnviar) return null;
+  return (
+    <span className="mx-stack">
+      <span className="mx-chip mx-chip--neutral" title={it.noEnviarPor[0]?.motivo ?? undefined}>
+        <BellOff size={12} aria-hidden />
+        No enviar
+        {it.noEnviarPor[0] && ` · ${textoNoEnviar(it.noEnviarPor[0])}`}
+      </span>
+      {it.noEnviarPor.length > 1 && (
+        <span className="mx-sub">
+          y {it.noEnviarPor.length - 1} exclusión{it.noEnviarPor.length > 2 ? 'es' : ''} más
+        </span>
+      )}
+    </span>
+  );
+}
+
+function Requisitos({ it, modo }: { it: ExpedienteItem; modo?: ModoValidacion }) {
+  if (it.requisitos.length === 0) return <span className="mx-muted">Sin documentos informados</span>;
+  return (
+    <div className="mx-reqs">
+      {ordenarRequisitos(it.requisitos, modo).map((r) => (
+        <ChipRequisito
+          key={r.tipo}
+          tipo={r.tipo}
+          producto={it.producto}
+          estado={r.estado}
+          motivo={r.motivo}
+          diagnostico={r.diagnostico}
+          actor={r.actor}
+          modo={modo}
+        />
+      ))}
+    </div>
+  );
+}
+
+function textoProximo(it: ExpedienteItem): string {
+  if (it.estadoDocumental !== 'incompleto') return '—';
+  return it.noEnviar ? 'detenido' : fechaBreve(it.proximoEnvio);
 }
 
 function Fila({
@@ -478,15 +625,9 @@ function Fila({
   modo?: ModoValidacion;
 }) {
   const abrir = () => onAbrir(String(it.id));
-  const cambios =
-    typeof it.cambiosDetectados === 'number'
-      ? it.cambiosDetectados
-      : it.cambiosDetectados
-        ? 1
-        : 0;
   return (
     <tr
-      className="mx-row"
+      className={`mx-row mx-tono--${tonoDocumental(it.estadoDocumental)}`}
       tabIndex={0}
       onClick={abrir}
       onKeyDown={(e) => {
@@ -499,84 +640,39 @@ function Fila({
         {it.cnrecibo && <span className="mx-sub">Recibo {it.cnrecibo}</span>}
         <span className="mx-sub">{fechaCorta(it.emitidaEn)}</span>
       </td>
-      <td className="min-w-[11rem] max-w-[15rem]">
+      <td className="min-w-[10rem] max-w-[14rem]">
         <span className="font-medium">{it.asegurado.nombre || '—'}</span>
         {it.asegurado.documento && <span className="mx-sub">{it.asegurado.documento}</span>}
         <span className="mx-sub truncate">{it.asegurado.emailMasked || 'Sin correo'}</span>
       </td>
-      <td className="max-w-[11rem]">
+      <td>
+        <div className="mx-stack">
+          <ChipDocumental estado={it.estadoDocumental} />
+          <ChipPago estado={it.estadoPago} />
+          {it.datosModificados && <ChipDatosCambiados requisitos={it.requisitos} />}
+          <ChipCambios it={it} />
+        </div>
+      </td>
+      <td>
+        <div className="grid gap-1.5">
+          <LineaPendiente requisitos={it.requisitos} modo={modo} />
+          <Requisitos it={it} modo={modo} />
+        </div>
+      </td>
+      <td className="max-w-[10rem]">
         <span className="whitespace-nowrap">{etiquetaArea(it.areaCodigo || it.area)}</span>
         <span className="mx-sub truncate">{it.vendedor || '—'}</span>
-      </td>
-      <td>
-        <div className="flex flex-col items-start gap-1.5">
-          <ChipPago estado={it.estadoPago} />
-          <ChipDocumental estado={it.estadoDocumental} />
-          {it.datosModificados && <ChipDatosCambiados it={it} />}
-        </div>
-      </td>
-      <td>
-        <div className="mx-reqs">
-          {it.requisitos.length === 0 ? (
-            <span className="mx-muted">—</span>
-          ) : (
-            it.requisitos.map((r) => (
-              <ChipRequisito
-                key={r.tipo}
-                tipo={r.tipo}
-                producto={it.producto}
-                estado={r.estado}
-                motivo={r.motivo}
-                diagnostico={r.diagnostico}
-                actor={r.actor}
-                modo={modo}
-              />
-            ))
-          )}
-        </div>
       </td>
       <td className="whitespace-nowrap">
         <span className="mx-num font-medium">
           {numero(it.intentos)} {it.intentos === 1 ? 'intento' : 'intentos'}
         </span>
         <span className="mx-sub mx-num">Último: {fechaBreve(it.ultimoEnvio)}</span>
-        <span className="mx-sub mx-num">
-          Próximo:{' '}
-          {it.estadoDocumental !== 'incompleto'
-            ? '—'
-            : it.noEnviar
-              ? 'detenido'
-              : fechaBreve(it.proximoEnvio)}
-        </span>
-      </td>
-      <td className="whitespace-nowrap">
-        {it.noEnviar ? (
-          <>
-            <span
-              className="mx-chip mx-chip--neutral"
-              title={it.noEnviarPor[0]?.motivo ?? undefined}
-            >
-              <BellOff size={12} aria-hidden />
-              No enviar
-              {it.noEnviarPor[0] && ` · ${textoNoEnviar(it.noEnviarPor[0])}`}
-            </span>
-            {it.noEnviarPor.length > 1 && (
-              <span className="mx-sub">
-                y {it.noEnviarPor.length - 1} exclusión{it.noEnviarPor.length > 2 ? 'es' : ''} más
-              </span>
-            )}
-          </>
-        ) : (
-          <span className="mx-muted">—</span>
-        )}
-      </td>
-      <td>
-        {cambios > 0 ? (
-          <span className="mx-chip mx-chip--alerta">
-            {cambios === 1 ? 'Sí' : `${cambios} cambios`}
+        <span className="mx-sub mx-num">Próximo: {textoProximo(it)}</span>
+        {it.noEnviar && (
+          <span className="block mt-1.5">
+            <ChipNoEnviar it={it} />
           </span>
-        ) : (
-          <span className="mx-muted">—</span>
         )}
       </td>
       <td>
@@ -594,5 +690,102 @@ function Fila({
         </button>
       </td>
     </tr>
+  );
+}
+
+/**
+ * Tarjeta del móvil: arriba lo que falta y lo que está mal, luego los datos de contacto y
+ * seguimiento. Toda la tarjeta abre el detalle; el botón es el acceso para teclado y lector.
+ */
+function Tarjeta({
+  it,
+  onAbrir,
+  modo,
+}: {
+  it: ExpedienteItem;
+  onAbrir: (id: string) => void;
+  modo?: ModoValidacion;
+}) {
+  const abrir = () => onAbrir(String(it.id));
+  return (
+    <article
+      className={`mx-card mx-tono--${tonoDocumental(it.estadoDocumental)}`}
+      onClick={abrir}
+      aria-label={`Póliza ${it.cnpoliza || 'sin número'}`}
+    >
+      <div className="mx-card-head">
+        <div>
+          <p className="mx-poliza">{it.cnpoliza || '—'}</p>
+          <p className="mx-sub">
+            <span className="mx-sub--strong">{etiquetaProducto(it.producto)}</span>
+            {it.cnrecibo ? ` · Recibo ${it.cnrecibo}` : ''} · {fechaCorta(it.emitidaEn)}
+          </p>
+        </div>
+        <ChevronRight size={18} className="mx-muted shrink-0 mt-0.5" aria-hidden />
+      </div>
+
+      <div className="mx-chips">
+        <ChipDocumental estado={it.estadoDocumental} />
+        <ChipPago estado={it.estadoPago} />
+        {it.datosModificados && <ChipDatosCambiados requisitos={it.requisitos} />}
+        <ChipCambios it={it} />
+      </div>
+
+      <div className="mx-card-seccion">
+        <LineaPendiente requisitos={it.requisitos} modo={modo} />
+        <Requisitos it={it} modo={modo} />
+      </div>
+
+      <div className="mx-card-seccion">
+        <p className="mx-card-nombre">{it.asegurado.nombre || 'Asegurado sin nombre'}</p>
+        <p className="mx-sub">
+          {it.asegurado.documento ? `${it.asegurado.documento} · ` : ''}
+          {it.asegurado.emailMasked || 'Sin correo'}
+        </p>
+      </div>
+
+      <dl className="mx-card-meta">
+        <div>
+          <dt>Área</dt>
+          <dd>{etiquetaArea(it.areaCodigo || it.area)}</dd>
+        </div>
+        <div>
+          <dt>Vendedor</dt>
+          <dd>{it.vendedor || '—'}</dd>
+        </div>
+        <div>
+          <dt>Recordatorios</dt>
+          <dd className="mx-num">
+            {numero(it.intentos)} {it.intentos === 1 ? 'intento' : 'intentos'}
+            <span className="mx-sub">Último: {fechaBreve(it.ultimoEnvio)}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>Próximo envío</dt>
+          <dd className="mx-num">{textoProximo(it)}</dd>
+        </div>
+        {it.noEnviar && (
+          <div className="col-span-2">
+            <dt className="sr-only">No enviar</dt>
+            <dd>
+              <ChipNoEnviar it={it} />
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      <button
+        type="button"
+        className="mx-btn mx-btn--ghost mx-btn--block"
+        onClick={(e) => {
+          e.stopPropagation();
+          abrir();
+        }}
+        aria-label={`Ver detalle de la póliza ${it.cnpoliza}`}
+      >
+        <Eye size={15} aria-hidden />
+        Ver detalle
+      </button>
+    </article>
   );
 }

@@ -65,6 +65,111 @@ export function estadoVisual(
   }
 }
 
+// ─── Presentación: color y orden (no cambian ninguna regla de estado) ─────
+
+/** Familia de color de un estado. La misma en bandeja, detalle, indicadores y página pública. */
+export type Tono = 'gris' | 'azul' | 'ambar' | 'rojo' | 'violeta' | 'verde';
+
+const TONO_VISUAL: Record<EstadoVisual, Tono> = {
+  faltante: 'gris',
+  sin_informacion: 'gris',
+  otro: 'gris',
+  analizando: 'azul',
+  por_validar: 'azul',
+  revisar: 'ambar',
+  observado: 'ambar',
+  errado: 'rojo',
+  ilegible: 'rojo',
+  datos_cambiados: 'violeta',
+  validado_ia: 'verde',
+  validado_manual: 'verde',
+};
+
+export function tonoVisual(v: EstadoVisual): Tono {
+  return TONO_VISUAL[v];
+}
+
+/** Color del expediente según su estado documental: verde solo si está completo. */
+export function tonoDocumental(estado: string): Tono {
+  if (estado === 'completo') return 'verde';
+  if (estado === 'incompleto') return 'ambar';
+  return 'gris';
+}
+
+/** Primero lo que está mal, luego lo que falta, luego lo que está en curso y al final lo listo. */
+const PRIORIDAD: Record<EstadoVisual, number> = {
+  errado: 0,
+  ilegible: 0,
+  datos_cambiados: 1,
+  observado: 1,
+  revisar: 2,
+  faltante: 3,
+  por_validar: 4,
+  analizando: 5,
+  validado_manual: 6,
+  validado_ia: 6,
+  sin_informacion: 7,
+  otro: 7,
+};
+
+/** Copia ordenada por gravedad (estable: a igual gravedad se respeta el orden original). */
+export function ordenarRequisitos<T extends Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>>(
+  reqs: T[],
+  modo?: ModoValidacion,
+): T[] {
+  return reqs
+    .map((r, i) => ({ r, i, p: PRIORIDAD[estadoVisual(r, modo)] }))
+    .sort((a, b) => a.p - b.p || a.i - b.i)
+    .map((x) => x.r);
+}
+
+export interface ConteoRequisitos {
+  conProblema: number;
+  datosCambiados: number;
+  porRevisar: number;
+  sinCargar: number;
+  enCurso: number;
+  validados: number;
+  total: number;
+}
+
+/** Cuenta los documentos por grupo para la línea «qué falta y qué está mal». */
+export function contarRequisitos(
+  reqs: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>[],
+  modo?: ModoValidacion,
+): ConteoRequisitos {
+  const c: ConteoRequisitos = {
+    conProblema: 0,
+    datosCambiados: 0,
+    porRevisar: 0,
+    sinCargar: 0,
+    enCurso: 0,
+    validados: 0,
+    total: reqs.length,
+  };
+  for (const r of reqs) {
+    const v = estadoVisual(r, modo);
+    if (v === 'errado' || v === 'ilegible') c.conProblema++;
+    else if (v === 'datos_cambiados') c.datosCambiados++;
+    else if (v === 'observado' || v === 'revisar') c.porRevisar++;
+    else if (v === 'faltante') c.sinCargar++;
+    else if (v === 'analizando' || v === 'por_validar') c.enCurso++;
+    else if (v === 'validado_ia' || v === 'validado_manual') c.validados++;
+  }
+  return c;
+}
+
+/**
+ * Póliza para la página pública: si Nexus ya la envía enmascarada se deja igual;
+ * si no, solo se ven los últimos 4 caracteres.
+ */
+export function polizaEnmascarada(p?: string | null): string | null {
+  const t = (p ?? '').trim();
+  if (!t) return null;
+  if (/[*•]/.test(t) || t.length <= 4) return t;
+  return `•••• ${t.slice(-4)}`;
+}
+
 /** Documento con problema: errado, ilegible, datos cambiados u observado (filtro «Con documentos errados»). */
 export function esDocumentoErrado(req: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>): boolean {
   const v = estadoVisual(req);
@@ -202,9 +307,11 @@ export function urlDocumento(ref?: string | null): string | null {
   if (!trimmed.includes('/')) return null;
 
   // Sin "/" inicial es una ruta relativa a EXPEDIENTES_ROOT ({empresa}/{cédula}/...), que OCR sirve en /ocr/files/.
+  // Algunos `ref` relativos ya traen `files/` (o `ocr/files/`): se quita para no duplicarlo.
+  const relativo = trimmed.replace(/^(?:ocr\/)?files\//, '');
   const path = trimmed.startsWith('/')
     ? conPrefijoOcr(trimmed)
-    : `/ocr/files/${trimmed.split('/').map(encodeURIComponent).join('/')}`;
+    : `/ocr/files/${relativo.split('/').map(encodeURIComponent).join('/')}`;
   return `${origenOcr()}${path}`;
 }
 

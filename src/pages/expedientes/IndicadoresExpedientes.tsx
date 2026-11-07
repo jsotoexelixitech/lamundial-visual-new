@@ -7,7 +7,7 @@ import {
   type Indicadores,
 } from '@/lib/expedientes-api';
 import { AvisoError, Cargando } from './expedientes-ui';
-import { numero } from './expedientes-format';
+import { numero, type Tono } from './expedientes-format';
 
 type Icono = React.ComponentType<{ size?: number; 'aria-hidden'?: boolean; className?: string }>;
 
@@ -65,7 +65,7 @@ export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
               Pólizas emitidas en el período. Sin fechas, se muestra el acumulado.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="mx-fechas">
             <label className="mx-field" htmlFor="mx-ind-desde">
               <span>Emitida desde</span>
               <input
@@ -140,24 +140,41 @@ function TarjetaArea({
 }
 
 function Contenido({ d }: { d: Indicadores }) {
-  const pct = d.total > 0 ? Math.round((d.completos / d.total) * 100) : 0;
-  const mini: [string, number][] = [
-    ['Completos', d.completos],
-    ['Incompletos', d.incompletos],
-    ['Sin información', d.sinInformacion],
-    ['Por validar', d.porValidar],
-    ['Observados', d.observados],
-    ['Validados por IA', d.validadosIa],
-    ['Con errores', d.conErrores],
-    ['Datos cambiados', d.datosModificados ?? 0],
-    ['Analizando', d.analizando],
-    ['Pagadas', d.pagadas],
-    ['Pendientes de pago', d.pendientesPago],
-    ['Sin correo', d.sinCorreo],
-    ['No enviar', d.noEnviar],
-    ['Intentos de envío', d.intentos],
-    ['Recuperados', d.recuperados],
-    ['Asegurados únicos', d.aseguradosUnicos],
+  // Hacia abajo: 99,6 % se muestra 99 %, nunca 100 % si falta alguna póliza.
+  const pct = d.total > 0 ? Math.floor((d.completos / d.total) * 100) : 0;
+  // Primero lo que pide atención; el color solo se pinta si la cifra es mayor que cero.
+  const grupos: { titulo: string; cifras: [string, number, Tono?][] }[] = [
+    {
+      titulo: 'Atención',
+      cifras: [
+        ['Incompletos', d.incompletos, 'ambar'],
+        ['Con errores', d.conErrores, 'rojo'],
+        ['Datos cambiados', d.datosModificados ?? 0, 'violeta'],
+        ['Observados', d.observados, 'ambar'],
+        ['Por validar', d.porValidar, 'ambar'],
+        ['Analizando', d.analizando],
+      ],
+    },
+    {
+      titulo: 'Documentos',
+      cifras: [
+        ['Completos', d.completos],
+        ['Validados por IA', d.validadosIa],
+        ['Sin información', d.sinInformacion],
+      ],
+    },
+    {
+      titulo: 'Pago y recordatorios',
+      cifras: [
+        ['Pagadas', d.pagadas],
+        ['Pendientes de pago', d.pendientesPago],
+        ['Sin correo', d.sinCorreo],
+        ['No enviar', d.noEnviar],
+        ['Intentos de envío', d.intentos],
+        ['Recuperados', d.recuperados],
+        ['Asegurados únicos', d.aseguradosUnicos],
+      ],
+    },
   ];
   return (
     <>
@@ -181,14 +198,19 @@ function Contenido({ d }: { d: Indicadores }) {
           <div style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <div className="mx-kpi-mini">
-        {mini.map(([label, v]) => (
-          <div key={label}>
-            <strong>{numero(v)}</strong>
-            <span>{label}</span>
+      {grupos.map((g) => (
+        <div key={g.titulo}>
+          <p className="mx-kpi-grupo">{g.titulo}</p>
+          <div className="mx-kpi-mini">
+            {g.cifras.map(([label, v, tono]) => (
+              <div key={label} className={tono && v > 0 ? `is-${tono}` : undefined}>
+                <strong>{numero(v)}</strong>
+                <span>{label}</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </>
   );
 }

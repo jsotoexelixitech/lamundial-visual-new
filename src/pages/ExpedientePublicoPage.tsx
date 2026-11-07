@@ -2,13 +2,17 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
+  Camera,
   CheckCircle2,
   Clock,
-  FileUp,
+  FileText,
   Hourglass,
+  Lightbulb,
   Link2Off,
   Loader2,
   RefreshCw,
+  RotateCcw,
+  WifiOff,
 } from 'lucide-react';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import {
@@ -22,7 +26,11 @@ import {
   type ExpedientesErrorKind,
   type Requisito,
 } from '@/lib/expedientes-api';
-import { etiquetaRequisito, motivoParaAsegurado } from './expedientes/expedientes-format';
+import {
+  etiquetaRequisito,
+  motivoParaAsegurado,
+  polizaEnmascarada,
+} from './expedientes/expedientes-format';
 import './expedientes/expedientes.css';
 
 /** Tras subir un archivo, la IA lo revisa: se vuelve a consultar en silencio para mostrar el resultado. */
@@ -43,6 +51,8 @@ type EstadoPagina =
  * Página pública del asegurado: /expediente?t=<token>
  * Solo muestra documentos pendientes y recibidos de su póliza y permite subirlos.
  * No usa la sesión del portal ni muestra datos de terceros.
+ * Pensada primero para el móvil: una tarjeta por documento con un botón grande para subirlo
+ * (el teléfono ofrece cámara o archivo; no se fuerza la cámara).
  */
 export const ExpedientePublicoPage: React.FC = () => {
   const [params] = useSearchParams();
@@ -100,39 +110,54 @@ export const ExpedientePublicoPage: React.FC = () => {
 
   return (
     <div className="mx-pub">
-      <div className="max-w-[38rem] mx-auto">
+      <div className="mx-pub-wrap">
         <MundialBrand subtitle="Tu póliza" isotipoClassName="h-10 w-10" />
+
+        <main className="mx-pub-card" aria-live="polite">
+          {estado.tipo === 'cargando' && <CargandoPublico />}
+          {estado.tipo === 'error' && (
+            <PantallaError kind={estado.kind} onReintentar={() => void cargar()} />
+          )}
+          {estado.tipo === 'listo' && (
+            <Expediente
+              token={token}
+              data={estado.data}
+              onSubido={async () => {
+                await cargar(true);
+                sondear();
+              }}
+              onEnlaceCaido={(kind) => setEstado({ tipo: 'error', kind })}
+            />
+          )}
+        </main>
+
+        <p className="mx-pub-pie">¿Tienes dudas? Comunícate con tu asesor de La Mundial de Seguros.</p>
       </div>
-
-      <main className="mx-pub-card" aria-live="polite">
-        {estado.tipo === 'cargando' && (
-          <div className="mx-estado">
-            <Loader2 size={28} className="animate-spin text-[#2E6DBF]" aria-hidden />
-            <p>Estamos buscando tu expediente…</p>
-          </div>
-        )}
-        {estado.tipo === 'error' && (
-          <PantallaError kind={estado.kind} onReintentar={() => void cargar()} />
-        )}
-        {estado.tipo === 'listo' && (
-          <Expediente
-            token={token}
-            data={estado.data}
-            onSubido={async () => {
-              await cargar(true);
-              sondear();
-            }}
-            onEnlaceCaido={(kind) => setEstado({ tipo: 'error', kind })}
-          />
-        )}
-      </main>
-
-      <p className="max-w-[38rem] mx-auto mt-5 text-center text-xs text-[#5E6275]">
-        ¿Tienes dudas? Comunícate con tu asesor de La Mundial de Seguros.
-      </p>
     </div>
   );
 };
+
+function CargandoPublico() {
+  return (
+    <div role="status" aria-live="polite">
+      <div className="mx-pub-head">
+        <p className="flex items-center gap-2 text-sm text-[#5E6275]">
+          <Loader2 size={18} className="animate-spin text-[#2E6DBF]" aria-hidden />
+          Estamos buscando tu expediente…
+        </p>
+      </div>
+      <div className="mx-pub-lista" aria-hidden>
+        {[0, 1].map((i) => (
+          <div key={i} className="mx-esqueleto-fila">
+            <span className="mx-esqueleto-linea" style={{ width: '45%' }} />
+            <span className="mx-esqueleto-linea" style={{ width: '80%' }} />
+            <span className="mx-esqueleto-linea" style={{ height: '2.75rem', borderRadius: '0.9rem' }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function PantallaError({
   kind,
@@ -164,16 +189,19 @@ function PantallaError({
   } else if (kind === 'red') {
     titulo = 'No hay conexión';
     texto = 'Revisa tu conexión a internet e intenta de nuevo.';
+    Icon = WifiOff;
   }
 
   return (
     <div className="mx-estado" role="alert">
-      <Icon size={32} className="text-[#0F1A5A]" aria-hidden />
+      <span className="mx-estado-icono" aria-hidden>
+        <Icon size={28} />
+      </span>
       <p className="mx-estado-titulo text-base">{titulo}</p>
-      <p className="max-w-[28rem]">{texto}</p>
+      <p className="max-w-[28rem] text-sm leading-relaxed">{texto}</p>
       {reintentar && (
-        <button type="button" className="mx-btn mx-btn--ghost mt-2" onClick={onReintentar}>
-          <RefreshCw size={15} aria-hidden />
+        <button type="button" className="mx-btn mx-btn--primary mt-2 min-h-[2.75rem]" onClick={onReintentar}>
+          <RefreshCw size={16} aria-hidden />
           Intentar de nuevo
         </button>
       )}
@@ -193,6 +221,7 @@ function Expediente({
   onEnlaceCaido: (kind: ExpedientesErrorKind) => void;
 }) {
   const [aviso, setAviso] = useState('');
+  const avisoRef = useRef<HTMLDivElement>(null);
   const pendientes = data.requisitos.filter(
     (r) => r.estado === 'faltante' || r.estado === 'observado' || hayQueRepetir(r),
   );
@@ -200,6 +229,12 @@ function Expediente({
     (r) => (r.estado === 'recibido' || r.estado === 'validado') && !hayQueRepetir(r),
   );
   const primerNombre = (data.nombre ?? '').trim().split(/\s+/)[0] ?? '';
+  const poliza = polizaEnmascarada(data.poliza);
+
+  // En el móvil la confirmación queda arriba: se lleva a la vista al aparecer.
+  useEffect(() => {
+    if (aviso) avisoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [aviso]);
 
   const trasSubir = async (nombreDoc: string) => {
     await onSubido();
@@ -214,39 +249,48 @@ function Expediente({
     <>
       <div className="mx-pub-head">
         <p className="mx-pub-hola">{primerNombre ? `Hola, ${primerNombre}` : 'Hola'}</p>
-        {aviso && (
-          <div className="mx-aviso mx-aviso--ok mt-3" role="status">
-            <CheckCircle2 size={18} aria-hidden className="shrink-0 mt-0.5" />
-            <p>{aviso}</p>
-          </div>
+        {poliza && (
+          <p className="mx-pub-poliza">
+            <FileText size={13} aria-hidden />
+            Póliza {poliza}
+          </p>
         )}
-        {pendientes.length > 0 ? (
-          <p className="mt-2 text-sm leading-relaxed text-[#3c4260]">
-            Tu póliza{data.poliza ? ` ${data.poliza}` : ''} ya está emitida. Para completar tu
-            expediente solo nos falta{pendientes.length === 1 ? ' este documento' : 'n estos documentos'}.
-          </p>
-        ) : (
-          <p className="mt-2 text-sm leading-relaxed text-[#3c4260]">
-            Tu póliza{data.poliza ? ` ${data.poliza}` : ''} ya está emitida.
-          </p>
+        <p className="mx-pub-texto">
+          {pendientes.length > 0
+            ? `Tu póliza ya está emitida. Para completar tu expediente solo nos falta${
+                pendientes.length === 1 ? ' este documento' : 'n estos documentos'
+              }.`
+            : 'Tu póliza ya está emitida.'}
+        </p>
+        {aviso && (
+          <div ref={avisoRef} className="mx-aviso mx-aviso--ok mt-3" role="status">
+            <CheckCircle2 size={18} aria-hidden className="shrink-0 mt-0.5" />
+            <p className="font-semibold">{aviso}</p>
+          </div>
         )}
       </div>
 
       {pendientes.length === 0 ? (
-        <div className="mx-estado">
-          <CheckCircle2 size={34} className="text-[#146C43]" aria-hidden />
+        <div className="mx-pub-gracias">
+          <span className="mx-estado-icono" aria-hidden>
+            <CheckCircle2 size={30} />
+          </span>
           <p className="mx-estado-titulo text-base">¡Gracias! Ya tenemos tus documentos</p>
-          <p className="max-w-[26rem]">
+          <p className="max-w-[26rem] text-sm leading-relaxed">
             No tienes nada pendiente. Si necesitamos algo más, te escribiremos.
           </p>
         </div>
       ) : (
         <>
-          <p className="px-5 pt-4 text-xs text-[#5E6275] leading-relaxed">
-            Toma una foto clara, con buena luz y sin reflejos, o sube un PDF. Formatos: JPG, PNG,
-            HEIC o PDF, hasta {MAX_ARCHIVO_MB} MB.
-          </p>
-          <ul className="mt-2">
+          <div className="mx-pub-tip">
+            <Lightbulb size={18} aria-hidden className="shrink-0 mt-0.5" />
+            <p>
+              Toma una foto clara, con buena luz y sin reflejos, o sube un PDF. Formatos: JPG, PNG,
+              HEIC o PDF, hasta {MAX_ARCHIVO_MB} MB.
+            </p>
+          </div>
+          <h2 className="mx-pub-seccion">Pendientes ({pendientes.length})</h2>
+          <ul className="mx-pub-lista">
             {pendientes.map((r) => (
               <DocumentoPendiente
                 key={r.tipo}
@@ -263,31 +307,39 @@ function Expediente({
 
       {recibidos.length > 0 && (
         <div className="border-t border-[#eceef4]">
-          <p className="px-5 pt-4 text-xs font-semibold text-[#5E6275]">Ya recibimos</p>
-          <ul>
-            {recibidos.map((r) => (
-              <li key={r.tipo} className="mx-pub-doc">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-semibold">{etiquetaRequisito(r.tipo, r.producto ?? data.producto)}</span>
-                  {r.estado === 'validado' ? (
-                    <span className="mx-req mx-req--validado">
-                      <CheckCircle2 size={12} aria-hidden />
-                      Aprobado
+          <h2 className="mx-pub-seccion">Ya recibimos ({recibidos.length})</h2>
+          <ul className="mx-pub-lista">
+            {recibidos.map((r) => {
+              const aprobado = r.estado === 'validado';
+              return (
+                <li key={r.tipo} className={`mx-pub-doc ${aprobado ? 'mx-tono--verde' : 'mx-tono--azul'}`}>
+                  <div className="mx-pub-doc-head">
+                    <span className="mx-pub-doc-nombre">
+                      <span className="mx-pub-doc-icono" aria-hidden>
+                        <FileText size={18} />
+                      </span>
+                      {etiquetaRequisito(r.tipo, r.producto ?? data.producto)}
                     </span>
-                  ) : (
-                    <span className="mx-req mx-req--recibido">
-                      <Hourglass size={12} aria-hidden />
-                      Recibido
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-[#5E6275]">
-                  {r.estado === 'validado'
-                    ? 'Revisado. No tienes que hacer nada más con este documento.'
-                    : 'Lo estamos revisando. No tienes que hacer nada más con este documento.'}
-                </p>
-              </li>
-            ))}
+                    {aprobado ? (
+                      <span className="mx-req mx-req--validado">
+                        <CheckCircle2 size={13} aria-hidden />
+                        Aprobado
+                      </span>
+                    ) : (
+                      <span className="mx-req mx-req--recibido">
+                        <Hourglass size={13} aria-hidden />
+                        Recibido
+                      </span>
+                    )}
+                  </div>
+                  <p className="mx-pub-nota">
+                    {aprobado
+                      ? 'Revisado. No tienes que hacer nada más con este documento.'
+                      : 'Lo estamos revisando. No tienes que hacer nada más con este documento.'}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
@@ -309,6 +361,7 @@ function DocumentoPendiente({
   onEnlaceCaido: (kind: ExpedientesErrorKind) => void;
 }) {
   const [pct, setPct] = useState<number | null>(null);
+  const [archivo, setArchivo] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const nombre = etiquetaRequisito(req.tipo, producto);
@@ -318,6 +371,7 @@ function DocumentoPendiente({
   const repetir = !enRevision && (req.estado === 'observado' || hayQueRepetir(req));
   // Motivo simple, sin datos de la póliza: nunca el resumen de la IA ni el motivo interno.
   const motivoSimple = motivoParaAsegurado(req.tipo, producto, req.diagnostico?.resultado);
+  const tono = enRevision ? 'ambar' : repetir ? 'rojo' : 'gris';
 
   const subir = async (file: File | undefined) => {
     if (!file) return;
@@ -328,6 +382,7 @@ function DocumentoPendiente({
       return;
     }
     setError('');
+    setArchivo(file.name);
     setPct(0);
     try {
       await subirDocumentoPublico(token, req.tipo, file, setPct);
@@ -354,30 +409,45 @@ function DocumentoPendiente({
   };
 
   return (
-    <li className="mx-pub-doc">
-      <div className="flex items-center justify-between gap-3">
-        <span className="font-semibold">{nombre}</span>
+    <li className={`mx-pub-doc mx-tono--${tono}`}>
+      <div className="mx-pub-doc-head">
+        <span className="mx-pub-doc-nombre">
+          <span className="mx-pub-doc-icono" aria-hidden>
+            <FileText size={18} />
+          </span>
+          {nombre}
+        </span>
         {enRevision ? (
-          <span className="mx-req mx-req--revisar">En revisión</span>
+          <span className="mx-req mx-req--revisar">
+            <Hourglass size={13} aria-hidden />
+            En revisión
+          </span>
         ) : repetir ? (
-          <span className="mx-req mx-req--observado">
-            <AlertCircle size={12} aria-hidden />
+          <span className="mx-req mx-req--errado">
+            <AlertCircle size={13} aria-hidden />
             Envíalo de nuevo
           </span>
         ) : (
           <span className="mx-req mx-req--faltante">Pendiente</span>
         )}
       </div>
-      {enRevision && motivoSimple && <p className="text-xs text-[#5E6275]">{motivoSimple}</p>}
+      {enRevision && motivoSimple && <p className="mx-pub-nota">{motivoSimple}</p>}
       {repetir && (
-        <p className={`text-xs ${motivoSimple ? 'font-semibold text-[#8F2A2D]' : 'text-[#5E6275]'}`}>
+        <p className={`mx-pub-nota ${motivoSimple ? 'mx-pub-nota--alerta' : ''}`}>
           {motivoSimple ??
             'No pudimos revisar bien el que nos enviaste. Por favor, envía una imagen nueva donde se lea todo el documento.'}
         </p>
       )}
 
+      {/* Sin `capture`: el teléfono deja elegir entre la cámara y un archivo. */}
       <label className="mx-pub-upload" aria-disabled={subiendo}>
-        {subiendo ? <Loader2 size={18} className="animate-spin" aria-hidden /> : <FileUp size={18} aria-hidden />}
+        {subiendo ? (
+          <Loader2 size={20} className="animate-spin" aria-hidden />
+        ) : repetir ? (
+          <RotateCcw size={20} aria-hidden />
+        ) : (
+          <Camera size={20} aria-hidden />
+        )}
         {subiendo ? `Enviando… ${pct} %` : repetir ? 'Subir de nuevo' : 'Subir foto o PDF'}
         <input
           ref={inputRef}
@@ -389,15 +459,27 @@ function DocumentoPendiente({
           onChange={(e) => void subir(e.target.files?.[0])}
         />
       </label>
+      {!subiendo && <p className="mx-pub-ayuda">Puedes tomar la foto en este momento o elegir un archivo.</p>}
 
       {subiendo && (
-        <div className="mx-progreso" aria-hidden>
-          <div style={{ width: `${pct}%` }} />
+        <div className="mx-pub-progreso">
+          <div
+            className="mx-progreso"
+            role="progressbar"
+            aria-valuenow={pct ?? 0}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Enviando ${nombre}`}
+          >
+            <div style={{ width: `${pct}%` }} />
+          </div>
+          {archivo && <span className="truncate">{archivo}</span>}
         </div>
       )}
       {error && (
-        <p className="text-xs text-[#8F2A2D]" role="alert">
-          {error}
+        <p className="mx-aviso mx-aviso--error" role="alert">
+          <AlertCircle size={16} aria-hidden className="shrink-0 mt-0.5" />
+          <span>{error}</span>
         </p>
       )}
     </li>

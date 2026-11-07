@@ -82,6 +82,18 @@ export const MonitorExpedientesPage: React.FC = () => {
   const cerrarDetalle = useCallback(() => setParam('exp', null), [setParam]);
   const recargar = useCallback(() => setRecargaKey((n) => n + 1), []);
 
+  // En pantallas chicas las pestañas se desplazan: la activa queda siempre a la vista.
+  // Se mueve solo la tira de pestañas (no la página ni el Sis2000 que la contiene).
+  useEffect(() => {
+    const boton = document.getElementById(`mx-tab-${tab}`);
+    const tira = boton?.parentElement;
+    if (!boton || !tira) return;
+    const izq = boton.getBoundingClientRect().left - tira.getBoundingClientRect().left + tira.scrollLeft;
+    const der = izq + boton.offsetWidth;
+    if (izq < tira.scrollLeft) tira.scrollLeft = Math.max(0, izq - 16);
+    else if (der > tira.scrollLeft + tira.clientWidth) tira.scrollLeft = der - tira.clientWidth + 16;
+  }, [tab]);
+
   const onTabKey = (e: React.KeyboardEvent, idx: number) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     e.preventDefault();
@@ -93,8 +105,8 @@ export const MonitorExpedientesPage: React.FC = () => {
   return (
     <div className="mx-app">
       <header className="mx-hero">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
+        <div className="mx-hero-top">
+          <div className="mx-hero-textos">
             <p className="mx-eyebrow">Marketplace · Control documental</p>
             <h1 className="mx-title">Monitor de expedientes</h1>
             <p className="mx-subtitle">
@@ -102,7 +114,7 @@ export const MonitorExpedientesPage: React.FC = () => {
               aquí se consulta y se da seguimiento.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="mx-hero-acciones">
             {accesoLibre && (
               <span className="mx-aviso-qa" role="note">
                 QA · acceso libre sin login
@@ -114,9 +126,14 @@ export const MonitorExpedientesPage: React.FC = () => {
                 {user.canal && <span className="block text-white/60">{user.canal}</span>}
               </span>
             )}
-            <button type="button" className="mx-hero-btn" onClick={recargar}>
-              <RefreshCw size={14} aria-hidden />
-              Actualizar
+            <button
+              type="button"
+              className="mx-hero-btn mx-hero-btn--auto"
+              onClick={recargar}
+              title="Actualizar"
+            >
+              <RefreshCw size={16} aria-hidden />
+              <span className="mx-hero-btn-texto">Actualizar</span>
             </button>
           </div>
         </div>
@@ -138,7 +155,7 @@ export const MonitorExpedientesPage: React.FC = () => {
               onClick={() => setParam('tab', id)}
               onKeyDown={(e) => onTabKey(e, i)}
             >
-              <Icon size={15} aria-hidden />
+              <Icon size={16} aria-hidden />
               {label}
             </button>
           ))}
