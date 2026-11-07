@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { LoginPasarelaPage } from '@/pages/LoginPasarelaPage';
@@ -22,6 +22,34 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Monitor de expedientes: con sesión, igual que siempre. Sin sesión prueba
+ * GET /api/expedientes/config sin login: 200 (QA con EXPEDIENTES_ACCESO_LIBRE) entra completo;
+ * cualquier otra respuesta redirige como RequireAuth.
+ */
+function RequireAuthOAccesoLibre({ children }: { children: React.ReactNode }) {
+  const conSesion = !!getCurrentUser();
+  const [libre, setLibre] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (conSesion) return;
+    let vigente = true;
+    import('@/lib/expedientes-api')
+      .then((m) => m.probarAccesoLibre())
+      .catch(() => false)
+      .then((ok) => {
+        if (vigente) setLibre(ok);
+      });
+    return () => {
+      vigente = false;
+    };
+  }, [conSesion]);
+
+  if (conSesion || libre) return <>{children}</>;
+  if (libre === null) return null;
+  return <RequireAuth>{children}</RequireAuth>;
+}
+
 function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
@@ -32,11 +60,11 @@ function App() {
         <Route
           path="/monitor-expedientes"
           element={
-            <RequireAuth>
+            <RequireAuthOAccesoLibre>
               <Suspense fallback={null}>
                 <MonitorExpedientesPage />
               </Suspense>
-            </RequireAuth>
+            </RequireAuthOAccesoLibre>
           }
         />
         <Route

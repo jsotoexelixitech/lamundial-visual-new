@@ -326,10 +326,33 @@ const api = axios.create({ baseURL: portalConfig.nexusApiUrl, timeout: TIMEOUT_M
 /** Sin cabecera de sesión: la página pública nunca usa el JWT del portal. */
 const apiPublica = axios.create({ baseURL: portalConfig.nexusApiUrl, timeout: TIMEOUT_MS });
 
+/**
+ * QA sin login: Nexus con EXPEDIENTES_ACCESO_LIBRE responde 200 a `/config` sin sesión.
+ * Solo se activa por `probarAccesoLibre()`; en producción Nexus responde 401 y queda apagado.
+ */
+let accesoLibre = false;
+
+export function esAccesoLibre(): boolean {
+  return accesoLibre;
+}
+
+/** Sin sesión: prueba `GET /config` sin Authorization. 200 = modo completo sin login (QA). */
+export async function probarAccesoLibre(): Promise<boolean> {
+  try {
+    const r = await apiPublica.get(`${BASE}/config`, { validateStatus: () => true });
+    const body = r.data as { status?: unknown } | null;
+    accesoLibre = r.status === 200 && body?.status === 'success';
+  } catch {
+    accesoLibre = false;
+  }
+  return accesoLibre;
+}
+
 function authHeaders(): Record<string, string> {
   const token = getToken();
-  if (!token) throw new ExpedientesError('sesion', MENSAJES.sesion, 401);
-  return { Authorization: `Bearer ${token}` };
+  if (token) return { Authorization: `Bearer ${token}` };
+  if (accesoLibre) return {};
+  throw new ExpedientesError('sesion', MENSAJES.sesion, 401);
 }
 
 /** Nexus responde `{ status, data }` (o `{ success, data }` en /api/portal): devuelve `data`. */

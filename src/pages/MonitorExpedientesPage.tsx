@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { BarChart3, CheckCircle2, CircleHelp, FileWarning, RefreshCw, Settings2 } from 'lucide-react';
 import { getCurrentUser } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
-import { obtenerConfig, type ModoValidacion } from '@/lib/expedientes-api';
+import { esAccesoLibre, obtenerConfig, type ModoValidacion } from '@/lib/expedientes-api';
 import { BandejaExpedientes } from './expedientes/BandejaExpedientes';
 import { IndicadoresExpedientes } from './expedientes/IndicadoresExpedientes';
 import { ConfiguracionExpedientes } from './expedientes/ConfiguracionExpedientes';
@@ -28,7 +28,9 @@ const TABS: { id: TabId; label: string; Icon: typeof FileWarning; admin?: boolea
  */
 export const MonitorExpedientesPage: React.FC = () => {
   const user = getCurrentUser();
-  const esAdmin = isPortalAdmin(user);
+  // QA sin login (Nexus con EXPEDIENTES_ACCESO_LIBRE): todas las pestañas y acciones.
+  const accesoLibre = !user && esAccesoLibre();
+  const esAdmin = accesoLibre || isPortalAdmin(user);
   const [params, setParams] = useSearchParams();
   const [recargaKey, setRecargaKey] = useState(0);
   const [modoValidacion, setModoValidacion] = useState<ModoValidacion | undefined>();
@@ -97,6 +99,11 @@ export const MonitorExpedientesPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {accesoLibre && (
+              <span className="mx-aviso-qa" role="note">
+                QA · acceso libre sin login
+              </span>
+            )}
             {user?.nombre && (
               <span className="hidden sm:block text-right text-xs leading-tight">
                 <span className="block font-semibold text-white">{user.nombre}</span>

@@ -82,6 +82,20 @@
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* Aviso discreto: QA sin login (Nexus con EXPEDIENTES_ACCESO_LIBRE) */
+.mx-aviso-qa {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  background: rgba(251, 191, 36, 0.12);
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .mx-tabs {
   display: flex;
   gap: 0.25rem;
