@@ -999,3 +999,36 @@ textarea.mx-input {
   padding-top: 0.6rem;
   border-top: 1px dashed #dfe3ec;
 }
+
+/* ── v1.3: datos cambiados en el formulario respecto al OCR al emitir ── */
+.mx-req--modificado {
+  background: #f3e8fd;
+  color: #6b21a8;
+  border: 1px solid #dcc4f5;
+}
+
+.mx-aviso--modificado {
+  background: #f3e8fd;
+  color: #5b1a8f;
+  border: 1px solid #dcc4f5;
+  border-left: 4px solid #7e22ce;
+}
+
+.mx-diag tr.mx-diag-mod td {
+  background: #f6eefe;
+}
+
+.mx-diag tr.mx-diag-mod td.mx-diag-doc,
+.mx-diag td.mx-diag-ocr {
+  font-weight: 600;
+}
+
+.mx-diag-modificado {
+  color: #6b21a8;
+}
+
+.mx-chip--modificado {
+  background: #f3e8fd;
+  color: #6b21a8;
+  border: 1px solid #dcc4f5;
+}

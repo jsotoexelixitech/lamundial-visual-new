@@ -1,5 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { BellOff, CheckCircle2, ExternalLink, Loader2, UserCheck, X, XCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  BellOff,
+  CheckCircle2,
+  ExternalLink,
+  Loader2,
+  PencilLine,
+  UserCheck,
+  X,
+  XCircle,
+} from 'lucide-react';
 import {
   isExpedientesError,
   obtenerExpediente,
@@ -411,6 +421,7 @@ const TONO_RESULTADO: Record<string, 'ok' | 'error' | 'warn' | 'info'> = {
   ilegible: 'error',
   sin_certeza: 'warn',
   error_tecnico: 'info',
+  datos_modificados: 'error',
 };
 
 const TEXTO_RESULTADO: Record<string, string> = {
@@ -419,7 +430,11 @@ const TEXTO_RESULTADO: Record<string, string> = {
   ilegible: 'no se pudo leer el documento',
   sin_certeza: 'sin certeza, hay que revisarlo',
   error_tecnico: 'no se pudo analizar todavía',
+  datos_modificados: 'datos cambiados en el formulario',
 };
+
+/** v1.3: el dato de la póliza se cambió a mano en el formulario respecto a lo que leyó el OCR. */
+const MODIFICADO = 'modificado_en_formulario';
 
 /**
  * Un documento del expediente: enlace para verlo, diagnóstico de la IA campo por campo
@@ -466,6 +481,9 @@ function TarjetaDocumento({
   const manual = !!actor && !esActorIa(actor);
   const automatica = modo !== 'manual';
   const fechaDecision = decision?.fecha ?? decision?.createdAt ?? null;
+  const datosCambiados = diag?.resultado === 'datos_modificados';
+  // Columna «Leído por OCR al emitir» solo si la emisión lo envió (no ensucia los anteriores).
+  const conOcrEmision = !!diag?.campos.some((c) => c.enOcrAlEmitir != null);
 
   const ejecutar = async (fn: () => Promise<void>, mensaje: string) => {
     setEnviando(true);
@@ -487,6 +505,15 @@ function TarjetaDocumento({
 
   return (
     <li className="mx-doc-card">
+      {datosCambiados && (
+        <div className="mx-aviso mx-aviso--modificado" role="alert">
+          <AlertTriangle size={18} aria-hidden className="shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="font-semibold">⚠ Datos cambiados en el formulario respecto al documento</p>
+            {diag?.resumen && <p className="mt-0.5">{diag.resumen}</p>}
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -537,7 +564,7 @@ function TarjetaDocumento({
               {TEXTO_RESULTADO[diag.resultado] ?? diag.resultado.replace(/_/g, ' ')}
             </p>
           )}
-          {diag.resumen && (
+          {diag.resumen && !datosCambiados && (
             <p
               className={`mx-diag-resumen mx-diag-resumen--${TONO_RESULTADO[diag.resultado ?? ''] ?? 'info'}`}
             >
@@ -553,6 +580,7 @@ function TarjetaDocumento({
                     <th scope="col">Dato</th>
                     <th scope="col">En la póliza</th>
                     <th scope="col">En el documento</th>
+                    {conOcrEmision && <th scope="col">Leído por OCR al emitir</th>}
                     <th scope="col" aria-label="¿Coincide?">
                       ✓ ✗
                     </th>
@@ -562,15 +590,31 @@ function TarjetaDocumento({
                   {diag.campos.map((c, i) => (
                     <tr
                       key={`${c.campo}-${i}`}
-                      className={c.coincide === false ? 'mx-diag-no' : undefined}
+                      className={
+                        c.estado === MODIFICADO
+                          ? 'mx-diag-no mx-diag-mod'
+                          : c.coincide === false
+                            ? 'mx-diag-no'
+                            : undefined
+                      }
                     >
                       <td className="mx-diag-dato">{c.etiqueta}</td>
                       <td>{c.enPoliza ?? <span className="mx-muted">—</span>}</td>
                       <td className="mx-diag-doc">
                         {c.enDocumento ?? <span className="mx-muted">No se leyó</span>}
                       </td>
+                      {conOcrEmision && (
+                        <td className="mx-diag-ocr">
+                          {c.enOcrAlEmitir ?? <span className="mx-muted">—</span>}
+                        </td>
+                      )}
                       <td className="mx-diag-marca">
-                        {c.coincide === true ? (
+                        {c.estado === MODIFICADO ? (
+                          <span className="mx-diag-modificado inline-flex items-center gap-1 font-semibold">
+                            <PencilLine size={15} aria-hidden />
+                            Modificado en el formulario
+                          </span>
+                        ) : c.coincide === true ? (
                           <span className="mx-diag-si inline-flex items-center gap-1">
                             <CheckCircle2 size={15} aria-hidden />
                             <span className="sr-only">Coincide</span>

@@ -37,6 +37,8 @@ export type ResultadoDiagnostico =
   | 'ilegible'
   | 'sin_certeza'
   | 'error_tecnico'
+  /** v1.3: el OCR al emitir leyó lo mismo que el documento, pero la póliza salió con otro dato. */
+  | 'datos_modificados'
   | OtroEstado;
 
 /** Un dato comparado: lo que dice la póliza y lo que leyó la IA en el documento. */
@@ -45,6 +47,10 @@ export interface CampoDiagnostico {
   etiqueta: string;
   enPoliza: string | null;
   enDocumento: string | null;
+  /** v1.3: lo que leyó el OCR del documento al emitir (null si la emisión no lo envió). */
+  enOcrAlEmitir: string | null;
+  /** coincide | no_coincide | sin_dato_poliza | … | modificado_en_formulario (v1.3). */
+  estado: string | null;
   /** null = la póliza no tiene ese dato para comparar. */
   coincide: boolean | null;
 }
@@ -102,6 +108,8 @@ export interface ExpedienteItem {
   noEnviarPor: ExclusionAplicada[];
   /** Fase 2: true o cantidad de cambios contra Sis2000. */
   cambiosDetectados?: boolean | number | null;
+  /** v1.3: algún dato de la póliza se cambió en el formulario respecto a lo que leyó el OCR. */
+  datosModificados: boolean;
   emitidaEn?: string | null;
 }
 
@@ -170,6 +178,8 @@ export interface Indicadores {
   validadosIa: number;
   conErrores: number;
   analizando: number;
+  /** v1.3: pólizas con datos cambiados en el formulario respecto al documento. */
+  datosModificados: number;
 }
 
 export interface AlcanceConfig {
@@ -261,6 +271,8 @@ export interface FiltrosBandeja {
   agrupar?: Agrupacion;
   /** Solo pólizas con algún documento errado. Se envía como `conErrores=true`. */
   conErrores?: boolean;
+  /** v1.3: solo pólizas con datos cambiados en el formulario. Se envía como `datosModificados=true`. */
+  datosModificados?: boolean;
   page: number;
   pageSize: number;
 }
@@ -507,6 +519,8 @@ function normalizarCampos(raw: unknown): CampoDiagnostico[] {
         etiqueta: texto(c.etiqueta) ?? (campo ? campo.replace(/_/g, ' ') : 'Dato'),
         enPoliza: valorCampo(c.enPoliza),
         enDocumento: valorCampo(c.enDocumento),
+        enOcrAlEmitir: valorCampo(c.enOcrAlEmitir),
+        estado: texto(c.estado)?.toLowerCase() ?? null,
         coincide: typeof c.coincide === 'boolean' ? c.coincide : null,
       };
     });
@@ -561,6 +575,7 @@ function normalizarItem(raw: Record<string, unknown>): ExpedienteItem {
     : {}) as AseguradoResumen;
   const estadoPago = texto(raw.estadoPago)?.toLowerCase() ?? '';
   const estadoDocumental = estadoDe(raw.estadoDocumental);
+  const requisitos = normalizarRequisitos(raw.requisitos, raw.documentos);
   return {
     id: (raw.id as number | string) ?? String(raw.cnpoliza ?? ''),
     cnpoliza: String(raw.cnpoliza ?? ''),
@@ -576,13 +591,16 @@ function normalizarItem(raw: Record<string, unknown>): ExpedienteItem {
     },
     estadoPago,
     estadoDocumental,
-    requisitos: normalizarRequisitos(raw.requisitos, raw.documentos),
+    requisitos,
     intentos: num(raw.intentos),
     ultimoEnvio: (raw.ultimoEnvio as string | null | undefined) ?? null,
     proximoEnvio: (raw.proximoEnvio as string | null | undefined) ?? null,
     noEnviar: Boolean(raw.noEnviar),
     noEnviarPor: exclusionesAplicadas(raw.noEnviarPor),
     cambiosDetectados: (raw.cambiosDetectados as boolean | number | null | undefined) ?? null,
+    datosModificados:
+      raw.datosModificados === true ||
+      requisitos.some((r) => r.diagnostico?.resultado === 'datos_modificados'),
     emitidaEn: (raw.emitidaEn as string | null | undefined) ?? null,
   };
 }
@@ -611,10 +629,14 @@ function exclusionesAplicadas(raw: unknown): ExclusionAplicada[] {
 
 export async function listarExpedientes(f: FiltrosBandeja): Promise<PaginaExpedientes> {
   try {
-    const { conErrores, ...resto } = f;
+    const { conErrores, datosModificados, ...resto } = f;
     const { data } = await api.get(BASE, {
       headers: authHeaders(),
-      params: limpiarParams({ ...resto, conErrores: conErrores ? 'true' : undefined }),
+      params: limpiarParams({
+        ...resto,
+        conErrores: conErrores ? 'true' : undefined,
+        datosModificados: datosModificados ? 'true' : undefined,
+      }),
     });
     const raw = unwrap<unknown>(data);
     if (Array.isArray(raw)) {
@@ -663,6 +685,7 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       validadosIa: num(r.validadosIa ?? r.validadosIA ?? r.validadosPorIa),
       conErrores: num(r.conErrores ?? r.errados),
       analizando: num(r.analizando ?? r.enAnalisis),
+      datosModificados: num(r.datosModificados),
     };
   } catch (err) {
     throw toExpedientesError(err, 'coleccion');

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BellOff, ChevronLeft, ChevronRight, Eye, RotateCcw } from 'lucide-react';
+import { BellOff, ChevronLeft, ChevronRight, Eye, PencilLine, RotateCcw } from 'lucide-react';
 import {
   listarExpedientes,
   type Agrupacion,
@@ -42,6 +42,8 @@ interface FiltrosUI {
   agrupar: Agrupacion;
   /** Solo pólizas con algún documento errado (no coincide, ilegible u observado). */
   conErrores: boolean;
+  /** v1.3: solo pólizas con datos cambiados en el formulario respecto al OCR al emitir. */
+  datosModificados: boolean;
 }
 
 const FILTROS_INICIALES: FiltrosUI = {
@@ -54,6 +56,7 @@ const FILTROS_INICIALES: FiltrosUI = {
   q: '',
   agrupar: 'poliza',
   conErrores: false,
+  datosModificados: false,
 };
 
 const TAMANOS = [25, 50, 100];
@@ -110,6 +113,8 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
   const { estadoPago, area, producto, desde, hasta, agrupar } = filtros;
   // El filtro de errados solo aplica a los incompletos (un expediente completo no tiene errados).
   const conErrores = estadoDoc === 'incompleto' && filtros.conErrores;
+  // Datos cambiados = documento observado: también solo en los incompletos.
+  const datosModificados = estadoDoc === 'incompleto' && filtros.datosModificados;
 
   useEffect(() => {
     const n = ++peticion.current;
@@ -126,6 +131,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
       q,
       agrupar,
       conErrores,
+      datosModificados,
       page,
       pageSize,
     })
@@ -140,7 +146,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
       .finally(() => {
         if (n === peticion.current) setCargando(false);
       });
-  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, page, pageSize, recargaKey, reintento]);
+  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, datosModificados, page, pageSize, recargaKey, reintento]);
 
   const cambiar = <K extends keyof FiltrosUI>(k: K, v: FiltrosUI[K]) => {
     setFiltros((p) => ({ ...p, [k]: v }));
@@ -152,11 +158,13 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
     [filtros],
   );
 
-  // Si Nexus aún no filtra por `conErrores`, se filtra también la página recibida.
+  // Si Nexus aún no filtra por `conErrores` / `datosModificados`, se filtra también la página recibida.
   const items = useMemo(() => {
-    const lista = datos?.items ?? [];
-    return conErrores ? lista.filter((it) => it.requisitos.some(esDocumentoErrado)) : lista;
-  }, [datos, conErrores]);
+    let lista = datos?.items ?? [];
+    if (conErrores) lista = lista.filter((it) => it.requisitos.some(esDocumentoErrado));
+    if (datosModificados) lista = lista.filter((it) => it.datosModificados);
+    return lista;
+  }, [datos, conErrores, datosModificados]);
   const total = datos?.total ?? 0;
   const paginas = Math.max(1, Math.ceil(total / pageSize));
   const desdeN = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -314,6 +322,15 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
               />
               Con documentos errados
             </label>
+            <label className="mx-check" htmlFor={`${idPrefijo}-modificados`}>
+              <input
+                id={`${idPrefijo}-modificados`}
+                type="checkbox"
+                checked={filtros.datosModificados}
+                onChange={(e) => cambiar('datosModificados', e.target.checked)}
+              />
+              Datos cambiados
+            </label>
           </div>
         )}
       </div>
@@ -433,6 +450,24 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
   );
 }
 
+/**
+ * v1.3: la póliza se emitió con datos distintos a los que el OCR leyó del documento
+ * (se cambiaron a mano en el formulario). Distinto de «Errado» (documento que no coincide).
+ */
+function ChipDatosCambiados({ it }: { it: ExpedienteItem }) {
+  const resumen = it.requisitos.find((r) => r.diagnostico?.resultado === 'datos_modificados')
+    ?.diagnostico?.resumen;
+  return (
+    <span
+      className="mx-chip mx-chip--modificado"
+      title={resumen ?? 'Datos cambiados en el formulario respecto al documento'}
+    >
+      <PencilLine size={13} aria-hidden />
+      Datos cambiados
+    </span>
+  );
+}
+
 function Fila({
   it,
   onAbrir,
@@ -477,6 +512,7 @@ function Fila({
         <div className="flex flex-col items-start gap-1.5">
           <ChipPago estado={it.estadoPago} />
           <ChipDocumental estado={it.estadoDocumental} />
+          {it.datosModificados && <ChipDatosCambiados it={it} />}
         </div>
       </td>
       <td>

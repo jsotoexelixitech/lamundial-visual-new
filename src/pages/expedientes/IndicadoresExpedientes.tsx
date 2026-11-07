@@ -149,6 +149,7 @@ function Contenido({ d }: { d: Indicadores }) {
     ['Observados', d.observados],
     ['Validados por IA', d.validadosIa],
     ['Con errores', d.conErrores],
+    ['Datos cambiados', d.datosModificados ?? 0],
     ['Analizando', d.analizando],
     ['Pagadas', d.pagadas],
     ['Pendientes de pago', d.pendientesPago],

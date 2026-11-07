@@ -11,6 +11,7 @@ const CIFRAS: { key: keyof Indicadores; label: string }[] = [
   { key: 'porValidar', label: 'Por validar' },
   { key: 'validadosIa', label: 'Validados por IA' },
   { key: 'conErrores', label: 'Con errores' },
+  { key: 'datosModificados', label: 'Datos cambiados' },
   { key: 'analizando', label: 'Analizando' },
 ];
 

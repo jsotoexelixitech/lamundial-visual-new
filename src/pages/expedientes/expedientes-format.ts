@@ -19,6 +19,8 @@ export function esActorIa(actor?: string | null): boolean {
  * Estado que se muestra de un documento, combinando su estado y el diagnóstico de la IA:
  * - validado: por IA si el actor es `ia` o la IA dio `coincide`; si no, a mano.
  * - no_coincide → errado · ilegible → ilegible · sin_certeza → revisar.
+ * - datos_modificados (v1.3) → datos_cambiados: la póliza salió con datos distintos a los que
+ *   el OCR leyó del documento al emitir (se cambiaron en el formulario).
  * - recibido sin diagnóstico o con error_tecnico → analizando (con validación manual: por validar).
  * - observado sin resultado de la IA = observado a mano.
  */
@@ -26,6 +28,7 @@ export type EstadoVisual =
   | 'faltante'
   | 'validado_ia'
   | 'validado_manual'
+  | 'datos_cambiados'
   | 'errado'
   | 'ilegible'
   | 'revisar'
@@ -50,6 +53,7 @@ export function estadoVisual(
       return resultado === 'coincide' ? 'validado_ia' : 'validado_manual';
     case 'observado':
     case 'recibido':
+      if (resultado === 'datos_modificados') return 'datos_cambiados';
       if (resultado === 'no_coincide') return 'errado';
       if (resultado === 'ilegible') return 'ilegible';
       if (req.estado === 'observado') return 'observado';
@@ -61,10 +65,15 @@ export function estadoVisual(
   }
 }
 
-/** Documento con problema: errado, ilegible u observado (filtro «Con documentos errados»). */
+/** Documento con problema: errado, ilegible, datos cambiados u observado (filtro «Con documentos errados»). */
 export function esDocumentoErrado(req: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>): boolean {
   const v = estadoVisual(req);
-  return v === 'errado' || v === 'ilegible' || v === 'observado';
+  return v === 'errado' || v === 'ilegible' || v === 'observado' || v === 'datos_cambiados';
+}
+
+/** v1.3: algún dato de la póliza se cambió en el formulario respecto a lo que leyó el OCR. */
+export function esDatoCambiado(req: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>): boolean {
+  return estadoVisual(req) === 'datos_cambiados';
 }
 
 /** Confianza en lenguaje simple. Acepta 0–1, 0–100 o el texto alta/media/baja. */
@@ -112,6 +121,10 @@ export function motivoParaAsegurado(
       ? { nombre: 'El certificado de circulación', fem: false, a: 'al vehículo de la póliza' }
       : (DOC_ASEGURADO[t] ?? { nombre: 'El documento', fem: false, a: 'a los datos de la póliza' });
   const cargalo = doc.fem ? 'Cárgala' : 'Cárgalo';
+  if (resultado === 'datos_modificados') {
+    // v1.3: el documento está bien; lo que se revisa son los datos de la póliza (sin mostrarlos).
+    return 'Estamos revisando los datos de tu póliza con este documento. No tienes que enviarlo de nuevo.';
+  }
   if (resultado === 'no_coincide') {
     return `${doc.nombre} no corresponde ${doc.a}. ${cargalo} de nuevo.`;
   }

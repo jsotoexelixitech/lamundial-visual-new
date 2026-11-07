@@ -313,7 +313,9 @@ function DocumentoPendiente({
   const inputRef = useRef<HTMLInputElement>(null);
   const nombre = etiquetaRequisito(req.tipo, producto);
   const subiendo = pct !== null;
-  const repetir = req.estado === 'observado' || hayQueRepetir(req);
+  // v1.3: datos cambiados en el formulario = el documento está bien, se revisa la póliza.
+  const enRevision = req.estado !== 'validado' && req.diagnostico?.resultado === 'datos_modificados';
+  const repetir = !enRevision && (req.estado === 'observado' || hayQueRepetir(req));
   // Motivo simple, sin datos de la póliza: nunca el resumen de la IA ni el motivo interno.
   const motivoSimple = motivoParaAsegurado(req.tipo, producto, req.diagnostico?.resultado);
 
@@ -355,7 +357,9 @@ function DocumentoPendiente({
     <li className="mx-pub-doc">
       <div className="flex items-center justify-between gap-3">
         <span className="font-semibold">{nombre}</span>
-        {repetir ? (
+        {enRevision ? (
+          <span className="mx-req mx-req--revisar">En revisión</span>
+        ) : repetir ? (
           <span className="mx-req mx-req--observado">
             <AlertCircle size={12} aria-hidden />
             Envíalo de nuevo
@@ -364,6 +368,7 @@ function DocumentoPendiente({
           <span className="mx-req mx-req--faltante">Pendiente</span>
         )}
       </div>
+      {enRevision && motivoSimple && <p className="text-xs text-[#5E6275]">{motivoSimple}</p>}
       {repetir && (
         <p className={`text-xs ${motivoSimple ? 'font-semibold text-[#8F2A2D]' : 'text-[#5E6275]'}`}>
           {motivoSimple ??
