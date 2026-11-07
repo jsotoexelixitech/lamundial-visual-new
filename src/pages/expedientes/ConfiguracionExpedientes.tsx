@@ -302,7 +302,7 @@ function FormConfig({
             {Object.entries(original.requisitosPorProducto).map(([prod, tipos]) => (
               <li key={prod}>
                 <span className="font-semibold">{etiquetaProducto(prod)}:</span>{' '}
-                {(Array.isArray(tipos) ? tipos : []).map(etiquetaRequisito).join(', ') || '—'}
+                {(Array.isArray(tipos) ? tipos : []).map((t) => etiquetaRequisito(t, prod)).join(', ') || '—'}
               </li>
             ))}
           </ul>

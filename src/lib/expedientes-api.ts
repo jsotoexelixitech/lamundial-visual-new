@@ -188,6 +188,8 @@ export interface FiltrosIndicadores {
 export interface ExpedientePublico {
   nombre: string | null;
   poliza: string | null;
+  /** rcv | personas | patrimonial; solo para nombrar los documentos. */
+  producto: string | null;
   requisitos: Requisito[];
 }
 
@@ -658,15 +660,21 @@ export async function obtenerExpedientePublico(token: string): Promise<Expedient
     const { data } = await apiPublica.get(`${BASE}/publico/${encodeURIComponent(token)}`);
     const r = (unwrap<Record<string, unknown>>(data) ?? {}) as Record<string, unknown>;
     const aseg = (r.asegurado ?? {}) as { nombre?: string };
+    const requisitos = normalizarRequisitos(r.requisitos);
+    // Si Nexus no envía el producto: la licencia solo se exige en RCV.
+    const producto =
+      texto(r.producto)?.toLowerCase() ??
+      (requisitos.some((q) => q.tipo.toLowerCase() === 'licencia') ? 'rcv' : null);
     return {
       nombre: (r.nombre as string | undefined) ?? aseg.nombre ?? null,
+      producto,
       poliza:
         (r.polizaMasked as string | undefined) ??
         (r.poliza as string | undefined) ??
         (r.cnpolizaMasked as string | undefined) ??
         (r.cnpoliza as string | undefined) ??
         null,
-      requisitos: normalizarRequisitos(r.requisitos),
+      requisitos,
     };
   } catch (err) {
     throw toExpedientesError(err, 'publico');

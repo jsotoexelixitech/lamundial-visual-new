@@ -240,6 +240,7 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
                         key={r.tipo}
                         expId={det.id}
                         req={r}
+                        producto={det.producto}
                         puedeValidar={puedeValidar}
                         onHecho={(m) => void trasCambio(m)}
                       />
@@ -332,7 +333,7 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
                 ) : (
                   <ul className="mx-lista">
                     {det.eventos.map((e, i) => (
-                      <EventoFila key={e.id ?? i} ev={e} />
+                      <EventoFila key={e.id ?? i} ev={e} producto={det.producto} />
                     ))}
                   </ul>
                 )}
@@ -345,13 +346,13 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
   );
 }
 
-function EventoFila({ ev }: { ev: ExpedienteEvento }) {
+function EventoFila({ ev, producto }: { ev: ExpedienteEvento; producto: string }) {
   return (
     <li>
       <div className="flex flex-wrap items-baseline justify-between gap-x-3">
         <p className="font-semibold">
           {etiquetaEvento(ev.tipo)}
-          {ev.requisito ? ` · ${etiquetaRequisito(ev.requisito)}` : ''}
+          {ev.requisito ? ` · ${etiquetaRequisito(ev.requisito, producto)}` : ''}
         </p>
         <span className="text-xs mx-muted whitespace-nowrap">{fechaHora(ev.fecha ?? ev.createdAt)}</span>
       </div>
@@ -370,11 +371,13 @@ function EventoFila({ ev }: { ev: ExpedienteEvento }) {
 function RequisitoFila({
   expId,
   req,
+  producto,
   puedeValidar,
   onHecho,
 }: {
   expId: number | string;
   req: Requisito;
+  producto: string;
   puedeValidar: boolean;
   onHecho: (mensaje: string) => void;
 }) {
@@ -382,7 +385,7 @@ function RequisitoFila({
   const [motivo, setMotivo] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
-  const nombre = etiquetaRequisito(req.tipo);
+  const nombre = etiquetaRequisito(req.tipo, producto);
   const cargado = req.estado !== 'faltante' || !!req.ref;
   const url = urlDocumento(req.ref);
   const motivoOk = motivo.trim().length >= MOTIVO_MIN;
@@ -408,7 +411,7 @@ function RequisitoFila({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold">{nombre}</span>
-            <ChipRequisito tipo={req.tipo} estado={req.estado} soloEstado />
+            <ChipRequisito tipo={req.tipo} producto={producto} estado={req.estado} soloEstado />
           </div>
           <p className="mx-sub">
             {cargado ? 'Cargado' : 'No cargado'}

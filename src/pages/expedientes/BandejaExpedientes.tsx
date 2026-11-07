@@ -438,7 +438,7 @@ function Fila({ it, onAbrir }: { it: ExpedienteItem; onAbrir: (id: string) => vo
             <span className="mx-muted">—</span>
           ) : (
             it.requisitos.map((r) => (
-              <ChipRequisito key={r.tipo} tipo={r.tipo} estado={r.estado} motivo={r.motivo} />
+              <ChipRequisito key={r.tipo} tipo={r.tipo} producto={it.producto} estado={r.estado} motivo={r.motivo} />
             ))
           )}
         </div>

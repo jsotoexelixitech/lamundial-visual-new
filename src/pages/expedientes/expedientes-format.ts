@@ -14,8 +14,18 @@ const OCR_DOC_LABELS: Record<string, string> = {
   pasaporte: 'Pasaporte',
 };
 
-export function etiquetaRequisito(tipo: string): string {
+/** En RCV el certificado es el de circulación del vehículo (no el médico de personas). */
+const ETIQUETAS_RCV: Record<string, string> = {
+  certificado: 'Certificado de circulación',
+};
+
+/**
+ * Etiqueta del documento según el producto: RCV usa sus propias etiquetas;
+ * personas, funerario y patrimoniales, las de la mesa técnica.
+ */
+export function etiquetaRequisito(tipo: string, producto?: string | null): string {
   const t = tipo.toLowerCase();
+  if ((producto ?? '').toLowerCase() === 'rcv' && ETIQUETAS_RCV[t]) return ETIQUETAS_RCV[t];
   if (OCR_DOC_LABELS[t]) return OCR_DOC_LABELS[t];
   return t ? `Documento ${t}` : 'Documento';
 }

@@ -218,7 +218,8 @@ function Expediente({
                 key={r.tipo}
                 token={token}
                 req={r}
-                onSubido={() => trasSubir(etiquetaRequisito(r.tipo))}
+                producto={data.producto}
+                onSubido={() => trasSubir(etiquetaRequisito(r.tipo, data.producto))}
                 onEnlaceCaido={onEnlaceCaido}
               />
             ))}
@@ -233,7 +234,7 @@ function Expediente({
             {recibidos.map((r) => (
               <li key={r.tipo} className="mx-pub-doc">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-semibold">{etiquetaRequisito(r.tipo)}</span>
+                  <span className="font-semibold">{etiquetaRequisito(r.tipo, data.producto)}</span>
                   <span className="mx-req mx-req--recibido">
                     <Hourglass size={12} aria-hidden />
                     Recibido
@@ -254,18 +255,20 @@ function Expediente({
 function DocumentoPendiente({
   token,
   req,
+  producto,
   onSubido,
   onEnlaceCaido,
 }: {
   token: string;
   req: Requisito;
+  producto: string | null;
   onSubido: () => Promise<void>;
   onEnlaceCaido: (kind: ExpedientesErrorKind) => void;
 }) {
   const [pct, setPct] = useState<number | null>(null);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const nombre = etiquetaRequisito(req.tipo);
+  const nombre = etiquetaRequisito(req.tipo, producto);
   const subiendo = pct !== null;
 
   const subir = async (file: File | undefined) => {

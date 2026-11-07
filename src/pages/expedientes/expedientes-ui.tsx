@@ -67,24 +67,27 @@ const REQ_META: Record<
 /** Chip de requisito: "Cédula · Por validar". */
 export function ChipRequisito({
   tipo,
+  producto,
   estado,
   motivo,
   soloEstado = false,
 }: {
   tipo: string;
+  producto?: string | null;
   estado: EstadoRequisito;
   motivo?: string | null;
   soloEstado?: boolean;
 }) {
   const meta = REQ_META[estado] ?? REQ_META.faltante;
   const Icon = meta.Icon;
-  const titulo = motivo ? `${etiquetaRequisito(tipo)}: ${meta.label} — ${motivo}` : undefined;
+  const nombre = etiquetaRequisito(tipo, producto);
+  const titulo = motivo ? `${nombre}: ${meta.label} — ${motivo}` : undefined;
   return (
     <span className={`mx-req ${meta.clase}`} title={titulo}>
       <Icon size={12} aria-hidden />
       {soloEstado ? meta.label : (
         <>
-          <span className="mx-req-tipo">{etiquetaRequisito(tipo)}</span>
+          <span className="mx-req-tipo">{nombre}</span>
           <span className="mx-req-sep" aria-hidden>·</span>
           {meta.label}
         </>
