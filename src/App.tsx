@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { LoginPasarelaPage } from '@/pages/LoginPasarelaPage';
@@ -10,6 +10,10 @@ import { PortalShell } from '@/layouts/PortalShell';
 import { PortalSessionProvider } from '@/context/PortalSessionContext';
 import { getCurrentUser, isSsoSession } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
+
+// Monitor de expedientes: visual aparte (Sis2000 por SSO) y página pública del asegurado.
+const MonitorExpedientesPage = lazy(() => import('@/pages/MonitorExpedientesPage'));
+const ExpedientePublicoPage = lazy(() => import('@/pages/ExpedientePublicoPage'));
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const user = getCurrentUser();
@@ -25,6 +29,24 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/login-pasarela" element={<LoginPasarelaPage />} />
         <Route path="/sso" element={<SsoEntryPage />} />
+        <Route
+          path="/monitor-expedientes"
+          element={
+            <RequireAuth>
+              <Suspense fallback={null}>
+                <MonitorExpedientesPage />
+              </Suspense>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/expediente"
+          element={
+            <Suspense fallback={null}>
+              <ExpedientePublicoPage />
+            </Suspense>
+          }
+        />
         <Route
           element={
             <RequireAuth>

@@ -1,0 +1,752 @@
+/* ═══════════════════════════════════════════════════
+   Monitor de expedientes Marketplace (prefijo mx-)
+   Visual embebida en Sis2000: sin menú del portal, a ancho completo.
+   Paleta La Mundial: Pennsylvania #0F1A5A, Profundo #091133, Azul Señal #2E6DBF.
+   ═══════════════════════════════════════════════════ */
+
+.mx-app {
+  min-height: 100vh;
+  background: #f4f5f8;
+  color: #091133;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.875rem;
+}
+
+/* Banda superior: misma medianoche con auroras que las visuales de Exélixi en Sis2000 */
+.mx-hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  padding: 1.1rem clamp(1rem, 2vw, 1.75rem) 0;
+  background:
+    radial-gradient(60% 90% at 12% 0%, rgba(102, 58, 243, 0.4), transparent 60%),
+    radial-gradient(50% 80% at 95% 10%, rgba(46, 109, 191, 0.45), transparent 65%),
+    radial-gradient(40% 70% at 70% 120%, rgba(232, 79, 81, 0.22), transparent 70%),
+    linear-gradient(135deg, #05060f 0%, #0f1a5a 100%);
+}
+
+.mx-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, #000 0%, transparent 85%);
+  pointer-events: none;
+}
+
+.mx-hero > * {
+  position: relative;
+}
+
+.mx-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.mx-title {
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 0.2rem;
+}
+
+.mx-subtitle {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 52rem;
+}
+
+.mx-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mx-hero-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.mx-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.mx-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.75rem 0.75rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mx-tab:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mx-tab[aria-selected='true'] {
+  background: #f4f5f8;
+  color: #0f1a5a;
+}
+
+.mx-tab:focus-visible,
+.mx-btn:focus-visible,
+.mx-hero-btn:focus-visible,
+.mx-link:focus-visible,
+.mx-row:focus-visible {
+  outline: 2px solid #2e6dbf;
+  outline-offset: 2px;
+}
+
+.mx-body {
+  padding: 1rem clamp(1rem, 2vw, 1.75rem) 2rem;
+  min-width: 0;
+}
+
+.mx-panel {
+  background: #fff;
+  border: 1px solid #e3e5ec;
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(9, 17, 51, 0.05);
+  min-width: 0;
+}
+
+.mx-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #eceef4;
+}
+
+.mx-h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #091133;
+}
+
+.mx-muted {
+  color: #5e6275;
+}
+
+/* ── Filtros ── */
+.mx-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 1fr));
+  gap: 0.65rem 0.75rem;
+  padding: 0.9rem 1rem;
+}
+
+.mx-field {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.mx-field > span:first-child,
+.mx-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #5e6275;
+}
+
+.mx-input {
+  width: 100%;
+  min-width: 0;
+  height: 2.4rem;
+  padding: 0 0.7rem;
+  border: 1px solid #d9dce5;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #091133;
+  font: inherit;
+  font-size: 0.82rem;
+}
+
+textarea.mx-input {
+  height: auto;
+  min-height: 4.5rem;
+  padding: 0.55rem 0.7rem;
+  resize: vertical;
+}
+
+.mx-input:focus {
+  outline: none;
+  border-color: #2e6dbf;
+  box-shadow: 0 0 0 3px rgba(46, 109, 191, 0.18);
+}
+
+.mx-input[aria-invalid='true'] {
+  border-color: #c2410c;
+}
+
+/* ── Botones ── */
+.mx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.4rem;
+  padding: 0 0.9rem;
+  border-radius: 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.mx-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mx-btn--primary {
+  background: #0f1a5a;
+  color: #fff;
+}
+
+.mx-btn--primary:hover:not(:disabled) {
+  background: #162a7f;
+}
+
+.mx-btn--ghost {
+  background: #fff;
+  color: #0f1a5a;
+  border-color: #e3e5ec;
+}
+
+.mx-btn--ghost:hover:not(:disabled) {
+  background: #f0f2f8;
+}
+
+.mx-btn--ok {
+  background: #e7f6ee;
+  color: #146c43;
+  border-color: #bfe5cf;
+}
+
+.mx-btn--ok:hover:not(:disabled) {
+  background: #d7f0e3;
+}
+
+.mx-btn--warn {
+  background: #fff4ec;
+  color: #9a3b0f;
+  border-color: #f6d3bd;
+}
+
+.mx-btn--warn:hover:not(:disabled) {
+  background: #ffe9db;
+}
+
+.mx-btn--sm {
+  height: 2rem;
+  padding: 0 0.65rem;
+  font-size: 0.75rem;
+}
+
+.mx-link {
+  color: #2e6dbf;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Tabla ── */
+.mx-table-wrap {
+  overflow-x: auto;
+}
+
+.mx-table {
+  width: 100%;
+  min-width: 58rem;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.mx-table th {
+  position: sticky;
+  top: 0;
+  background: #f0f2f8;
+  color: #5e6275;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.6rem 0.55rem;
+  white-space: nowrap;
+}
+
+.mx-table td {
+  padding: 0.6rem 0.55rem;
+  border-top: 1px solid #eceef4;
+  vertical-align: top;
+}
+
+.mx-row {
+  cursor: pointer;
+}
+
+.mx-row:hover td {
+  background: #fafbfd;
+}
+
+.mx-grupo td {
+  background: #f7f8fb;
+  border-top: 1px solid #dfe3ec;
+  padding: 0.5rem 0.65rem;
+}
+
+.mx-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.mx-poliza {
+  font-weight: 600;
+  color: #091133;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mx-sub {
+  display: block;
+  font-size: 0.7rem;
+  color: #5e6275;
+  margin-top: 0.1rem;
+}
+
+/* ── Chips ── */
+.mx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+/* Pago: contorno (cobro). Documental: relleno (expediente). Así no se confunden. */
+.mx-chip--pago-ok {
+  background: #fff;
+  color: #1e4f8f;
+  border: 1px solid #c7d6ee;
+}
+
+.mx-chip--pago-pendiente {
+  background: #f3efff;
+  color: #4b25b8;
+  border: 1px dashed #8f73f0;
+}
+
+.mx-chip--doc-ok {
+  background: #dff3e7;
+  color: #146c43;
+  border: 1px solid transparent;
+}
+
+.mx-chip--doc-pend {
+  background: #fff1d6;
+  color: #7a4b00;
+  border: 1px solid transparent;
+}
+
+.mx-chip--neutral {
+  background: #eef0f6;
+  color: #3c4260;
+  border: 1px solid transparent;
+}
+
+.mx-chip--alerta {
+  background: #fdecec;
+  color: #8f2a2d;
+  border: 1px solid transparent;
+}
+
+.mx-reqs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  max-width: 15rem;
+}
+
+.mx-req {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.mx-req-tipo {
+  font-weight: 600;
+}
+
+.mx-req-sep {
+  opacity: 0.5;
+}
+
+.mx-req--faltante {
+  background: #fff;
+  color: #4a4f66;
+  border: 1px dashed #b5b9c7;
+}
+
+.mx-req--recibido {
+  background: #e8f0fb;
+  color: #1e4f8f;
+}
+
+.mx-req--observado {
+  background: #fdecec;
+  color: #8f2a2d;
+}
+
+.mx-req--validado {
+  background: #dff3e7;
+  color: #146c43;
+}
+
+/* ── Estados y avisos ── */
+.mx-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: #5e6275;
+}
+
+.mx-estado-titulo {
+  font-weight: 600;
+  color: #091133;
+}
+
+.mx-aviso {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.mx-aviso--info {
+  background: #eef4fc;
+  color: #1e3d6b;
+  border: 1px solid #d5e3f6;
+}
+
+.mx-aviso--error {
+  background: #fdecec;
+  color: #8f2a2d;
+  border: 1px solid #f6d0d1;
+}
+
+.mx-aviso--warn {
+  background: #fff7e6;
+  color: #7a4b00;
+  border: 1px solid #f4e0b5;
+}
+
+.mx-aviso--ok {
+  background: #e7f6ee;
+  color: #146c43;
+  border: 1px solid #c4e8d4;
+}
+
+/* ── Paginación ── */
+.mx-paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid #eceef4;
+  font-size: 0.78rem;
+  color: #5e6275;
+}
+
+/* ── Indicadores ── */
+.mx-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+  gap: 1rem;
+}
+
+.mx-kpi-hero {
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  color: #091133;
+}
+
+.mx-kpi-mini {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.mx-kpi-mini > div {
+  background: #f7f8fb;
+  border-radius: 0.65rem;
+  padding: 0.5rem 0.6rem;
+  min-width: 0;
+}
+
+.mx-kpi-mini strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #091133;
+}
+
+.mx-kpi-mini span {
+  display: block;
+  font-size: 0.68rem;
+  color: #5e6275;
+  line-height: 1.25;
+}
+
+.mx-bar {
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: #e3e8f2;
+  overflow: hidden;
+}
+
+.mx-bar > div {
+  height: 100%;
+  border-radius: 9999px;
+  background: #2e6dbf;
+}
+
+/* ── Detalle (panel lateral) ── */
+.mx-velo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(9, 17, 51, 0.45);
+}
+
+.mx-drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 50;
+  width: min(100vw, 46rem);
+  display: flex;
+  flex-direction: column;
+  background: #f4f5f8;
+  box-shadow: -24px 0 48px -24px rgba(9, 17, 51, 0.55);
+}
+
+.mx-drawer-head {
+  background: linear-gradient(135deg, #05060f 0%, #0f1a5a 100%);
+  color: #fff;
+  padding: 1rem 1.1rem;
+}
+
+.mx-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.1rem 2rem;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.mx-dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  gap: 0.6rem 1rem;
+  padding: 0.9rem 1rem;
+}
+
+.mx-dl dt {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #5e6275;
+}
+
+.mx-dl dd {
+  margin-top: 0.1rem;
+  color: #091133;
+  overflow-wrap: anywhere;
+}
+
+.mx-lista > li {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #eceef4;
+}
+
+.mx-lista > li:first-child {
+  border-top: 0;
+}
+
+.mx-progreso {
+  height: 0.35rem;
+  border-radius: 9999px;
+  background: #e3e8f2;
+  overflow: hidden;
+}
+
+.mx-progreso > div {
+  height: 100%;
+  background: #2e6dbf;
+  transition: width 0.2s ease;
+}
+
+/* ── Página pública /expediente ── */
+.mx-pub {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #e3ebf8 0%, #f4f5f8 18rem);
+  color: #091133;
+  font-family: 'Poppins', system-ui, sans-serif;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+.mx-pub-card {
+  max-width: 38rem;
+  margin: 1.25rem auto 0;
+  background: #fff;
+  border: 1px solid #e3e5ec;
+  border-radius: 1.25rem;
+  box-shadow: 0 24px 48px -32px rgba(9, 17, 51, 0.45);
+  overflow: hidden;
+}
+
+.mx-pub-head {
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid #eceef4;
+}
+
+.mx-pub-hola {
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: clamp(1.35rem, 1.1rem + 1vw, 1.7rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.mx-pub-doc {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #eceef4;
+}
+
+.mx-pub-doc:first-child {
+  border-top: 0;
+}
+
+.mx-pub-upload {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.9rem;
+  padding: 0 1rem;
+  border-radius: 0.85rem;
+  background: #0f1a5a;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.mx-pub-upload:hover {
+  background: #162a7f;
+}
+
+.mx-pub-upload:focus-within {
+  outline: 3px solid rgba(46, 109, 191, 0.45);
+  outline-offset: 2px;
+}
+
+.mx-pub-upload[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.mx-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: inherit;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mx-progreso > div,
+  .mx-tab,
+  .mx-btn {
+    transition: none;
+  }
+}
+
+.mx-input--sm {
+  height: 2rem;
+  width: auto;
+  padding: 0 0.5rem;
+}
+
+.mx-table th.mx-right,
+.mx-table td.mx-right {
+  text-align: right;
+}
+
+.mx-title--sm {
+  font-size: 1.2rem;
+}
+
+.mx-hero-btn--icon {
+  padding: 0.45rem;
+}
+
+.mx-table--compact {
+  min-width: 0;
+}
+
+.mx-sub--strong {
+  color: #091133;
+  font-weight: 500;
+}
