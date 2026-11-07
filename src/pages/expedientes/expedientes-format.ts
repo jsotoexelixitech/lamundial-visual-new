@@ -346,7 +346,7 @@ export function etiquetaArea(a: string): string {
   if (v === 'C' || v.startsWith('CANAL')) return 'Canal alterno';
   if (v === 'G' || v.startsWith('GESTOR')) return 'Gestor';
   if (v === 'P' || v.startsWith('PRODUCTOR')) return 'Productor';
-  if (v === 'DESCONOCIDA') return 'Sin dato del vendedor';
+  if (v === 'DESCONOCIDA') return 'Sin dato de quién la emitió';
   return a || '—';
 }
 

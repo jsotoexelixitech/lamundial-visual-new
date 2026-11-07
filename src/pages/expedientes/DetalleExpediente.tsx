@@ -208,7 +208,7 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
                 <div className="mx-panel-head">
                   <div className="grid gap-1 min-w-0">
                     <h3 id="mx-req-titulo" className="mx-h2">Documentos</h3>
-                    <LineaPendiente requisitos={det.requisitos} modo={modo} />
+                    <LineaPendiente requisitos={det.requisitos} modo={modo} producto={det.producto} />
                   </div>
                   <span className="text-xs mx-muted">
                     {modo === 'manual' ? 'Validación manual' : 'Validación automática con IA'}
@@ -279,7 +279,7 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
                     <dd>{etiquetaArea(det.areaCodigo || det.area)}</dd>
                   </div>
                   <div>
-                    <dt>Vendedor</dt>
+                    <dt>Emitida por</dt>
                     <dd>{det.vendedor || '—'}</dd>
                   </div>
                   <div>

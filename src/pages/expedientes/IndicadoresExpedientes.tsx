@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Building2, Layers, UserRound, Users } from 'lucide-react';
+import { Building2, ChevronDown, Layers, UserRound, Users } from 'lucide-react';
 import {
   obtenerIndicadores,
   isExpedientesError,
   ExpedientesError,
   type Indicadores,
 } from '@/lib/expedientes-api';
-import { AvisoError, Cargando } from './expedientes-ui';
-import { numero, type Tono } from './expedientes-format';
+import { AvisoError, BarraApilada, BarrasH, Esqueleto } from './expedientes-ui';
+import { numero } from './expedientes-format';
 
 type Icono = React.ComponentType<{ size?: number; 'aria-hidden'?: boolean; className?: string }>;
 
@@ -94,123 +94,160 @@ export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
 
       {cargando && !res ? (
         <div className="mx-panel">
-          <Cargando texto="Cargando indicadores…" />
+          <Esqueleto filas={3} texto="Cargando indicadores…" />
         </div>
       ) : errorGlobal ? (
         <AvisoError error={errorGlobal} onReintentar={() => setReintento((n) => n + 1)} />
       ) : (
-        <div className={`mx-kpi-grid ${cargando ? 'opacity-60' : ''}`} aria-busy={cargando}>
-          {AREAS.map((a) => {
-            const r = res?.[a.key];
-            return (
-              <TarjetaArea key={a.key} titulo={a.titulo} Icon={a.Icon} resultado={r} />
-            );
-          })}
+        <div className={`grid gap-4 ${cargando ? 'opacity-60' : ''}`} aria-busy={cargando}>
+          <Comparativo res={res} />
+          <div className="mx-kpi-grid">
+            {AREAS.map((a) => (
+              <TarjetaArea
+                key={a.key}
+                titulo={a.titulo}
+                Icon={a.Icon}
+                resultado={res?.[a.key]}
+                abiertaInicial={a.key === 'todas' || esEscritorio()}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function TarjetaArea({
-  titulo,
-  Icon,
-  resultado,
-}: {
-  titulo: string;
-  Icon: Icono;
-  resultado?: Resultado;
-}) {
-  return (
-    <section className="mx-panel p-4 grid gap-3 content-start" aria-label={titulo}>
-      <div className="flex items-center gap-2">
-        <span className="grid place-items-center h-8 w-8 rounded-lg bg-[#F0F2F8] text-[#0F1A5A]">
-          <Icon size={16} aria-hidden />
-        </span>
-        <h3 className="mx-h2">{titulo}</h3>
-      </div>
+const esEscritorio = () =>
+  typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 1024px)').matches;
 
-      {!resultado ? null : !resultado.ok ? (
-        <AvisoError error={resultado.error} />
-      ) : (
-        <Contenido d={resultado.data} />
-      )}
+/** Estado documental de las tres áreas, lado a lado, para comparar de un vistazo. */
+function Comparativo({ res }: { res: Record<string, Resultado> | null }) {
+  const areas = AREAS.filter((a) => a.area);
+  return (
+    <section className="mx-panel" aria-labelledby="mx-ind-comp">
+      <div className="mx-panel-head">
+        <h3 id="mx-ind-comp" className="mx-h2">
+          Estado documental por área
+        </h3>
+      </div>
+      <div className="mx-ind-comparativo">
+        {areas.map((a) => {
+          const r = res?.[a.key];
+          return (
+            <div key={a.key} className="min-w-0">
+              <p className="mx-ind-area-tit">
+                {a.titulo}
+                {r?.ok && <span className="mx-num">{numero(r.data.total)} pólizas</span>}
+              </p>
+              {!r ? null : !r.ok ? (
+                <p className="text-xs mx-muted">No se pudo cargar esta área.</p>
+              ) : (
+                <BarraApilada titulo={`Estado documental · ${a.titulo}`} segmentos={segDocumental(r.data)} tituloOculto />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </section>
   );
 }
 
+const segDocumental = (d: Indicadores) => [
+  { label: 'Completos', valor: d.completos, tono: 'verde' as const },
+  { label: 'Incompletos', valor: d.incompletos, tono: 'ambar' as const },
+  { label: 'Sin información', valor: d.sinInformacion, tono: 'gris' as const },
+];
+
+/**
+ * Tarjeta de un área, plegable: en el móvil solo el consolidado arranca abierto para que la
+ * pestaña no quede tan larga; el total se ve siempre en el encabezado.
+ */
+function TarjetaArea({
+  titulo,
+  Icon,
+  resultado,
+  abiertaInicial,
+}: {
+  titulo: string;
+  Icon: Icono;
+  resultado?: Resultado;
+  abiertaInicial: boolean;
+}) {
+  const [abierta, setAbierta] = useState(abiertaInicial);
+  return (
+    <details
+      className="mx-panel mx-ind-tarjeta"
+      open={abierta}
+      onToggle={(e) => setAbierta((e.currentTarget as HTMLDetailsElement).open)}
+    >
+      <summary>
+        <span className="grid place-items-center h-9 w-9 rounded-lg bg-[#F0F2F8] text-[#0F1A5A] shrink-0">
+          <Icon size={17} aria-hidden />
+        </span>
+        <h3 className="mx-h2">{titulo}</h3>
+        {resultado?.ok && (
+          <span className="mx-ind-total">
+            <strong>{numero(resultado.data.total)}</strong>
+            <span>pólizas emitidas</span>
+          </span>
+        )}
+        <ChevronDown
+          size={18}
+          className={`mx-plegable-chev ${resultado?.ok ? '' : 'ml-auto'}`}
+          aria-hidden
+        />
+      </summary>
+      <div className="mx-ind-cuerpo">
+        {!resultado ? null : !resultado.ok ? (
+          <AvisoError error={resultado.error} />
+        ) : (
+          <Contenido d={resultado.data} />
+        )}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * Las 16 cifras del área en cuatro gráficos sencillos, cada uno con su número visible.
+ * El color sigue el mismo código de estados del monitor; pago y recordatorios van en tinta neutra.
+ */
 function Contenido({ d }: { d: Indicadores }) {
-  // Hacia abajo: 99,6 % se muestra 99 %, nunca 100 % si falta alguna póliza.
-  const pct = d.total > 0 ? Math.floor((d.completos / d.total) * 100) : 0;
-  // Primero lo que pide atención; el color solo se pinta si la cifra es mayor que cero.
-  const grupos: { titulo: string; cifras: [string, number, Tono?][] }[] = [
-    {
-      titulo: 'Atención',
-      cifras: [
-        ['Incompletos', d.incompletos, 'ambar'],
-        ['Con errores', d.conErrores, 'rojo'],
-        ['Datos cambiados', d.datosModificados ?? 0, 'violeta'],
-        ['Observados', d.observados, 'ambar'],
-        ['Por validar', d.porValidar, 'ambar'],
-        ['Analizando', d.analizando],
-      ],
-    },
-    {
-      titulo: 'Documentos',
-      cifras: [
-        ['Completos', d.completos],
-        ['Validados por IA', d.validadosIa],
-        ['Sin información', d.sinInformacion],
-      ],
-    },
-    {
-      titulo: 'Pago y recordatorios',
-      cifras: [
-        ['Pagadas', d.pagadas],
-        ['Pendientes de pago', d.pendientesPago],
-        ['Sin correo', d.sinCorreo],
-        ['No enviar', d.noEnviar],
-        ['Intentos de envío', d.intentos],
-        ['Recuperados', d.recuperados],
-        ['Asegurados únicos', d.aseguradosUnicos],
-      ],
-    },
-  ];
   return (
     <>
-      <div>
-        <p className="mx-kpi-hero">{numero(d.total)}</p>
-        <p className="text-xs mx-muted">pólizas emitidas</p>
-      </div>
-      <div>
-        <div className="flex justify-between text-xs mb-1">
-          <span className="mx-muted">Expediente completo</span>
-          <span className="font-semibold mx-num">{pct} %</span>
-        </div>
-        <div
-          className="mx-bar"
-          role="progressbar"
-          aria-valuenow={pct}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Porcentaje de pólizas con expediente completo"
-        >
-          <div style={{ width: `${pct}%` }} />
-        </div>
-      </div>
-      {grupos.map((g) => (
-        <div key={g.titulo}>
-          <p className="mx-kpi-grupo">{g.titulo}</p>
-          <div className="mx-kpi-mini">
-            {g.cifras.map(([label, v, tono]) => (
-              <div key={label} className={tono && v > 0 ? `is-${tono}` : undefined}>
-                <strong>{numero(v)}</strong>
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+      <BarraApilada titulo="Estado documental" segmentos={segDocumental(d)} />
+      <BarrasH
+        titulo="Documentos: atención y validación"
+        filas={[
+          { label: 'Con errores', valor: d.conErrores, tono: 'rojo' },
+          { label: 'Datos cambiados', valor: d.datosModificados ?? 0, tono: 'violeta' },
+          { label: 'Observados', valor: d.observados, tono: 'ambar' },
+          { label: 'Por validar', valor: d.porValidar, tono: 'azul' },
+          { label: 'Analizando', valor: d.analizando, tono: 'azul' },
+          { label: 'Validados por IA', valor: d.validadosIa, tono: 'verde' },
+        ]}
+      />
+      <BarraApilada
+        titulo="Pago"
+        segmentos={[
+          { label: 'Pagadas', valor: d.pagadas, tono: 'tinta' },
+          { label: 'Pendientes de pago', valor: d.pendientesPago, tono: 'gris' },
+        ]}
+      />
+      <BarrasH
+        titulo="Recordatorios"
+        filas={[
+          { label: 'Intentos de envío', valor: d.intentos },
+          { label: 'Recuperados', valor: d.recuperados },
+          { label: 'Sin correo', valor: d.sinCorreo },
+          { label: 'No enviar', valor: d.noEnviar },
+        ]}
+      />
+      <p className="text-xs mx-muted">
+        <strong className="mx-num text-[#091133] text-sm">{numero(d.aseguradosUnicos)}</strong>{' '}
+        asegurados únicos
+      </p>
     </>
   );
 }

@@ -257,9 +257,8 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
         )}
       </div>
 
-      <div role="search">
-        <div className="mx-toolbar">
-          <div className="mx-toolbar-fila">
+      {/* Búsqueda y Filtros: hijos directos del panel para quedar fijos arriba en el móvil. */}
+      <div className="mx-buscar-fija" role="search">
             <label className="mx-buscar" htmlFor={`${idPrefijo}-q`}>
               <span className="sr-only">Cédula o póliza</span>
               <Search size={16} aria-hidden />
@@ -267,7 +266,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
                 id={`${idPrefijo}-q`}
                 className="mx-input"
                 type="search"
-                placeholder="Buscar por cédula o póliza"
+                placeholder="Cédula o póliza"
                 value={filtros.q}
                 onChange={(e) => cambiar('q', e.target.value)}
               />
@@ -288,8 +287,10 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
               )}
               {panelAbierto ? <ChevronUp size={15} aria-hidden /> : <ChevronDown size={15} aria-hidden />}
             </button>
-          </div>
+      </div>
 
+      <div>
+        <div className="mx-toolbar">
           <div className="mx-toolbar-fila">
             {estadoDoc === 'incompleto' && (
               <div className="mx-toolbar-fila" role="group" aria-label="Validación con IA">
@@ -379,7 +380,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
             </select>
           </label>
           <label className="mx-field" htmlFor={`${idPrefijo}-vendedor`}>
-            <span>Vendedor</span>
+            <span>Emitida por</span>
             <input
               id={`${idPrefijo}-vendedor`}
               className="mx-input"
@@ -389,7 +390,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
               onChange={(e) => cambiar('vendedor', e.target.value)}
             />
           </label>
-          <label className="mx-field" htmlFor={`${idPrefijo}-desde`}>
+          <label className="mx-field mx-field--fecha" htmlFor={`${idPrefijo}-desde`}>
             <span>Emitida desde</span>
             <input
               id={`${idPrefijo}-desde`}
@@ -400,7 +401,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
               onChange={(e) => cambiar('desde', e.target.value)}
             />
           </label>
-          <label className="mx-field" htmlFor={`${idPrefijo}-hasta`}>
+          <label className="mx-field mx-field--fecha" htmlFor={`${idPrefijo}-hasta`}>
             <span>Emitida hasta</span>
             <input
               id={`${idPrefijo}-hasta`}
@@ -444,7 +445,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
                   <th scope="col">Asegurado</th>
                   <th scope="col">Estado</th>
                   <th scope="col">Documentos</th>
-                  <th scope="col">Área / vendedor</th>
+                  <th scope="col">Área / emitida por</th>
                   <th scope="col">Recordatorios</th>
                   <th scope="col">
                     <span className="sr-only">Acciones</span>
@@ -655,7 +656,7 @@ function Fila({
       </td>
       <td>
         <div className="grid gap-1.5">
-          <LineaPendiente requisitos={it.requisitos} modo={modo} />
+          <LineaPendiente requisitos={it.requisitos} modo={modo} producto={it.producto} />
           <Requisitos it={it} modo={modo} />
         </div>
       </td>
@@ -694,8 +695,8 @@ function Fila({
 }
 
 /**
- * Tarjeta del móvil: arriba lo que falta y lo que está mal, luego los datos de contacto y
- * seguimiento. Toda la tarjeta abre el detalle; el botón es el acceso para teclado y lector.
+ * Tarjeta del móvil, corta: póliza, asegurado, chips y barra de documentos arriba; la lista de
+ * requisitos y los datos secundarios en «Ver documentos y datos». Toda la tarjeta abre el detalle.
  */
 function Tarjeta({
   it,
@@ -720,8 +721,23 @@ function Tarjeta({
             <span className="mx-sub--strong">{etiquetaProducto(it.producto)}</span>
             {it.cnrecibo ? ` · Recibo ${it.cnrecibo}` : ''} · {fechaCorta(it.emitidaEn)}
           </p>
+          <div className="mx-card-aseg">
+            <p className="mx-card-nombre">{it.asegurado.nombre || 'Asegurado sin nombre'}</p>
+            {it.asegurado.documento && <p className="mx-sub">{it.asegurado.documento}</p>}
+          </div>
         </div>
-        <ChevronRight size={18} className="mx-muted shrink-0 mt-0.5" aria-hidden />
+        <button
+          type="button"
+          className="mx-btn mx-btn--ghost mx-btn--sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            abrir();
+          }}
+          aria-label={`Ver detalle de la póliza ${it.cnpoliza}`}
+        >
+          Ver
+          <ChevronRight size={16} aria-hidden />
+        </button>
       </div>
 
       <div className="mx-chips">
@@ -731,26 +747,24 @@ function Tarjeta({
         <ChipCambios it={it} />
       </div>
 
-      <div className="mx-card-seccion">
-        <LineaPendiente requisitos={it.requisitos} modo={modo} />
-        <Requisitos it={it} modo={modo} />
-      </div>
+      <LineaPendiente requisitos={it.requisitos} modo={modo} producto={it.producto} />
 
-      <div className="mx-card-seccion">
-        <p className="mx-card-nombre">{it.asegurado.nombre || 'Asegurado sin nombre'}</p>
-        <p className="mx-sub">
-          {it.asegurado.documento ? `${it.asegurado.documento} · ` : ''}
-          {it.asegurado.emailMasked || 'Sin correo'}
-        </p>
-      </div>
-
+      {/* Lo secundario, a un toque y sin abrir el detalle. */}
+      <details className="mx-card-mas" onClick={(e) => e.stopPropagation()}>
+        <summary>
+          Ver documentos y datos
+          <ChevronDown size={16} className="mx-plegable-chev" aria-hidden />
+        </summary>
+        <div className="mx-card-mas-cuerpo">
+          <Requisitos it={it} modo={modo} />
+          <p className="mx-sub">Correo: {it.asegurado.emailMasked || 'Sin correo'}</p>
       <dl className="mx-card-meta">
         <div>
           <dt>Área</dt>
           <dd>{etiquetaArea(it.areaCodigo || it.area)}</dd>
         </div>
         <div>
-          <dt>Vendedor</dt>
+          <dt>Emitida por</dt>
           <dd>{it.vendedor || '—'}</dd>
         </div>
         <div>
@@ -773,19 +787,8 @@ function Tarjeta({
           </div>
         )}
       </dl>
-
-      <button
-        type="button"
-        className="mx-btn mx-btn--ghost mx-btn--block"
-        onClick={(e) => {
-          e.stopPropagation();
-          abrir();
-        }}
-        aria-label={`Ver detalle de la póliza ${it.cnpoliza}`}
-      >
-        <Eye size={15} aria-hidden />
-        Ver detalle
-      </button>
+        </div>
+      </details>
     </article>
   );
 }

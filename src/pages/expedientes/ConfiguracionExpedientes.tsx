@@ -198,7 +198,7 @@ function FormConfig({
                 ['canales', 'Canales alternos'],
                 ['gestores', 'Gestores'],
                 ['productores', 'Productores'],
-                ['desconocida', 'Sin datos del vendedor (pólizas anteriores)'],
+                ['desconocida', 'Sin datos de quién la emitió (pólizas anteriores)'],
               ] as const
             ).map(([k, label]) => (
               <label key={k} className="flex items-center gap-2">

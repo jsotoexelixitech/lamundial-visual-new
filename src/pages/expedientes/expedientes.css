@@ -2082,3 +2082,493 @@ textarea.mx-input {
   white-space: normal;
   min-width: 7.5rem;
 }
+
+/* ═══════════════════════════════════════════════════
+   v2 · Datos a simple vista: barra de documentos, gráficos, tarjetas cortas
+   Rellenos de gráfico (más saturados que los fondos de chip). El rojo lleva rayas y lo no
+   cargado va vacío con borde punteado: así se distinguen también sin ver el color.
+   ═══════════════════════════════════════════════════ */
+.mx-app,
+.mx-pub,
+.mx-drawer {
+  --mx-g-verde: #2f9a63;
+  --mx-g-azul: #4f86cc;
+  --mx-g-ambar: #d99a2b;
+  --mx-g-violeta: #8b4fd8;
+  --mx-g-rojo: #cf4a46;
+  --mx-g-gris: #9aa0b4;
+  --mx-g-tinta: #3b4a8f;
+}
+
+.mx-docbar-tramo.is-validado_ia,
+.mx-docbar-tramo.is-validado_manual,
+.mx-apilada-seg.is-verde,
+.mx-graf-muestra.is-verde,
+.mx-barras-relleno.is-verde {
+  background: var(--mx-g-verde);
+}
+
+.mx-docbar-tramo.is-analizando,
+.mx-docbar-tramo.is-por_validar,
+.mx-apilada-seg.is-azul,
+.mx-graf-muestra.is-azul,
+.mx-barras-relleno.is-azul {
+  background: var(--mx-g-azul);
+}
+
+.mx-docbar-tramo.is-revisar,
+.mx-docbar-tramo.is-observado,
+.mx-apilada-seg.is-ambar,
+.mx-graf-muestra.is-ambar,
+.mx-barras-relleno.is-ambar {
+  background: var(--mx-g-ambar);
+}
+
+.mx-docbar-tramo.is-datos_cambiados,
+.mx-apilada-seg.is-violeta,
+.mx-graf-muestra.is-violeta,
+.mx-barras-relleno.is-violeta {
+  background: var(--mx-g-violeta);
+}
+
+.mx-docbar-tramo.is-errado,
+.mx-docbar-tramo.is-ilegible,
+.mx-apilada-seg.is-rojo,
+.mx-graf-muestra.is-rojo,
+.mx-barras-relleno.is-rojo {
+  background: repeating-linear-gradient(135deg, var(--mx-g-rojo) 0 4px, #e8807c 4px 6px);
+}
+
+.mx-docbar-tramo.is-sin_informacion,
+.mx-docbar-tramo.is-otro,
+.mx-apilada-seg.is-gris,
+.mx-graf-muestra.is-gris,
+.mx-barras-relleno.is-gris {
+  background: var(--mx-g-gris);
+}
+
+.mx-docbar-tramo.is-faltante {
+  background: #fff;
+  border: 1.5px dashed var(--mx-g-gris);
+}
+
+.mx-apilada-seg.is-tinta,
+.mx-graf-muestra.is-tinta,
+.mx-barras-relleno.is-tinta {
+  background: var(--mx-g-tinta);
+}
+
+/* Barra de documentos por expediente */
+.mx-docbar {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.mx-docbar-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.mx-docbar-barra {
+  display: flex;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 4rem;
+  max-width: 14rem;
+  height: 0.6rem;
+}
+
+.mx-docbar-tramo {
+  flex: 1 1 0;
+  min-width: 0.5rem;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+.mx-docbar-texto {
+  font-size: 0.74rem;
+  color: var(--mx-muted);
+  white-space: nowrap;
+}
+
+.mx-docbar-texto strong {
+  color: var(--mx-ink);
+  font-weight: 700;
+}
+
+.mx-docbar-texto.is-completo strong {
+  color: var(--mx-verde-fg);
+}
+
+.mx-leyenda-muestra {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.5rem;
+  min-width: 0;
+}
+
+.mx-leyenda li {
+  gap: 0.4rem;
+}
+
+/* Gráficos */
+.mx-graf {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.mx-graf-titulo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mx-muted);
+}
+
+.mx-apilada {
+  display: flex;
+  gap: 2px;
+  height: 0.85rem;
+}
+
+.mx-apilada-seg {
+  min-width: 4px;
+  flex-basis: 0;
+  border-radius: 4px;
+}
+
+.mx-apilada-vacia {
+  flex: 1;
+  border-radius: 4px;
+  background: #e3e8f2;
+}
+
+.mx-graf-leyenda {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.mx-graf-leyenda li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.6rem;
+  font-size: 0.78rem;
+}
+
+.mx-graf-muestra {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+}
+
+.mx-graf-label {
+  color: var(--mx-gris-fg);
+  overflow-wrap: anywhere;
+}
+
+.mx-graf-valor {
+  font-weight: 700;
+  color: var(--mx-ink);
+  text-align: right;
+}
+
+.mx-graf-pct {
+  font-size: 0.7rem;
+  color: var(--mx-muted);
+  text-align: right;
+}
+
+.mx-barras {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.mx-barras li {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 9.5rem) minmax(0, 1fr) 3.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 1.6rem;
+  font-size: 0.78rem;
+}
+
+.mx-barras-label {
+  color: var(--mx-gris-fg);
+  line-height: 1.2;
+}
+
+.mx-barras-pista {
+  height: 0.6rem;
+  border-radius: 4px;
+  background: #eef0f5;
+  overflow: hidden;
+}
+
+.mx-barras-relleno {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.mx-barras-valor {
+  font-weight: 700;
+  color: var(--mx-ink);
+  text-align: right;
+}
+
+/* Indicadores v2 */
+.mx-ind-comparativo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem 1.5rem;
+  padding: 1rem;
+}
+
+.mx-ind-area-tit {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.mx-ind-area-tit span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--mx-muted);
+}
+
+.mx-ind-tarjeta > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: var(--mx-touch);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.mx-ind-tarjeta > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mx-ind-tarjeta > summary:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+
+.mx-ind-tarjeta[open] > summary {
+  border-bottom: 1px solid var(--mx-line-soft);
+}
+
+.mx-ind-tarjeta[open] .mx-plegable-chev {
+  transform: rotate(180deg);
+}
+
+.mx-ind-cuerpo {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1rem;
+}
+
+.mx-ind-total {
+  margin-left: auto;
+  text-align: right;
+  line-height: 1.1;
+}
+
+.mx-ind-total strong {
+  display: block;
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mx-ind-total span {
+  font-size: 0.68rem;
+  color: var(--mx-muted);
+}
+
+/* Encabezado: avance de completos */
+.mx-resumen-avance {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.mx-resumen-avance-fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.mx-resumen-avance-fila strong {
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.mx-resumen-avance .mx-bar {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.mx-resumen-avance .mx-bar > div {
+  background: #4cc38a;
+}
+
+/* Tarjeta del móvil v2: corta, con plegable */
+.mx-card {
+  gap: 0.7rem;
+  padding: 0.9rem 0.9rem 0 1.1rem;
+}
+
+.mx-card-head .mx-btn {
+  flex-shrink: 0;
+}
+
+.mx-card .mx-poliza {
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.mx-card-aseg {
+  display: grid;
+  gap: 0.05rem;
+  margin-top: 0.3rem;
+}
+
+.mx-card-aseg .mx-card-nombre {
+  font-size: 0.82rem;
+}
+
+.mx-card-mas {
+  margin: 0 -0.9rem 0 -1.1rem;
+  border-top: 1px solid var(--mx-line-soft);
+}
+
+.mx-card-mas > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: var(--mx-touch);
+  padding: 0 0.9rem 0 1.1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--mx-navy);
+  cursor: pointer;
+  list-style: none;
+}
+
+.mx-card-mas > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mx-card-mas > summary:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+
+.mx-card-mas[open] .mx-plegable-chev {
+  transform: rotate(180deg);
+}
+
+.mx-card-mas-cuerpo {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.2rem 0.9rem 0.9rem 1.1rem;
+}
+
+.mx-card-mas-cuerpo .mx-card-meta {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* Búsqueda y Filtros: fijos arriba en el móvil */
+.mx-buscar-fija {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem 0;
+}
+
+@media (max-width: 1023px) {
+  .mx-buscar-fija {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    padding: 0.6rem 0.85rem;
+    background: #fff;
+    box-shadow: 0 6px 12px -10px rgba(9, 17, 51, 0.35);
+    border-bottom: 1px solid var(--mx-line-soft);
+  }
+
+  .mx-buscar-fija {
+    flex-wrap: nowrap;
+  }
+
+  .mx-buscar-fija .mx-buscar {
+    flex: 1 1 0;
+  }
+
+  .mx-buscar-fija + .mx-toolbar {
+    padding-top: 0.6rem;
+  }
+}
+
+/* Jerarquía tipográfica */
+.mx-h2 {
+  font-size: 1rem;
+  letter-spacing: -0.005em;
+}
+
+/* Fechas que no caben a 360 px: una por fila */
+@media (max-width: 379px) {
+  .mx-filtros .mx-field--fecha,
+  .mx-fechas .mx-field {
+    grid-column: 1 / -1;
+  }
+
+  .mx-fechas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .mx-barras li {
+    grid-template-columns: minmax(5.5rem, 40%) minmax(0, 1fr) 3rem;
+  }
+
+  .mx-docbar-barra {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mx-card-mas .mx-plegable-chev,
+  .mx-ind-tarjeta .mx-plegable-chev {
+    transition: none;
+  }
+}
+
+/* Indicadores: cuadrícula 2 × 2 en escritorio */
+.mx-kpi-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 28rem), 1fr));
+}

@@ -131,7 +131,7 @@ export const ExpedientePublicoPage: React.FC = () => {
           )}
         </main>
 
-        <p className="mx-pub-pie">¿Tienes dudas? Comunícate con tu asesor de La Mundial de Seguros.</p>
+        <p className="mx-pub-pie">¿Tienes dudas? Comunícate con tu asesor de seguros.</p>
       </div>
     </div>
   );
@@ -174,13 +174,13 @@ function PantallaError({
   if (kind === 'enlace_vencido') {
     titulo = 'Este enlace ya venció';
     texto =
-      'Por tu seguridad, los enlaces duran pocos días. Pide uno nuevo a tu asesor de La Mundial de Seguros.';
+      'Por tu seguridad, los enlaces duran pocos días. Pide uno nuevo a tu asesor de seguros.';
     Icon = Clock;
     reintentar = false;
   } else if (kind === 'enlace_invalido' || kind === 'no_encontrado' || kind === 'permiso' || kind === 'sesion') {
     titulo = 'Este enlace no es válido';
     texto =
-      'Revisa que lo hayas abierto completo desde el correo que te enviamos. Si el problema sigue, pide uno nuevo a tu asesor.';
+      'Revisa que lo hayas abierto completo desde el correo que te enviamos. Si el problema sigue, pide uno nuevo a tu asesor de seguros.';
     Icon = Link2Off;
     reintentar = false;
   } else if (kind === 'apagado') {

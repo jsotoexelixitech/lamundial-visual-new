@@ -24,6 +24,10 @@ const CIFRAS: { key: keyof Indicadores; label: string; tono?: TonoResumen }[] = 
 ];
 const VISIBLES_MOVIL = 4;
 
+/** Hacia abajo: nunca 100 % si falta alguna póliza. */
+const pctCompletos = (d: Indicadores) =>
+  d.total > 0 ? Math.floor((d.completos / d.total) * 100) : 0;
+
 /**
  * Resumen compacto del encabezado, visible en todas las pestañas.
  * Respeta los filtros globales (fecha y área) si la página los pasa; sin filtros es el acumulado
@@ -74,6 +78,29 @@ export function ResumenExpedientes({
       aria-label="Resumen de expedientes"
       aria-busy={cargando}
     >
+      {datos && (
+        <div className={`mx-resumen-avance ${cargando ? 'opacity-70' : ''}`}>
+          <div className="mx-resumen-avance-fila">
+            <span>
+              Expedientes completos:{' '}
+              <strong className="mx-num">
+                {numero(datos.completos)} de {numero(datos.total)}
+              </strong>
+            </span>
+            <span className="mx-num">{pctCompletos(datos)} %</span>
+          </div>
+          <div
+            className="mx-bar"
+            role="progressbar"
+            aria-valuenow={pctCompletos(datos)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Porcentaje de pólizas con expediente completo"
+          >
+            <div style={{ width: `${pctCompletos(datos)}%` }} />
+          </div>
+        </div>
+      )}
       <dl id={gridId} className={`mx-resumen-grid ${cargando && datos ? 'opacity-70' : ''}`}>
         {CIFRAS.map(({ key, label, tono }, i) => {
           const valor = datos ? datos[key] : null;
