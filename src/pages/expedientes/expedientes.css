@@ -750,3 +750,8 @@ textarea.mx-input {
   color: #091133;
   font-weight: 500;
 }
+
+.mx-req--sin-info {
+  background: #eef0f6;
+  color: #3c4260;
+}

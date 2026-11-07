@@ -144,6 +144,7 @@ function Contenido({ d }: { d: Indicadores }) {
   const mini: [string, number][] = [
     ['Completos', d.completos],
     ['Incompletos', d.incompletos],
+    ['Sin información', d.sinInformacion],
     ['Por validar', d.porValidar],
     ['Observados', d.observados],
     ['Pagadas', d.pagadas],

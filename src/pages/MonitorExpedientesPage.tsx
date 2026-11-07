@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BarChart3, CheckCircle2, FileWarning, RefreshCw, Settings2 } from 'lucide-react';
+import { BarChart3, CheckCircle2, CircleHelp, FileWarning, RefreshCw, Settings2 } from 'lucide-react';
 import { getCurrentUser } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
 import { obtenerConfig, type ModoValidacion } from '@/lib/expedientes-api';
@@ -10,11 +10,12 @@ import { ConfiguracionExpedientes } from './expedientes/ConfiguracionExpedientes
 import { DetalleExpediente } from './expedientes/DetalleExpediente';
 import './expedientes/expedientes.css';
 
-type TabId = 'incompletos' | 'completos' | 'indicadores' | 'configuracion';
+type TabId = 'incompletos' | 'completos' | 'sin_informacion' | 'indicadores' | 'configuracion';
 
 const TABS: { id: TabId; label: string; Icon: typeof FileWarning; admin?: boolean }[] = [
   { id: 'incompletos', label: 'Incompletos', Icon: FileWarning },
   { id: 'completos', label: 'Completos', Icon: CheckCircle2 },
+  { id: 'sin_informacion', label: 'Sin información', Icon: CircleHelp },
   { id: 'indicadores', label: 'Indicadores', Icon: BarChart3 },
   { id: 'configuracion', label: 'Configuración', Icon: Settings2, admin: true },
 ];
@@ -23,7 +24,7 @@ const TABS: { id: TabId; label: string; Icon: typeof FileWarning; admin?: boolea
  * Monitor de expedientes Marketplace (solo lectura).
  * Visual nueva para abrir desde Sis2000 por SSO (iframe): sin menú ni encabezado del portal,
  * a ancho completo. Entrada: /sso?nexus_token=…&next=/monitor-expedientes
- * Parámetros: ?tab=incompletos|completos|indicadores|configuracion · ?exp=<id> abre el detalle.
+ * Parámetros: ?tab=incompletos|completos|sin_informacion|indicadores|configuracion · ?exp=<id> abre el detalle.
  */
 export const MonitorExpedientesPage: React.FC = () => {
   const user = getCurrentUser();
@@ -150,6 +151,13 @@ export const MonitorExpedientesPage: React.FC = () => {
               {id === 'completos' && (
                 <BandejaExpedientes
                   estadoDoc="completo"
+                  recargaKey={recargaKey}
+                  onAbrir={(expId) => setParam('exp', expId)}
+                />
+              )}
+              {id === 'sin_informacion' && (
+                <BandejaExpedientes
+                  estadoDoc="sin_informacion"
                   recargaKey={recargaKey}
                   onAbrir={(expId) => setParam('exp', expId)}
                 />

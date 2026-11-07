@@ -52,6 +52,25 @@ const FILTROS_INICIALES: FiltrosUI = {
 
 const TAMANOS = [25, 50, 100];
 
+const TEXTOS: Record<string, { titulo: string; descripcion: string; vacio: string }> = {
+  incompleto: {
+    titulo: 'Expedientes incompletos',
+    descripcion: 'Pólizas con algún documento que falta, está por validar u observado.',
+    vacio: 'No hay expedientes incompletos',
+  },
+  completo: {
+    titulo: 'Expedientes completos',
+    descripcion: 'Pólizas con todos sus documentos validados.',
+    vacio: 'Todavía no hay expedientes completos',
+  },
+  sin_informacion: {
+    titulo: 'Sin información documental',
+    descripcion:
+      'Pólizas anteriores al monitor o sin datos de documentos en la emisión. No son incompletas ni reciben recordatorios.',
+    vacio: 'No hay pólizas sin información documental',
+  },
+};
+
 function useDebounced<T>(value: T, ms = 400): T {
   const [v, setV] = useState(value);
   useEffect(() => {
@@ -142,19 +161,14 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
   }, [agrupar, items]);
 
   const idPrefijo = `mx-f-${estadoDoc}`;
+  const textos = TEXTOS[estadoDoc] ?? TEXTOS.incompleto;
 
   return (
     <div className="mx-panel">
       <div className="mx-panel-head">
         <div>
-          <h2 className="mx-h2">
-            {estadoDoc === 'incompleto' ? 'Expedientes incompletos' : 'Expedientes completos'}
-          </h2>
-          <p className="text-xs mx-muted mt-0.5">
-            {estadoDoc === 'incompleto'
-              ? 'Pólizas con algún documento que falta, está por validar u observado.'
-              : 'Pólizas con todos sus documentos validados.'}
-          </p>
+          <h2 className="mx-h2">{textos.titulo}</h2>
+          <p className="text-xs mx-muted mt-0.5">{textos.descripcion}</p>
         </div>
         {hayFiltros && (
           <button
@@ -284,11 +298,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
       ) : items.length === 0 ? (
         <Vacio
           titulo={
-            hayFiltros
-              ? 'Ningún expediente coincide con los filtros'
-              : estadoDoc === 'incompleto'
-                ? 'No hay expedientes incompletos'
-                : 'Todavía no hay expedientes completos'
+            hayFiltros ? 'Ningún expediente coincide con los filtros' : textos.vacio
           }
           texto={hayFiltros ? 'Prueba con otros filtros o límpialos.' : undefined}
         />
@@ -296,9 +306,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir }: Props) {
         <>
           <div className="mx-table-wrap" aria-busy={cargando}>
             <table className="mx-table">
-              <caption className="sr-only">
-                {estadoDoc === 'incompleto' ? 'Expedientes incompletos' : 'Expedientes completos'}
-              </caption>
+              <caption className="sr-only">{textos.titulo}</caption>
               <thead>
                 <tr>
                   <th scope="col">Póliza / producto</th>
@@ -423,7 +431,7 @@ function Fila({ it, onAbrir }: { it: ExpedienteItem; onAbrir: (id: string) => vo
         <span className="mx-sub truncate">{it.asegurado.emailMasked || 'Sin correo'}</span>
       </td>
       <td className="max-w-[11rem]">
-        <span className="whitespace-nowrap">{etiquetaArea(it.area)}</span>
+        <span className="whitespace-nowrap">{etiquetaArea(it.areaCodigo || it.area)}</span>
         <span className="mx-sub truncate">{it.vendedor || '—'}</span>
       </td>
       <td>
@@ -450,7 +458,11 @@ function Fila({ it, onAbrir }: { it: ExpedienteItem; onAbrir: (id: string) => vo
         <span className="mx-sub mx-num">Último: {fechaBreve(it.ultimoEnvio)}</span>
         <span className="mx-sub mx-num">
           Próximo:{' '}
-          {it.estadoDocumental === 'completo' ? '—' : it.noEnviar ? 'detenido' : fechaBreve(it.proximoEnvio)}
+          {it.estadoDocumental !== 'incompleto'
+            ? '—'
+            : it.noEnviar
+              ? 'detenido'
+              : fechaBreve(it.proximoEnvio)}
         </span>
       </td>
       <td>

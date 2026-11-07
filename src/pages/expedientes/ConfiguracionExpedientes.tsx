@@ -149,7 +149,8 @@ function FormConfig({
   };
 
   const sucio = JSON.stringify(nueva) !== JSON.stringify(original);
-  const alcanceVacio = !alcance.canales && !alcance.gestores && !alcance.productores;
+  const alcanceVacio =
+    !alcance.canales && !alcance.gestores && !alcance.productores && !alcance.desconocida;
   const valido =
     !!cadencia && correos.malos.length === 0 && horasOk && !alcanceVacio && motivo.trim().length >= MOTIVO_MIN;
 
@@ -186,6 +187,7 @@ function FormConfig({
                 ['canales', 'Canales alternos'],
                 ['gestores', 'Gestores'],
                 ['productores', 'Productores'],
+                ['desconocida', 'Sin datos del vendedor (pólizas anteriores)'],
               ] as const
             ).map(([k, label]) => (
               <label key={k} className="flex items-center gap-2">

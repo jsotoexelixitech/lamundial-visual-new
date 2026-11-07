@@ -24,32 +24,29 @@ import {
 
 const MOTIVO_MIN = 5;
 
+/** Tipos de evento que registra Nexus (marketplace-expedientes). */
 const EVENTOS: Record<string, string> = {
-  creado: 'Expediente creado',
-  conciliado: 'Creado por conciliación',
+  expediente_creado: 'Expediente creado',
+  expediente_actualizado: 'Expediente actualizado',
   documento_recibido: 'Documento recibido',
-  recibido: 'Documento recibido',
-  validado: 'Documento validado',
-  observado: 'Documento observado',
-  recordatorio_enviado: 'Recordatorio enviado',
+  requisito_validado: 'Documento validado',
+  requisito_observado: 'Documento observado',
+  estado_documental: 'Cambio de estado documental',
   recordatorio: 'Recordatorio',
-  estado_recalculado: 'Estado recalculado',
-  completo: 'Expediente completo',
+  cadencia_agotada: 'Recordatorios terminados',
   cambio_detectado: 'Cambio detectado en Sis2000',
-  excluido: 'Excluido de recordatorios',
   exclusion_creada: 'Excluido de recordatorios',
   exclusion_eliminada: 'Recordatorios reactivados',
+  error_tecnico: 'Error técnico',
 };
 
+/** Resultados de envío que registra Nexus. */
 const ENVIOS: Record<string, string> = {
   enviado: 'Enviado',
-  entregado: 'Entregado',
   bloqueado_whitelist: 'No enviado (ambiente de pruebas)',
   sin_correo: 'Sin correo válido',
   excluido: 'No enviado (excluido)',
   error: 'Error al enviar',
-  rebotado: 'Rebotado',
-  pendiente: 'Programado',
 };
 
 const etiquetaEvento = (t: string) => EVENTOS[t] ?? t.replace(/_/g, ' ');
@@ -196,7 +193,7 @@ export function DetalleExpediente({ id, esAdmin, modoValidacion, onCerrar, onCam
                   </div>
                   <div>
                     <dt>Área</dt>
-                    <dd>{etiquetaArea(det.area)}</dd>
+                    <dd>{etiquetaArea(det.areaCodigo || det.area)}</dd>
                   </div>
                   <div>
                     <dt>Vendedor</dt>
@@ -386,7 +383,14 @@ function RequisitoFila({
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const nombre = etiquetaRequisito(req.tipo, producto);
-  const cargado = req.estado !== 'faltante' || !!req.ref;
+  // Cargado o no, como la mesa técnica; sin_informacion u otro estado: no se sabe.
+  const cargado =
+    !!req.ref || req.estado === 'recibido' || req.estado === 'observado' || req.estado === 'validado';
+  const textoCarga = cargado
+    ? 'Cargado'
+    : req.estado === 'faltante'
+      ? 'No cargado'
+      : 'Sin información de carga';
   const url = urlDocumento(req.ref);
   const motivoOk = motivo.trim().length >= MOTIVO_MIN;
 
@@ -414,7 +418,7 @@ function RequisitoFila({
             <ChipRequisito tipo={req.tipo} producto={producto} estado={req.estado} soloEstado />
           </div>
           <p className="mx-sub">
-            {cargado ? 'Cargado' : 'No cargado'}
+            {textoCarga}
             {cargado && !url ? ' · sin enlace para verlo' : ''}
           </p>
         </div>

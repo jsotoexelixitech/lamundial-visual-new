@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   CircleDashed,
+  CircleHelp,
   FileWarning,
   Hourglass,
   Info,
@@ -14,11 +15,15 @@ import type {
   EstadoDocumental,
   EstadoPago,
   EstadoRequisito,
+  EstadoRequisitoConocido,
   ExpedientesError,
 } from '@/lib/expedientes-api';
 import { etiquetaRequisito } from './expedientes-format';
 
 // ─── Chips de estado (siempre icono + texto, nunca solo color) ─────────────
+// Un estado que no se conoce se muestra tal cual, en gris: nunca se convierte en otro.
+
+const textoEstado = (e: string) => (e ? e.charAt(0).toUpperCase() + e.slice(1).replace(/_/g, ' ') : 'Sin dato');
 
 export function ChipPago({ estado }: { estado: EstadoPago }) {
   if (estado === 'pendiente') {
@@ -29,10 +34,18 @@ export function ChipPago({ estado }: { estado: EstadoPago }) {
       </span>
     );
   }
+  if (estado === 'pagada') {
+    return (
+      <span className="mx-chip mx-chip--pago-ok">
+        <Wallet size={13} aria-hidden />
+        Pagada
+      </span>
+    );
+  }
   return (
-    <span className="mx-chip mx-chip--pago-ok">
+    <span className="mx-chip mx-chip--neutral">
       <Wallet size={13} aria-hidden />
-      Pagada
+      Pago: {textoEstado(estado).toLowerCase()}
     </span>
   );
 }
@@ -46,23 +59,48 @@ export function ChipDocumental({ estado }: { estado: EstadoDocumental }) {
       </span>
     );
   }
+  if (estado === 'incompleto') {
+    return (
+      <span className="mx-chip mx-chip--doc-pend">
+        <FileWarning size={13} aria-hidden />
+        Expediente incompleto
+      </span>
+    );
+  }
   return (
-    <span className="mx-chip mx-chip--doc-pend">
-      <FileWarning size={13} aria-hidden />
-      Expediente incompleto
+    <span
+      className="mx-chip mx-chip--neutral"
+      title={estado === 'sin_informacion' ? 'La emisión no informó documentos' : undefined}
+    >
+      <CircleHelp size={13} aria-hidden />
+      {estado === 'sin_informacion' ? 'Sin información' : textoEstado(estado)}
     </span>
   );
 }
 
-const REQ_META: Record<
-  EstadoRequisito,
-  { label: string; clase: string; Icon: React.ComponentType<{ size?: number; 'aria-hidden'?: boolean }> }
-> = {
+type MetaReq = {
+  label: string;
+  clase: string;
+  Icon: React.ComponentType<{ size?: number; 'aria-hidden'?: boolean }>;
+};
+
+const REQ_META: Record<EstadoRequisitoConocido, MetaReq> = {
   faltante: { label: 'No cargado', clase: 'mx-req--faltante', Icon: CircleDashed },
   recibido: { label: 'Por validar', clase: 'mx-req--recibido', Icon: Hourglass },
   observado: { label: 'Observado', clase: 'mx-req--observado', Icon: AlertTriangle },
   validado: { label: 'Validado', clase: 'mx-req--validado', Icon: CheckCircle2 },
+  sin_informacion: { label: 'Sin información', clase: 'mx-req--sin-info', Icon: CircleHelp },
 };
+
+function metaRequisito(estado: EstadoRequisito): MetaReq {
+  return (
+    REQ_META[estado as EstadoRequisitoConocido] ?? {
+      label: textoEstado(estado),
+      clase: 'mx-req--sin-info',
+      Icon: CircleHelp,
+    }
+  );
+}
 
 /** Chip de requisito: "Cédula · Por validar". */
 export function ChipRequisito({
@@ -78,7 +116,7 @@ export function ChipRequisito({
   motivo?: string | null;
   soloEstado?: boolean;
 }) {
-  const meta = REQ_META[estado] ?? REQ_META.faltante;
+  const meta = metaRequisito(estado);
   const Icon = meta.Icon;
   const nombre = etiquetaRequisito(tipo, producto);
   const titulo = motivo ? `${nombre}: ${meta.label} — ${motivo}` : undefined;

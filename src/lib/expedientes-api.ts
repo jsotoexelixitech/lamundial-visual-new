@@ -13,9 +13,13 @@ import { getToken } from './nexus-auth';
 
 // ─── Tipos del contrato ────────────────────────────────────────────────────
 
-export type EstadoPago = 'pagada' | 'pendiente';
-export type EstadoDocumental = 'completo' | 'incompleto';
-export type EstadoRequisito = 'faltante' | 'recibido' | 'observado' | 'validado';
+// Un estado que Nexus agregue después se muestra tal cual: nunca se convierte a otro.
+type OtroEstado = string & {};
+export type EstadoPago = 'pagada' | 'pendiente' | OtroEstado;
+/** sin_informacion: póliza anterior al monitor o sin datos de documentos; no es incompleto. */
+export type EstadoDocumental = 'completo' | 'incompleto' | 'sin_informacion' | OtroEstado;
+export type EstadoRequisitoConocido = 'faltante' | 'recibido' | 'observado' | 'validado' | 'sin_informacion';
+export type EstadoRequisito = EstadoRequisitoConocido | OtroEstado;
 /** cedula | licencia | certificado (configurable en Nexus: puede llegar otro tipo). */
 export type TipoRequisito = string;
 /** rcv | personas | patrimonial */
@@ -31,6 +35,8 @@ export interface Requisito {
   motivo?: string | null;
   /** Ruta o id del archivo en OCR (`documentos.<tipo>.ref` del registro de emisión). */
   ref?: string | null;
+  /** Solo en el enlace público: producto de la póliza que pide este documento. */
+  producto?: string | null;
 }
 
 export interface AseguradoResumen {
@@ -44,7 +50,10 @@ export interface ExpedienteItem {
   cnpoliza: string;
   cnrecibo?: string | null;
   producto: ProductoExpediente;
+  /** canal | gestor | productor | desconocida */
   area: AreaExpediente;
+  /** C | G | P (centidad); null si no hay dato del vendedor. Es el valor del filtro `area`. */
+  areaCodigo?: string | null;
   vendedor?: string | null;
   asegurado: AseguradoResumen;
   estadoPago: EstadoPago;
@@ -110,6 +119,7 @@ export interface Indicadores {
   total: number;
   completos: number;
   incompletos: number;
+  sinInformacion: number;
   pagadas: number;
   pendientesPago: number;
   porValidar: number;
@@ -125,6 +135,8 @@ export interface AlcanceConfig {
   canales: boolean;
   gestores: boolean;
   productores: boolean;
+  /** Pólizas sin datos del vendedor (registros anteriores). */
+  desconocida: boolean;
 }
 
 export interface ExpedientesConfig {
@@ -285,8 +297,12 @@ function toExpedientesError(err: unknown, ctx: Contexto): ExpedientesError {
 
   if (status === 503) return new ExpedientesError('apagado', MENSAJES.apagado, status);
   if (status === 404) {
-    // Módulo sin montar = 404 genérico en cualquier ruta; en un recurso puede ser "no existe".
-    if (ctx === 'coleccion' || /deshabilit|apagad|disabled|not enabled/.test(pista)) {
+    // Módulo apagado = 404 "Ruta no encontrada" en las rutas internas; en un recurso un 404
+    // con otro mensaje es "no existe".
+    if (
+      ctx === 'coleccion' ||
+      /ruta no encontrada|deshabilit|apagad|disabled|not enabled|cannot (get|post|put|delete)/.test(pista)
+    ) {
       return new ExpedientesError('apagado', MENSAJES.apagado, status);
     }
     return new ExpedientesError('no_encontrado', msg || MENSAJES.no_encontrado, status);
@@ -346,10 +362,13 @@ const num = (v: unknown, fallback = 0): number => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-const ESTADOS_REQ: EstadoRequisito[] = ['faltante', 'recibido', 'observado', 'validado'];
-
 function texto(v: unknown): string | null {
   return typeof v === 'string' && v.trim() ? v.trim() : null;
+}
+
+/** Estado tal como llega (en minúsculas). Sin dato = sin_informacion; nunca faltante ni incompleto. */
+function estadoDe(v: unknown): string {
+  return texto(v)?.toLowerCase() ?? 'sin_informacion';
 }
 
 /** `ref` del archivo: en el requisito (ref/url/file.url) o en el mapa `documentos` del detalle. */
@@ -374,30 +393,27 @@ function normalizarRequisitos(raw: unknown, documentos?: unknown): Requisito[] {
     documentos && typeof documentos === 'object' ? (documentos as Record<string, unknown>) : undefined;
   return raw
     .filter((r): r is Record<string, unknown> => !!r && typeof r === 'object')
-    .map((r) => {
-      const estado = String(r.estado ?? 'faltante').toLowerCase() as EstadoRequisito;
-      return {
-        tipo: String(r.tipo ?? ''),
-        estado: ESTADOS_REQ.includes(estado) ? estado : 'faltante',
-        motivo: typeof r.motivo === 'string' ? r.motivo : null,
-        ref: refDe(r, docs),
-      };
-    });
+    .map((r) => ({
+      tipo: String(r.tipo ?? ''),
+      estado: estadoDe(r.estado),
+      motivo: typeof r.motivo === 'string' ? r.motivo : null,
+      ref: refDe(r, docs),
+    }));
 }
 
 function normalizarItem(raw: Record<string, unknown>): ExpedienteItem {
   const aseg = (raw.asegurado && typeof raw.asegurado === 'object'
     ? raw.asegurado
     : {}) as AseguradoResumen;
-  const estadoPago = String(raw.estadoPago ?? '').toLowerCase() === 'pendiente' ? 'pendiente' : 'pagada';
-  const estadoDocumental =
-    String(raw.estadoDocumental ?? '').toLowerCase() === 'completo' ? 'completo' : 'incompleto';
+  const estadoPago = texto(raw.estadoPago)?.toLowerCase() ?? '';
+  const estadoDocumental = estadoDe(raw.estadoDocumental);
   return {
     id: (raw.id as number | string) ?? String(raw.cnpoliza ?? ''),
     cnpoliza: String(raw.cnpoliza ?? ''),
     cnrecibo: (raw.cnrecibo as string | null | undefined) ?? null,
     producto: String(raw.producto ?? ''),
     area: String(raw.area ?? ''),
+    areaCodigo: texto(raw.areaCodigo)?.toUpperCase() ?? null,
     vendedor: (raw.vendedor as string | null | undefined) ?? null,
     asegurado: {
       documento: aseg.documento ?? null,
@@ -462,6 +478,7 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       total: num(r.total),
       completos: num(r.completos),
       incompletos: num(r.incompletos),
+      sinInformacion: num(r.sinInformacion),
       pagadas: num(r.pagadas),
       pendientesPago: num(r.pendientesPago),
       porValidar: num(r.porValidar),
@@ -530,7 +547,7 @@ export async function observarRequisito(
 // ─── Configuración y exclusiones (administrador) ───────────────────────────
 
 const CONFIG_POR_DEFECTO: ExpedientesConfig = {
-  alcance: { canales: true, gestores: true, productores: false },
+  alcance: { canales: true, gestores: true, productores: false, desconocida: true },
   validacion: 'manual',
   cadenciaDias: [0, 3, 7, 14],
   destinatariosResumen: [],
@@ -551,6 +568,7 @@ function normalizarConfig(raw: Record<string, unknown>): ExpedientesConfig {
       canales: alc.canales ?? CONFIG_POR_DEFECTO.alcance.canales,
       gestores: alc.gestores ?? CONFIG_POR_DEFECTO.alcance.gestores,
       productores: alc.productores ?? CONFIG_POR_DEFECTO.alcance.productores,
+      desconocida: alc.desconocida ?? CONFIG_POR_DEFECTO.alcance.desconocida,
     },
     validacion: val === 'automatica' ? 'automatica' : 'manual',
     cadenciaDias: Array.isArray(raw.cadenciaDias)
@@ -660,7 +678,19 @@ export async function obtenerExpedientePublico(token: string): Promise<Expedient
     const { data } = await apiPublica.get(`${BASE}/publico/${encodeURIComponent(token)}`);
     const r = (unwrap<Record<string, unknown>>(data) ?? {}) as Record<string, unknown>;
     const aseg = (r.asegurado ?? {}) as { nombre?: string };
-    const requisitos = normalizarRequisitos(r.requisitos);
+    // El enlace puede cubrir varias pólizas del asegurado: cada documento toma el producto
+    // de la póliza que lo pide (para nombrarlo bien: certificado de circulación en RCV).
+    const polizas = arreglo<{ producto?: unknown; requisitos?: unknown }>(r.polizas);
+    const productoDe = (tipo: string): string | null => {
+      const p = polizas.find((x) =>
+        arreglo<{ tipo?: unknown }>(x.requisitos).some((q) => q.tipo === tipo),
+      );
+      return texto(p?.producto)?.toLowerCase() ?? null;
+    };
+    const requisitos = normalizarRequisitos(r.requisitos).map((q) => ({
+      ...q,
+      producto: productoDe(q.tipo),
+    }));
     // Si Nexus no envía el producto: la licencia solo se exige en RCV.
     const producto =
       texto(r.producto)?.toLowerCase() ??

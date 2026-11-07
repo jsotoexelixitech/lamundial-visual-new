@@ -218,8 +218,8 @@ function Expediente({
                 key={r.tipo}
                 token={token}
                 req={r}
-                producto={data.producto}
-                onSubido={() => trasSubir(etiquetaRequisito(r.tipo, data.producto))}
+                producto={r.producto ?? data.producto}
+                onSubido={() => trasSubir(etiquetaRequisito(r.tipo, r.producto ?? data.producto))}
                 onEnlaceCaido={onEnlaceCaido}
               />
             ))}
@@ -234,7 +234,7 @@ function Expediente({
             {recibidos.map((r) => (
               <li key={r.tipo} className="mx-pub-doc">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-semibold">{etiquetaRequisito(r.tipo, data.producto)}</span>
+                  <span className="font-semibold">{etiquetaRequisito(r.tipo, r.producto ?? data.producto)}</span>
                   <span className="mx-req mx-req--recibido">
                     <Hourglass size={12} aria-hidden />
                     Recibido
