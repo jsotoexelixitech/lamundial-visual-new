@@ -93,7 +93,7 @@ const TEXTOS: Record<string, { titulo: string; descripcion: string; vacio: strin
   sin_informacion: {
     titulo: 'Sin información documental',
     descripcion:
-      'Pólizas anteriores al monitor o sin datos de documentos en la emisión. No son incompletas ni reciben recordatorios.',
+      'Pólizas que quedaron registradas antes de que el monitor empezara a recibir los documentos y los datos de quién emite, o que llegaron por un flujo que no los envía. Por eso no se sabe qué documentos se cargaron ni quién la emitió. Se muestran para no perder ninguna póliza, pero no cuentan como incompletas ni reciben correos.',
     vacio: 'No hay pólizas sin información documental',
   },
 };
