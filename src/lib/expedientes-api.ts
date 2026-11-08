@@ -8,7 +8,7 @@
  * - Si el módulo está apagado (EXPEDIENTES_ENABLED), Nexus responde 404 o 503: se informa como
  *   `apagado`, no como error.
  */
-import axios, { AxiosHeaders, type AxiosError, type AxiosProgressEvent } from 'axios';
+import axios, { type AxiosError, type AxiosProgressEvent } from 'axios';
 import { portalConfig } from './portal-config';
 import { getToken } from './nexus-auth';
 
@@ -477,13 +477,11 @@ let ignorarTokenGuardado = false;
 
 api.interceptors.response.use(undefined, async (error: AxiosError) => {
   const cfg = error.config as (typeof error.config & { _sinToken?: boolean }) | undefined;
-  const conToken = !!cfg?.headers && AxiosHeaders.from(cfg.headers).has('Authorization');
+  const conToken = !!cfg?.headers?.has('Authorization');
   if (error.response?.status === 401 && cfg && !cfg._sinToken && conToken && (await probarAccesoLibre())) {
     ignorarTokenGuardado = true;
     cfg._sinToken = true;
-    const headers = AxiosHeaders.from(cfg.headers);
-    headers.delete('Authorization');
-    cfg.headers = headers;
+    cfg.headers.delete('Authorization');
     return api.request(cfg);
   }
   return Promise.reject(error);
