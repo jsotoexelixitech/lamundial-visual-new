@@ -209,7 +209,7 @@ export function OcrPorCanal() {
                 <input
                   id="mx-ocr-buscar"
                   type="search"
-                  className="mx-input w-full pl-8"
+                  className="mx-input mx-input--icono w-full"
                   value={filtro}
                   onChange={(e) => setFiltro(e.target.value)}
                   // Enter en el buscador no debe guardar el formulario.
@@ -249,7 +249,7 @@ export function OcrPorCanal() {
                             <p className="font-semibold truncate" title={nombre}>
                               {nombre}
                             </p>
-                            <p className="mx-sub flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <p className="mx-sub mx-ocr-meta">
                               <span className="mx-num">Código {c.codigo}</span>
                               {!c.enCatalogo && <span>Ya no está entre los canales activos</span>}
                               {opcional && <span className="mx-chip mx-chip--ocr-opcional">OCR opcional</span>}

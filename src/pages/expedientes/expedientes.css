@@ -425,6 +425,11 @@ textarea.mx-input {
   border-color: #c2410c;
 }
 
+/* Campo con ícono a la izquierda (lupa): el padding de .mx-input pisa pl-* de Tailwind. */
+.mx-input.mx-input--icono {
+  padding-left: 2.2rem;
+}
+
 .mx-input--sm {
   height: 2rem;
   width: auto;
@@ -1634,6 +1639,15 @@ textarea.mx-input {
 
 .mx-ocr-fila.is-opcional {
   background: var(--mx-azul-bg);
+}
+
+/* Código del canal y etiqueta «OCR opcional» en la misma línea, separados. */
+.mx-sub.mx-ocr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.6rem;
+  margin-top: 0.2rem;
 }
 
 .mx-chip--ocr-opcional {

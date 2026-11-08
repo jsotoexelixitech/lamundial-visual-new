@@ -675,7 +675,7 @@ function Exclusiones() {
               <input
                 id="mx-excl-buscar"
                 type="search"
-                className="mx-input w-full pl-8"
+                className="mx-input mx-input--icono w-full"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder={ES_ACTOR(tipo) ? 'Código o nombre' : 'Escribe para buscar'}
