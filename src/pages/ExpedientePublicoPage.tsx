@@ -8,6 +8,7 @@ import {
   Clock,
   FileText,
   Hourglass,
+  KeyRound,
   Lightbulb,
   Link2Off,
   Loader2,
@@ -32,6 +33,7 @@ import {
   motivoParaAsegurado,
   polizaEnmascarada,
 } from './expedientes/expedientes-format';
+import { AccesoCedula } from './expedientes/AccesoCedula';
 import './expedientes/expedientes.css';
 import './expedientes/expediente-publico.css';
 
@@ -78,7 +80,7 @@ type EstadoPagina =
  * tarjeta más ancha. Animaciones solo en CSS y apagadas con `prefers-reduced-motion`.
  */
 export const ExpedientePublicoPage: React.FC = () => {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const token = (params.get('t') ?? '').trim();
   const [estado, setEstado] = useState<EstadoPagina>(() =>
     token ? { tipo: 'cargando' } : { tipo: 'error', kind: 'enlace_invalido' },
@@ -142,11 +144,24 @@ export const ExpedientePublicoPage: React.FC = () => {
 
       <div className="mxp-wrap">
         <main className="mx-pub-card mxp-card" aria-live="polite">
-          {estado.tipo === 'cargando' && <CargandoPublico />}
-          {estado.tipo === 'error' && (
-            <PantallaError kind={estado.kind} onReintentar={() => void cargar()} />
+          {/* Sin enlace: ingreso por cédula + código al correo registrado. */}
+          {!token && (
+            <AccesoCedula
+              onAcceso={(t) => {
+                setEstado({ tipo: 'cargando' });
+                setParams({ t }, { replace: true });
+              }}
+            />
           )}
-          {estado.tipo === 'listo' && (
+          {token && estado.tipo === 'cargando' && <CargandoPublico />}
+          {token && estado.tipo === 'error' && (
+            <PantallaError
+              kind={estado.kind}
+              onReintentar={() => void cargar()}
+              onIngresarConCedula={() => setParams({}, { replace: true })}
+            />
+          )}
+          {token && estado.tipo === 'listo' && (
             <Expediente
               token={token}
               data={estado.data}
@@ -190,15 +205,18 @@ function CargandoPublico() {
 function PantallaError({
   kind,
   onReintentar,
+  onIngresarConCedula,
 }: {
   kind: ExpedientesErrorKind;
   onReintentar: () => void;
+  onIngresarConCedula?: () => void;
 }) {
   let titulo = 'No pudimos abrir su expediente';
   let texto = 'Intente de nuevo en unos minutos.';
   let Icon = AlertCircle;
   let tono = 'azul';
   let reintentar = true;
+  let cedula = false;
 
   if (kind === 'enlace_vencido') {
     titulo = 'Este enlace ya venció';
@@ -207,6 +225,7 @@ function PantallaError({
     Icon = Clock;
     tono = 'ambar';
     reintentar = false;
+    cedula = true;
   } else if (kind === 'enlace_invalido' || kind === 'no_encontrado' || kind === 'permiso' || kind === 'sesion') {
     titulo = 'Este enlace no es válido';
     texto =
@@ -214,6 +233,7 @@ function PantallaError({
     Icon = Link2Off;
     tono = 'ambar';
     reintentar = false;
+    cedula = true;
   } else if (kind === 'apagado') {
     titulo = 'Por ahora no podemos recibir documentos por aquí';
     texto = 'Intente de nuevo más tarde. Disculpe las molestias.';
@@ -234,6 +254,16 @@ function PantallaError({
         <button type="button" className="mx-btn mx-btn--primary mxp-btn-grande" onClick={onReintentar}>
           <RefreshCw size={16} aria-hidden />
           Intentar de nuevo
+        </button>
+      )}
+      {cedula && onIngresarConCedula && (
+        <button
+          type="button"
+          className="mx-btn mx-btn--ghost mxp-ir-cedula"
+          onClick={onIngresarConCedula}
+        >
+          <KeyRound size={16} aria-hidden />
+          ¿No tiene el enlace? Ingrese con su cédula
         </button>
       )}
     </div>

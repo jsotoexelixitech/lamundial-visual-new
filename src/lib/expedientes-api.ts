@@ -1111,6 +1111,79 @@ export async function subirDocumentoPublico(
   }
 }
 
+// ─── Público: acceso por cédula + código al correo registrado ─────────────
+
+export type TipoDocumentoAcceso = 'V' | 'E' | 'J' | 'P';
+export const TIPOS_DOCUMENTO_ACCESO: { valor: TipoDocumentoAcceso; etiqueta: string }[] = [
+  { valor: 'V', etiqueta: 'V - Venezolano' },
+  { valor: 'E', etiqueta: 'E - Extranjero' },
+  { valor: 'J', etiqueta: 'J - Jurídico' },
+  { valor: 'P', etiqueta: 'P - Pasaporte' },
+];
+
+export interface SolicitudCodigoAcceso {
+  /** Siempre el mismo texto, existan o no pólizas: la cédula sola no revela nada. */
+  mensaje: string;
+  vigenciaMinutos: number;
+  reenvioSegundos: number;
+}
+
+const MSG_DEMASIADOS = 'Demasiados intentos. Espere unos minutos e intente de nuevo.';
+
+/** 400, 409, 422 y 429 se muestran con el texto de Nexus; el resto como en la página pública. */
+function errorAcceso(err: unknown): ExpedientesError {
+  if (axios.isAxiosError(err) && err.response) {
+    const status = err.response.status;
+    const msg = textoDe(err.response.data);
+    if (status === 429) return new ExpedientesError('validacion', msg || MSG_DEMASIADOS, status);
+    // «El código no es válido o ya venció» no es un enlace vencido: se muestra tal cual.
+    if (status === 400 || status === 409 || status === 422) {
+      return new ExpedientesError('validacion', msg || MENSAJES.validacion, status);
+    }
+  }
+  return toExpedientesError(err, 'publico');
+}
+
+export async function solicitarCodigoAcceso(
+  tipoDoc: TipoDocumentoAcceso,
+  documento: string,
+): Promise<SolicitudCodigoAcceso> {
+  try {
+    const { data } = await apiPublica.post(`${BASE}/publico/verificar`, { tipoDoc, documento });
+    const r = (unwrap<Record<string, unknown>>(data) ?? {}) as Record<string, unknown>;
+    return {
+      mensaje:
+        texto(r.mensaje) ??
+        'Si los datos coinciden con una póliza con documentos pendientes, enviamos un código al correo registrado.',
+      vigenciaMinutos: Number(r.vigenciaMinutos) > 0 ? Number(r.vigenciaMinutos) : 10,
+      reenvioSegundos: Number(r.reenvioSegundos) > 0 ? Number(r.reenvioSegundos) : 60,
+    };
+  } catch (err) {
+    throw errorAcceso(err);
+  }
+}
+
+/** Código válido → token del enlace temporal; la página sigue en `/expediente?t=…`. */
+export async function verificarCodigoAcceso(
+  tipoDoc: TipoDocumentoAcceso,
+  documento: string,
+  codigo: string,
+): Promise<{ token: string; expiraEn: string | null }> {
+  try {
+    const { data } = await apiPublica.post(`${BASE}/publico/verificar-codigo`, {
+      tipoDoc,
+      documento,
+      codigo,
+    });
+    const r = (unwrap<Record<string, unknown>>(data) ?? {}) as Record<string, unknown>;
+    const token = texto(r.token);
+    if (!token) throw new ExpedientesError('servidor', MENSAJES.servidor);
+    return { token, expiraEn: texto(r.expiraEn) };
+  } catch (err) {
+    throw errorAcceso(err);
+  }
+}
+
 function progreso(cb?: (pct: number) => void) {
   if (!cb) return undefined;
   return (e: AxiosProgressEvent) => {

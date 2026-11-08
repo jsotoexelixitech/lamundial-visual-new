@@ -394,3 +394,98 @@
     transition: none;
   }
 }
+
+/* Ingreso por cédula + código (sin el enlace del correo) */
+.mxp-acceso {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 2.25rem 1.25rem 2rem;
+  text-align: center;
+}
+
+.mxp-acceso-campos {
+  display: grid;
+  grid-template-columns: minmax(0, 10.5rem) minmax(0, 1fr);
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 24rem;
+  margin-top: 0.4rem;
+  text-align: left;
+}
+
+.mxp-acceso-codigo {
+  width: 100%;
+  max-width: 16rem;
+  margin-top: 0.4rem;
+  text-align: left;
+}
+
+/* 16 px: el móvil no hace zoom al enfocar; 44 px de alto para el dedo */
+.mxp-acceso .mxp-acceso-input {
+  height: 2.75rem;
+  font-size: 1rem;
+}
+
+.mxp-acceso .mxp-acceso-otp {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.45em;
+  padding-left: 0.45em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mxp-acceso-btn {
+  width: 100%;
+  max-width: 24rem;
+  font-size: 0.9rem;
+}
+
+.mxp-acceso-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.mxp-acceso .mxp-acceso-sec {
+  min-height: 2.75rem;
+  white-space: normal;
+}
+
+.mxp-acceso-error {
+  max-width: 24rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.7rem;
+  background: var(--mx-ambar-bg);
+  color: var(--mx-ambar-fg);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.mxp-acceso-aviso {
+  max-width: 24rem;
+  font-size: 0.85rem;
+  color: var(--mx-azul-fg);
+}
+
+.mxp-acceso-nota {
+  max-width: 24rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--mx-muted);
+}
+
+@media (max-width: 420px) {
+  .mxp-acceso-campos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.mxp-ir-cedula {
+  min-height: 2.75rem;
+  margin-top: 0.2rem;
+  white-space: normal;
+}
