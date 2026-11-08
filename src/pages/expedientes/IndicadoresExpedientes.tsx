@@ -8,6 +8,8 @@ import {
 } from '@/lib/expedientes-api';
 import { AvisoError, BarraApilada, BarrasH, Esqueleto } from './expedientes-ui';
 import { numero } from './expedientes-format';
+import { useReanimar } from './expedientes-anim';
+import { EsqueletoKpi, KpiPrincipales, PanelesKpi } from './IndicadoresKpi';
 
 type Icono = React.ComponentType<{ size?: number; 'aria-hidden'?: boolean; className?: string }>;
 
@@ -26,7 +28,13 @@ export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
   const [res, setRes] = useState<Record<string, Resultado> | null>(null);
   const [cargando, setCargando] = useState(true);
   const [reintento, setReintento] = useState(0);
+  /** Área de las tarjetas de KPI (los datos ya vienen en la misma carga; cambiar no consulta). */
+  const [areaKpi, setAreaKpi] = useState('todas');
+  /** Sube con cada respuesta nueva: vuelve a animar cifras, barras y anillos. */
+  const [version, setVersion] = useState(0);
   const peticion = useRef(0);
+  const animRef = useReanimar<HTMLDivElement>(`${version}|${areaKpi}`);
+  const [escritorio] = useState(esEscritorio);
 
   useEffect(() => {
     const n = ++peticion.current;
@@ -48,12 +56,14 @@ export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
               };
       });
       setRes(out);
+      setVersion((v) => v + 1);
       setCargando(false);
     });
   }, [desde, hasta, recargaKey, reintento]);
 
   const errores = res ? Object.values(res).filter((r): r is { ok: false; error: ExpedientesError } => !r.ok) : [];
   const errorGlobal = errores.length === AREAS.length ? errores[0].error : null;
+  const kpiRes = res?.[areaKpi];
 
   return (
     <div className="grid gap-4">
@@ -93,13 +103,37 @@ export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
       </div>
 
       {cargando && !res ? (
-        <div className="mx-panel">
-          <Esqueleto filas={3} texto="Cargando indicadores…" />
-        </div>
+        <>
+          <EsqueletoKpi />
+          <div className="mx-panel">
+            <Esqueleto filas={3} texto="Cargando indicadores…" />
+          </div>
+        </>
       ) : errorGlobal ? (
         <AvisoError error={errorGlobal} onReintentar={() => setReintento((n) => n + 1)} />
       ) : (
-        <div className={`grid gap-4 ${cargando ? 'opacity-60' : ''}`} aria-busy={cargando}>
+        <div ref={animRef} className={`grid gap-4 mx-ind-datos ${cargando ? 'is-recargando' : ''}`} aria-busy={cargando}>
+          <div className="mx-kpi-areas" role="group" aria-label="Área de los indicadores principales">
+            {AREAS.map((a) => (
+              <button
+                key={a.key}
+                type="button"
+                className="mx-kpi-area"
+                aria-pressed={areaKpi === a.key}
+                onClick={() => setAreaKpi(a.key)}
+              >
+                {a.titulo}
+              </button>
+            ))}
+          </div>
+          {!kpiRes ? null : !kpiRes.ok ? (
+            <AvisoError error={kpiRes.error} onReintentar={() => setReintento((n) => n + 1)} />
+          ) : (
+            <>
+              <KpiPrincipales d={kpiRes.data} clave={`${version}|${areaKpi}`} />
+              <PanelesKpi d={kpiRes.data} escritorio={escritorio} />
+            </>
+          )}
           <Comparativo res={res} />
           <div className="mx-kpi-grid">
             {AREAS.map((a) => (

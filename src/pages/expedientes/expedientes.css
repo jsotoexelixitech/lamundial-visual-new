@@ -2572,3 +2572,565 @@ textarea.mx-input {
 .mx-kpi-grid {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 28rem), 1fr));
 }
+
+/* ═══════════════════════════════════════════════════
+   v3 · KPI principales y animaciones de carga
+   Cifras que cuentan desde 0 y gráficos que crecen (~700 ms) al cargar o al cambiar un
+   filtro; la clase .mx-anim la pone useReanimar. Todo se apaga con «reducir movimiento».
+   ═══════════════════════════════════════════════════ */
+.mx-kpi-areas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.mx-kpi-area {
+  min-height: var(--mx-touch);
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--mx-line);
+  background: var(--mx-surface);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--mx-gris-fg);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.mx-kpi-area:hover {
+  border-color: var(--mx-navy);
+}
+
+.mx-kpi-area[aria-pressed='true'] {
+  background: var(--mx-navy);
+  border-color: var(--mx-navy);
+  color: #fff;
+}
+
+.mx-kpi-area:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+
+.mx-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr));
+  gap: 0.75rem;
+}
+
+.mx-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--mx-line);
+  border-top: 3px solid var(--mx-line);
+  background: var(--mx-surface);
+}
+
+.mx-kpi.is-rojo {
+  border-top-color: var(--mx-g-rojo);
+}
+
+.mx-kpi.is-violeta {
+  border-top-color: var(--mx-g-violeta);
+}
+
+.mx-kpi--anillo {
+  border-top-color: var(--mx-g-verde);
+}
+
+.mx-kpi-tit {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mx-muted);
+}
+
+.mx-kpi-valor {
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: 1.85rem;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  color: var(--mx-ink);
+}
+
+.mx-kpi-valor small,
+.mx-anillo-texto small {
+  font-family: inherit;
+  font-size: 0.55em;
+  font-weight: 600;
+  color: var(--mx-muted);
+}
+
+.mx-kpi-sub {
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--mx-gris-fg);
+}
+
+.mx-kpi-sub strong {
+  color: var(--mx-ink);
+}
+
+.mx-kpi-sindato {
+  font-family: var(--font-family-sans, inherit);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mx-muted);
+}
+
+.mx-kpi-anillo-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.mx-anillo-caja {
+  position: relative;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+}
+
+.mx-anillo {
+  transform: rotate(-90deg);
+}
+
+.mx-anillo-pista,
+.mx-anillo-valor {
+  fill: none;
+  stroke-width: 8;
+}
+
+.mx-anillo-pista {
+  stroke: #e7eaf1;
+}
+
+.mx-anillo-valor {
+  stroke: var(--mx-g-verde);
+  stroke-linecap: round;
+}
+
+.mx-anillo-texto {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  grid-auto-flow: column;
+  justify-content: center;
+  align-items: baseline;
+  align-content: center;
+  font-family: var(--font-family-display, 'Libre Baskerville', Georgia, serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--mx-ink);
+}
+
+.mx-anillo-texto .mx-kpi-sindato {
+  font-size: 0.62rem;
+  text-align: center;
+}
+
+.mx-kpi-par {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.mx-kpi-par > div {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.65rem;
+  background: var(--mx-soft);
+  border: 1px solid transparent;
+  min-width: 0;
+}
+
+.mx-kpi-par .mx-kpi-valor {
+  font-size: 1.5rem;
+}
+
+.mx-kpi-par > div > span {
+  font-size: 0.72rem;
+  color: var(--mx-muted);
+}
+
+.mx-kpi-par > div.is-rojo {
+  background: var(--mx-rojo-bg);
+  border-color: var(--mx-rojo-bd);
+}
+
+.mx-kpi-par > div.is-violeta {
+  background: var(--mx-violeta-bg);
+  border-color: var(--mx-violeta-bd);
+}
+
+.mx-kpi-par > div.is-rojo .mx-kpi-valor,
+.mx-kpi-par > div.is-rojo > span {
+  color: var(--mx-rojo-fg);
+}
+
+.mx-kpi-par > div.is-violeta .mx-kpi-valor,
+.mx-kpi-par > div.is-violeta > span {
+  color: var(--mx-violeta-fg);
+}
+
+/* «¿Qué mide?» */
+.mx-que-mide {
+  margin-top: auto;
+  font-size: 0.72rem;
+  color: var(--mx-muted);
+}
+
+.mx-que-mide > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2rem;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  color: var(--mx-blue);
+}
+
+.mx-que-mide > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mx-que-mide > summary:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.mx-que-mide > p {
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--mx-soft);
+  line-height: 1.4;
+  color: var(--mx-gris-fg);
+}
+
+/* Mini-gráfico de 30 días */
+.mx-spark {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.mx-spark-barras {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 2.6rem;
+  border-bottom: 1px solid var(--mx-line);
+}
+
+.mx-spark-barra {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+}
+
+.mx-spark-barra.is-tenue {
+  background: #c9cedb;
+}
+
+.mx-spark-barra.is-verde {
+  background: var(--mx-g-verde);
+}
+
+.mx-spark-barra.is-tinta {
+  background: var(--mx-g-tinta);
+}
+
+.mx-spark-pie {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.66rem;
+  color: var(--mx-muted);
+}
+
+.mx-spark-pie strong {
+  color: var(--mx-ink);
+}
+
+/* Paneles de detalle */
+.mx-ind-resumen {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--mx-muted);
+  white-space: nowrap;
+}
+
+.mx-ind-resumen strong {
+  color: var(--mx-ink);
+}
+
+.mx-embudo {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mx-embudo li {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr) 4rem;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 1.9rem;
+  font-size: 0.8rem;
+}
+
+.mx-embudo-pista {
+  height: 0.9rem;
+  border-radius: 4px;
+  background: #eef0f5;
+  overflow: hidden;
+}
+
+.mx-graf-leyenda--fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.mx-graf-leyenda--fila li {
+  display: inline-flex;
+  min-height: 1.4rem;
+  gap: 0.4rem;
+}
+
+.mx-apilada-seg.is-faltante,
+.mx-graf-muestra.is-faltante {
+  background: #fff;
+  border: 1.5px dashed var(--mx-g-gris);
+  box-sizing: border-box;
+}
+
+.mx-filas {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+}
+
+.mx-filas li {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.mx-filas-cab {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.mx-filas-label {
+  font-weight: 600;
+  color: var(--mx-ink);
+}
+
+.mx-filas-total {
+  color: var(--mx-muted);
+}
+
+.mx-filas-cifras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.85rem;
+  font-size: 0.72rem;
+  color: var(--mx-muted);
+}
+
+.mx-filas-cifras strong {
+  color: var(--mx-ink);
+}
+
+.mx-top-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem 1.5rem;
+}
+
+.mx-top-lista {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+}
+
+.mx-top-lista li {
+  display: grid;
+  grid-template-columns: minmax(3.5rem, 6rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 1.6rem;
+  font-size: 0.78rem;
+}
+
+.mx-top-cod {
+  font-weight: 600;
+  color: var(--mx-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mx-top-valor {
+  white-space: nowrap;
+  color: var(--mx-muted);
+  font-size: 0.72rem;
+}
+
+.mx-top-valor strong {
+  font-size: 0.8rem;
+  color: var(--mx-ink);
+}
+
+/* Esqueletos de las tarjetas */
+.mx-kpi--esq {
+  min-height: 9.5rem;
+  border-top-color: var(--mx-line);
+}
+
+.mx-esq-valor {
+  height: 1.6rem;
+  border-radius: 0.5rem;
+}
+
+.mx-esq-anillo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 8px solid #eceef4;
+  animation: mx-latido 1.2s ease-in-out infinite;
+}
+
+@keyframes mx-latido {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Recarga con datos en pantalla: se atenúa, sin saltos */
+.mx-ind-datos {
+  transition: opacity 0.2s ease;
+}
+
+.mx-ind-datos.is-recargando {
+  opacity: 0.6;
+}
+
+/* Crecimiento al cargar o cambiar filtro */
+.mx-anim .mx-barras-relleno,
+.mx-anim .mx-apilada {
+  transform-origin: left center;
+  animation: mx-crecer-x 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.mx-anim .mx-spark-barra {
+  animation: mx-crecer-y 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.mx-anim .mx-anillo-valor {
+  animation: mx-anillo 750ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes mx-crecer-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes mx-crecer-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes mx-anillo {
+  from {
+    stroke-dashoffset: var(--mx-anillo-c);
+  }
+}
+
+/* Cambio de pestaña: aparece suave */
+.mx-body > [role='tabpanel']:not([hidden]) {
+  animation: mx-aparecer 220ms ease-out both;
+}
+
+@keyframes mx-aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* Móvil: dos tarjetas por fila; el avance ocupa la fila entera */
+@media (max-width: 639px) {
+  .mx-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .mx-kpi {
+    padding: 0.75rem;
+  }
+
+  .mx-kpi--anillo,
+  .mx-kpi--spark,
+  .mx-kpis > .mx-kpi:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .mx-kpi-valor {
+    font-size: 1.5rem;
+  }
+
+  .mx-que-mide > summary {
+    min-height: var(--mx-touch);
+  }
+
+  .mx-kpi-area {
+    flex: 1 1 calc(50% - 0.4rem);
+    padding: 0 0.5rem;
+  }
+
+  .mx-embudo li {
+    grid-template-columns: minmax(0, 1fr) 3.5rem;
+    gap: 0.2rem 0.5rem;
+  }
+
+  .mx-embudo li .mx-embudo-pista {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .mx-ind-resumen {
+    white-space: normal;
+    text-align: right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mx-anim .mx-barras-relleno,
+  .mx-anim .mx-apilada,
+  .mx-anim .mx-spark-barra,
+  .mx-anim .mx-anillo-valor,
+  .mx-body > [role='tabpanel']:not([hidden]),
+  .mx-esq-anillo {
+    animation: none;
+  }
+
+  .mx-ind-datos,
+  .mx-kpi-area {
+    transition: none;
+  }
+}

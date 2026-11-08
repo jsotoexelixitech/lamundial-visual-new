@@ -10,7 +10,7 @@ type TonoResumen = 'rojo' | 'ambar' | 'violeta';
  * El tono solo se pinta si la cifra es mayor que cero.
  * En el móvil se ven las cuatro primeras y «Ver todo el resumen» abre las demás.
  */
-const CIFRAS: { key: keyof Indicadores; label: string; tono?: TonoResumen }[] = [
+const CIFRAS: { key: Exclude<keyof Indicadores, 'kpis'>; label: string; tono?: TonoResumen }[] = [
   { key: 'incompletos', label: 'Incompletos', tono: 'ambar' },
   { key: 'conErrores', label: 'Con errores', tono: 'rojo' },
   { key: 'datosModificados', label: 'Datos cambiados', tono: 'violeta' },

@@ -180,6 +180,40 @@ export interface Indicadores {
   analizando: number;
   /** v1.3: pólizas con datos cambiados en el formulario respecto al documento. */
   datosModificados: number;
+  /** v1.4: KPI agregados con el mismo filtro. Puede faltar si Nexus aún no lo publica. */
+  kpis?: KpisExpedientes;
+}
+
+export interface TopIncompleto {
+  codigo: string;
+  incompletos: number;
+  total: number;
+}
+
+/** `null` = Nexus no pudo calcular el dato: la pantalla dice «sin dato». */
+export interface KpisExpedientes {
+  /** 0..1: completos / (completos + incompletos). */
+  tasaCompletitud: number | null;
+  tiempoMedioCompletarDias: number | null;
+  completadosUltimos7Dias: number;
+  /** 0..1: recuperados / expedientes que recibieron recordatorio. */
+  tasaRecuperacion: number | null;
+  recordatorios: {
+    recibieron: number;
+    recuperados: number;
+    enviados: number;
+    error: number;
+    bloqueados: number;
+    sinCorreo: number;
+    agotados: number;
+    excluidos: number;
+    noEnviar: number;
+  };
+  porProducto: { producto: string; total: number; completos: number; incompletos: number }[];
+  porDocumento: { tipo: string; faltante: number; recibido: number; observado: number; validado: number }[];
+  topIncompletos: { canales: TopIncompleto[]; gestores: TopIncompleto[]; productores: TopIncompleto[] };
+  /** Últimos 30 días, hora Caracas. */
+  tendencia: { fecha: string; emitidas: number; completadas: number }[];
 }
 
 export interface AlcanceConfig {
@@ -661,6 +695,62 @@ export async function listarExpedientes(f: FiltrosBandeja): Promise<PaginaExpedi
   }
 }
 
+/** null/indefinido o no numérico = sin dato (nunca se convierte en 0). */
+const numONull = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+const lista = (v: unknown): Record<string, unknown>[] =>
+  Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object') : [];
+
+/** v1.4: KPI de Nexus. Si Nexus aún no los publica, undefined (la pantalla lo avisa). */
+function normalizarKpis(v: unknown): KpisExpedientes | undefined {
+  if (!v || typeof v !== 'object') return undefined;
+  const k = v as Record<string, unknown>;
+  const rec = (k.recordatorios ?? {}) as Record<string, unknown>;
+  const top = (k.topIncompletos ?? {}) as Record<string, unknown>;
+  const tops = (x: unknown): TopIncompleto[] =>
+    lista(x).map((t) => ({ codigo: String(t.codigo ?? ''), incompletos: num(t.incompletos), total: num(t.total) }));
+  return {
+    tasaCompletitud: numONull(k.tasaCompletitud),
+    tiempoMedioCompletarDias: numONull(k.tiempoMedioCompletarDias),
+    completadosUltimos7Dias: num(k.completadosUltimos7Dias),
+    tasaRecuperacion: numONull(k.tasaRecuperacion),
+    recordatorios: {
+      recibieron: num(rec.recibieron),
+      recuperados: num(rec.recuperados),
+      enviados: num(rec.enviados),
+      error: num(rec.error),
+      bloqueados: num(rec.bloqueados),
+      sinCorreo: num(rec.sinCorreo),
+      agotados: num(rec.agotados),
+      excluidos: num(rec.excluidos),
+      noEnviar: num(rec.noEnviar),
+    },
+    porProducto: lista(k.porProducto).map((p) => ({
+      producto: String(p.producto ?? ''),
+      total: num(p.total),
+      completos: num(p.completos),
+      incompletos: num(p.incompletos),
+    })),
+    porDocumento: lista(k.porDocumento).map((d) => ({
+      tipo: String(d.tipo ?? ''),
+      faltante: num(d.faltante),
+      recibido: num(d.recibido),
+      observado: num(d.observado),
+      validado: num(d.validado),
+    })),
+    topIncompletos: { canales: tops(top.canales), gestores: tops(top.gestores), productores: tops(top.productores) },
+    tendencia: lista(k.tendencia).map((t) => ({
+      fecha: String(t.fecha ?? ''),
+      emitidas: num(t.emitidas),
+      completadas: num(t.completadas),
+    })),
+  };
+}
+
 export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicadores> {
   try {
     const { data } = await api.get(`${BASE}/indicadores`, {
@@ -686,6 +776,7 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       conErrores: num(r.conErrores ?? r.errados),
       analizando: num(r.analizando ?? r.enAnalisis),
       datosModificados: num(r.datosModificados),
+      kpis: normalizarKpis(r.kpis),
     };
   } catch (err) {
     throw toExpedientesError(err, 'coleccion');
