@@ -160,14 +160,12 @@ export function contarRequisitos(
 }
 
 /**
- * Póliza para la página pública: si Nexus ya la envía enmascarada se deja igual;
- * si no, solo se ven los últimos 4 caracteres.
+ * Póliza para la página pública: siempre «•••• 7414», con los últimos 4 caracteres visibles,
+ * llegue o no enmascarada desde Nexus («************7414» también queda «•••• 7414»).
  */
 export function polizaEnmascarada(p?: string | null): string | null {
-  const t = (p ?? '').trim();
-  if (!t) return null;
-  if (/[*•]/.test(t) || t.length <= 4) return t;
-  return `•••• ${t.slice(-4)}`;
+  const visibles = (p ?? '').replace(/[^0-9A-Za-z]/g, '').slice(-4);
+  return visibles ? `•••• ${visibles}` : null;
 }
 
 /** Documento con problema: errado, ilegible, datos cambiados u observado (filtro «Con documentos errados»). */
@@ -199,7 +197,7 @@ export function nivelConfianza(c?: number | string | null): 'alta' | 'media' | '
   return 'baja';
 }
 
-/** Nombre corto con artículo para el asegurado: «La cédula», «El RIF»… (femenino = «Cárgala»). */
+/** Nombre corto con artículo para el asegurado: «La cédula», «El RIF»… (femenino = «Cárguela»). */
 const DOC_ASEGURADO: Record<string, { nombre: string; fem: boolean; a: string }> = {
   cedula: { nombre: 'La cédula', fem: true, a: 'al titular de la póliza' },
   cedula_titular: { nombre: 'La cédula', fem: true, a: 'al titular de la póliza' },
@@ -225,10 +223,11 @@ export function motivoParaAsegurado(
     rcv && t === 'certificado'
       ? { nombre: 'El certificado de circulación', fem: false, a: 'al vehículo de la póliza' }
       : (DOC_ASEGURADO[t] ?? { nombre: 'El documento', fem: false, a: 'a los datos de la póliza' });
-  const cargalo = doc.fem ? 'Cárgala' : 'Cárgalo';
+  // Trato de usted, como el correo oficial de La Mundial.
+  const cargalo = doc.fem ? 'Cárguela' : 'Cárguelo';
   if (resultado === 'datos_modificados') {
     // v1.3: el documento está bien; lo que se revisa son los datos de la póliza (sin mostrarlos).
-    return 'Estamos revisando los datos de tu póliza con este documento. No tienes que enviarlo de nuevo.';
+    return 'Estamos revisando los datos de su póliza con este documento. No tiene que enviarlo de nuevo.';
   }
   if (resultado === 'no_coincide') {
     return `${doc.nombre} no corresponde ${doc.a}. ${cargalo} de nuevo.`;
