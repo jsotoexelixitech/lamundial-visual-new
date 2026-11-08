@@ -1607,6 +1607,108 @@ textarea.mx-input {
   outline-offset: 1px;
 }
 
+/* ── OCR por canal: lista con interruptor «OCR obligatorio» ── */
+.mx-ocr-productos {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.mx-ocr-lista {
+  max-height: 26rem;
+  overflow-y: auto;
+  border: 1px solid #e3e6ef;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.mx-ocr-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.mx-ocr-lista > ul > li + li {
+  border-top: 1px solid var(--mx-line-soft);
+}
+
+.mx-ocr-fila.is-opcional {
+  background: var(--mx-azul-bg);
+}
+
+.mx-chip--ocr-opcional {
+  background: #fff;
+  color: var(--mx-azul-fg);
+  border-color: var(--mx-azul-bd);
+}
+
+/* role="switch": encendido (aria-checked) = OCR obligatorio */
+.mx-switch {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  padding: 0.15rem 0.25rem;
+  border-radius: 0.6rem;
+}
+
+.mx-switch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mx-switch:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+
+.mx-switch-texto {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--mx-muted);
+  white-space: nowrap;
+}
+
+.mx-switch-pista {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: #c5c9d6;
+  transition: background-color 0.15s ease;
+}
+
+.mx-switch-perilla {
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(9, 17, 51, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.mx-switch[aria-checked='true'] .mx-switch-pista {
+  background: var(--mx-navy);
+}
+
+.mx-switch[aria-checked='true'] .mx-switch-perilla {
+  transform: translateX(1.1rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mx-switch-pista,
+  .mx-switch-perilla {
+    transition: none;
+  }
+}
+
 /* ═══════════════════════════════════════════════════
    Página pública /expediente (primero el móvil)
    ═══════════════════════════════════════════════════ */
@@ -1853,6 +1955,12 @@ textarea.mx-input {
 
   .mx-excl-opcion input {
     margin-top: 0;
+  }
+
+  .mx-switch {
+    min-height: var(--mx-touch);
+    min-width: var(--mx-touch);
+    justify-content: center;
   }
 
   .mx-check input {

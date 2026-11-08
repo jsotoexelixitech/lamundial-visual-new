@@ -1073,6 +1073,105 @@ export async function eliminarExclusion(id: number | string, motivo: string): Pr
   }
 }
 
+// ─── OCR por canal (administrador; misma config que el parametrizador del OCR) ─
+
+/** Productos del flujo con config OCR propia. */
+export type ProductoOcr = 'rcv' | 'funerario' | 'patrimoniales';
+
+export interface CanalOcr {
+  codigo: string;
+  nombre: string | null;
+  /** false: está en la config del OCR pero ya no entre los canales activos. */
+  enCatalogo: boolean;
+  ocrOpcional: boolean;
+}
+
+export interface CambioOcrPorCanal {
+  id: number | string;
+  fecha: string | null;
+  actor: string | null;
+  motivo: string | null;
+  agregados: string[];
+  quitados: string[];
+}
+
+export interface OcrPorCanal {
+  empresaNombre: string | null;
+  producto: ProductoOcr;
+  canales: CanalOcr[];
+  /** Códigos con OCR opcional tal como están guardados. */
+  opcionales: string[];
+  cambios: CambioOcrPorCanal[];
+}
+
+function codigos(v: unknown): string[] {
+  return arreglo<unknown>(v)
+    .map((c) => (c == null ? '' : String(c).trim()))
+    .filter(Boolean);
+}
+
+function normalizarOcrPorCanal(raw: unknown, producto: ProductoOcr): OcrPorCanal {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  return {
+    empresaNombre: texto(r.empresaNombre),
+    producto,
+    canales: arreglo<Record<string, unknown>>(r.canales)
+      .filter((c) => !!c && typeof c === 'object')
+      .map((c) => ({
+        codigo: c.codigo == null ? '' : String(c.codigo).trim(),
+        nombre: texto(c.nombre),
+        enCatalogo: c.enCatalogo !== false,
+        ocrOpcional: Boolean(c.ocrOpcional),
+      }))
+      .filter((c) => c.codigo),
+    opcionales: codigos(r.opcionales),
+    cambios: arreglo<Record<string, unknown>>(r.cambios)
+      .filter((c) => !!c && typeof c === 'object')
+      .map((c, i) => ({
+        id: (c.id as number | string | undefined) ?? i,
+        fecha: texto(c.fecha),
+        actor: texto(c.actor),
+        motivo: texto(c.motivo),
+        agregados: codigos(c.agregados),
+        quitados: codigos(c.quitados),
+      })),
+  };
+}
+
+export async function obtenerOcrPorCanal(producto: ProductoOcr): Promise<OcrPorCanal> {
+  try {
+    const { data } = await api.get(`${BASE}/ocr-por-canal`, {
+      headers: authHeaders(),
+      params: { producto },
+    });
+    return normalizarOcrPorCanal(unwrap<unknown>(data), producto);
+  } catch (err) {
+    throw toExpedientesError(err, 'coleccion');
+  }
+}
+
+/**
+ * Guarda la lista completa de canales con OCR opcional. `base` es la lista que se cargó:
+ * si alguien guardó antes (aquí o en el panel del OCR), Nexus responde 409 y no pisa nada.
+ */
+export async function guardarOcrPorCanal(
+  producto: ProductoOcr,
+  canales: string[],
+  base: string[],
+  motivo: string,
+): Promise<OcrPorCanal> {
+  try {
+    const { data } = await api.put(
+      `${BASE}/ocr-por-canal`,
+      { producto, canales, base, motivo: motivo.trim() },
+      { headers: authHeaders() },
+    );
+    return normalizarOcrPorCanal(unwrap<unknown>(data), producto);
+  } catch (err) {
+    throw toExpedientesError(err, 'coleccion');
+  }
+}
+
 // ─── Público (enlace firmado, sin sesión) ──────────────────────────────────
 
 export async function obtenerExpedientePublico(token: string): Promise<ExpedientePublico> {

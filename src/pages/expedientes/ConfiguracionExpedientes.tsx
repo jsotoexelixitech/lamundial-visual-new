@@ -19,6 +19,7 @@ import {
   type TipoActor,
 } from '@/lib/expedientes-api';
 import { AvisoError, Cargando } from './expedientes-ui';
+import { OcrPorCanal } from './OcrPorCanal';
 import {
   OPCIONES_EXCLUSION,
   etiquetaAlcanceExclusion,
@@ -121,6 +122,7 @@ export function ConfiguracionExpedientes({ onGuardado }: { onGuardado: (c: Exped
             await cargar();
           }}
         />
+        <OcrPorCanal />
         <HistorialCambios cambios={cambios} />
       </div>
       <Exclusiones />
