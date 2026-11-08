@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, Info } from 'lucide-react';
-import type { Indicadores, KpisExpedientes, TopIncompleto } from '@/lib/expedientes-api';
-import { etiquetaProducto, etiquetaRequisito, numero } from './expedientes-format';
+import type { Indicadores, KpisExpedientes, RankingActor } from '@/lib/expedientes-api';
+import { etiquetaProducto, etiquetaRequisito, numero, SIN_IDENTIFICAR } from './expedientes-format';
 import { useCuenta } from './expedientes-anim';
 import type { TonoGrafico } from './expedientes-ui';
 
@@ -161,7 +161,7 @@ export function KpiPrincipales({ d, clave }: { d: Indicadores; clave: unknown })
         </div>
         <QueMide>
           Pólizas con todos los documentos validados entre las que tienen documentos que revisar
-          (completas + incompletas). Las «Sin información» no cuentan.
+          (completas + incompletas).
         </QueMide>
       </article>
 
@@ -362,40 +362,94 @@ function FilasApiladas({
   );
 }
 
-function ListaTop({ titulo, items }: { titulo: string; items: TopIncompleto[] }) {
-  const max = Math.max(1, ...items.map((i) => i.incompletos));
+/** Grupo del ranking: canal (incluye gestores y puntos de comercialización) o productor. */
+export type GrupoRanking = 'canal' | 'productor';
+
+function nombreRanking(it: RankingActor, grupo: GrupoRanking): string {
+  if (it.codigo === SIN_IDENTIFICAR) return grupo === 'canal' ? 'Canal sin identificar' : 'Productor sin identificar';
+  return it.nombre ? `${it.nombre} (${it.codigo})` : it.codigo;
+}
+
+/**
+ * Ranking por canal o por productor: dónde quedan pólizas sin documentos. Ordenado por % de
+ * incompletos y luego por cantidad (lo hace Nexus). Un clic filtra la bandeja por ese código.
+ */
+function TablaRanking({
+  titulo,
+  grupo,
+  items,
+  onElegir,
+}: {
+  titulo: string;
+  grupo: GrupoRanking;
+  items: RankingActor[];
+  onElegir?: (grupo: GrupoRanking, codigo: string, nombre: string) => void;
+}) {
   return (
-    <figure className="mx-graf mx-top">
+    <figure className="mx-graf mx-ranking">
       <figcaption className="mx-graf-titulo">{titulo}</figcaption>
       {items.length === 0 ? (
-        <p className="text-xs mx-muted">Sin incompletos en el período.</p>
+        <p className="text-xs mx-muted">Sin pólizas en el período.</p>
       ) : (
-        <ol className="mx-top-lista">
-          {items.map((it) => (
-            <li key={it.codigo}>
-              <span className="mx-top-cod mx-num" title={it.codigo}>
-                {it.codigo}
-              </span>
-              <span className="mx-barras-pista" aria-hidden>
-                <span
-                  className="mx-barras-relleno is-ambar"
-                  style={{ width: `max(4px, ${(it.incompletos / max) * 100}%)` }}
-                />
-              </span>
-              <span className="mx-top-valor">
-                <strong className="mx-num">{numero(it.incompletos)}</strong>
-                <span className="mx-num"> de {numero(it.total)}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
+        <div className="mx-ranking-scroll">
+          <table className="mx-ranking-tabla">
+            <thead>
+              <tr>
+                <th scope="col">{grupo === 'canal' ? 'Canal' : 'Productor'}</th>
+                <th scope="col">Total</th>
+                <th scope="col">Completos</th>
+                <th scope="col">Incompletos</th>
+                <th scope="col">% incompletos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((it) => {
+                const nombre = nombreRanking(it, grupo);
+                const pct = it.pctIncompletos == null ? null : Math.round(it.pctIncompletos * 100);
+                return (
+                  <tr key={it.codigo}>
+                    <th scope="row">
+                      {onElegir ? (
+                        <button
+                          type="button"
+                          className="mx-ranking-btn"
+                          onClick={() => onElegir(grupo, it.codigo, nombre)}
+                          title="Ver estas pólizas en la bandeja"
+                        >
+                          {nombre}
+                        </button>
+                      ) : (
+                        nombre
+                      )}
+                    </th>
+                    <td className="mx-num">{numero(it.total)}</td>
+                    <td className="mx-num">{numero(it.completos)}</td>
+                    <td className="mx-num">{numero(it.incompletos)}</td>
+                    <td className={`mx-num ${pct != null && pct >= 50 ? 'is-rojo' : pct ? 'is-ambar' : ''}`}>
+                      {pct == null ? '—' : `${pct} %`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </figure>
   );
 }
 
-/** Embudo, documentos, top 5, productos y tendencia (debajo de las tarjetas). */
-export function PanelesKpi({ d, escritorio }: { d: Indicadores; escritorio: boolean }) {
+/** Embudo, documentos, ranking por canal y productor, productos y tendencia (debajo de las tarjetas). */
+export function PanelesKpi({
+  d,
+  escritorio,
+  onElegirActor,
+}: {
+  d: Indicadores;
+  escritorio: boolean;
+  /** Clic en un canal o productor del ranking: abre la bandeja filtrada. */
+  onElegirActor?: (grupo: GrupoRanking, codigo: string, nombre: string) => void;
+}) {
   const k: KpisExpedientes | undefined = d.kpis;
   if (!k) return null;
   const r = k.recordatorios;
@@ -414,8 +468,7 @@ export function PanelesKpi({ d, escritorio }: { d: Indicadores; escritorio: bool
     { label: 'Marcadas «No enviar»', valor: r.noEnviar },
   ];
   const docsAtencion = k.porDocumento.reduce((a, x) => a + x.faltante + x.observado, 0);
-  const topTotal =
-    k.topIncompletos.canales.length + k.topIncompletos.gestores.length + k.topIncompletos.productores.length;
+  const conIncompletos = [...k.porCanal, ...k.porProductor].filter((x) => x.incompletos > 0).length;
   const emitidas = k.tendencia.map((t) => ({ fecha: t.fecha, valor: t.emitidas }));
   const completadas = k.tendencia.map((t) => ({ fecha: t.fecha, valor: t.completadas }));
 
@@ -492,16 +545,28 @@ export function PanelesKpi({ d, escritorio }: { d: Indicadores; escritorio: bool
       </Plegable>
 
       <Plegable
-        titulo="Más incompletos"
-        resumen={topTotal ? 'Top 5 por grupo' : 'Sin incompletos'}
+        titulo="Pólizas sin documentos por canal y productor"
+        resumen={
+          conIncompletos ? (
+            <>
+              <strong className="mx-num">{numero(conIncompletos)}</strong> con incompletos
+            </>
+          ) : (
+            'Sin incompletos'
+          )
+        }
         abiertoInicial={escritorio}
       >
-        <div className="mx-top-grid">
-          <ListaTop titulo="Canales alternos" items={k.topIncompletos.canales} />
-          <ListaTop titulo="Gestores" items={k.topIncompletos.gestores} />
-          <ListaTop titulo="Productores" items={k.topIncompletos.productores} />
+        <div className="mx-ranking-grid">
+          <TablaRanking titulo="Canales alternos" grupo="canal" items={k.porCanal} onElegir={onElegirActor} />
+          <TablaRanking titulo="Productores" grupo="productor" items={k.porProductor} onElegir={onElegirActor} />
         </div>
-        <p className="text-xs mx-muted">Incompletos de las pólizas de cada código en el período.</p>
+        <QueMide>
+          Pólizas del período por canal y por productor, ordenadas por el porcentaje de incompletos y
+          luego por la cantidad. Las pólizas emitidas por la red de cada canal cuentan en ese canal.
+          Un clic en un canal o productor muestra sus pólizas en la
+          bandeja.
+        </QueMide>
       </Plegable>
 
       <Plegable
@@ -522,15 +587,13 @@ export function PanelesKpi({ d, escritorio }: { d: Indicadores; escritorio: bool
             series={[
               { key: 'completos', label: 'Completos', tono: 'verde' },
               { key: 'incompletos', label: 'Incompletos', tono: 'ambar' },
-              { key: 'otros', label: 'Sin información', tono: 'gris' },
             ]}
             filas={k.porProducto.map((p) => ({
               label: etiquetaProducto(p.producto),
-              total: p.total,
+              total: p.completos + p.incompletos,
               valores: {
                 completos: p.completos,
                 incompletos: p.incompletos,
-                otros: Math.max(0, p.total - p.completos - p.incompletos),
               },
             }))}
           />

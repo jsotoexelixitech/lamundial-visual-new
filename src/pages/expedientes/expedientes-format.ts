@@ -333,17 +333,23 @@ export const OPCIONES_PRODUCTO = [
   { value: 'patrimonial', label: 'Patrimoniales' },
 ];
 
-/** Valores de `area` del contrato: centidad del SSO (C, G, P). */
+/**
+ * Solo dos áreas: Canales y Productores. Los gestores, puntos de comercialización y subcanales
+ * trabajan para los canales: sus pólizas cuentan en Canales (Nexus incluye G en area=C).
+ */
 export const OPCIONES_AREA = [
   { value: 'C', label: 'Canales alternos' },
-  { value: 'G', label: 'Gestores' },
   { value: 'P', label: 'Productores' },
 ];
+
+/** Código del grupo «Canal sin identificar» / «Productor sin identificar» del ranking. */
+export const SIN_IDENTIFICAR = 'SIN_IDENTIFICAR';
 
 export function etiquetaArea(a: string): string {
   const v = a.trim().toUpperCase();
   if (v === 'C' || v.startsWith('CANAL')) return 'Canal alterno';
-  if (v === 'G' || v.startsWith('GESTOR')) return 'Gestor';
+  // El gestor trabaja para un canal: se muestra como canal, nunca como área aparte.
+  if (v === 'G' || v.startsWith('GESTOR')) return 'Canal alterno';
   if (v === 'P' || v.startsWith('PRODUCTOR')) return 'Productor';
   if (v === 'DESCONOCIDA') return 'Sin dato de quién la emitió';
   return a || '—';
@@ -351,21 +357,25 @@ export function etiquetaArea(a: string): string {
 
 // ─── Exclusiones «No enviar» ───────────────────────────────────────────────
 
-/** Tipos de exclusión, en el orden del selector de Configuración. */
+/**
+ * Tipos de exclusión, en el orden del selector de Configuración. Ya no se crean exclusiones por
+ * gestor (trabajan para los canales); las que existan siguen activas en Nexus y se muestran como
+ * «Red del canal».
+ */
 export const OPCIONES_EXCLUSION: { value: AlcanceExclusion; label: string; plural: string }[] = [
   { value: 'asegurado', label: 'Asegurado', plural: 'Asegurados' },
   { value: 'poliza', label: 'Póliza', plural: 'Pólizas' },
   { value: 'canal', label: 'Canal', plural: 'Canales' },
-  { value: 'gestor', label: 'Gestor', plural: 'Gestores' },
   { value: 'intermediario', label: 'Intermediario', plural: 'Intermediarios' },
 ];
 
 export function etiquetaAlcanceExclusion(a: string): string {
+  if (a === 'gestor') return 'Red del canal';
   return OPCIONES_EXCLUSION.find((o) => o.value === a)?.label ?? (a || '—');
 }
 
 /**
- * Texto corto de por qué no se envía: «canal 45», «gestor 12», «intermediario 80080».
+ * Texto corto de por qué no se envía: «canal 45», «intermediario 80080».
  * En asegurado y póliza el valor es la misma fila: basta el alcance.
  */
 export function textoNoEnviar(x?: Pick<ExclusionAplicada, 'alcance' | 'valor'> | null): string {

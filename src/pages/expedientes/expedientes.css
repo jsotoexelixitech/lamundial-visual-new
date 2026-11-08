@@ -3134,3 +3134,91 @@ textarea.mx-input {
     transition: none;
   }
 }
+
+/* ─── Ranking por canal y por productor (Indicadores) ─────────────────── */
+.mx-ranking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem 1.5rem;
+}
+
+.mx-ranking-scroll {
+  max-height: 22rem;
+  overflow: auto;
+  border: 1px solid var(--mx-line-soft);
+  border-radius: 0.5rem;
+}
+
+.mx-ranking-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.mx-ranking-tabla th,
+.mx-ranking-tabla td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--mx-line-soft);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.mx-ranking-tabla thead th {
+  position: sticky;
+  top: 0;
+  background: var(--mx-soft);
+  color: var(--mx-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.mx-ranking-tabla th:first-child {
+  text-align: left;
+  white-space: normal;
+  font-weight: 500;
+  color: var(--mx-ink);
+}
+
+.mx-ranking-tabla td.is-rojo {
+  color: var(--mx-rojo-fg);
+  font-weight: 700;
+}
+
+.mx-ranking-tabla td.is-ambar {
+  color: var(--mx-ambar-fg);
+  font-weight: 600;
+}
+
+.mx-ranking-btn {
+  min-height: 1.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mx-blue);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.mx-ranking-btn:hover,
+.mx-ranking-btn:focus-visible {
+  color: var(--mx-navy-hover);
+}
+
+/* Filtro de canal o productor elegido en el ranking (bandeja). */
+.mx-filtro-actor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0 1rem 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--mx-azul-bd);
+  border-radius: 0.5rem;
+  background: var(--mx-azul-bg);
+  color: var(--mx-azul-fg);
+  font-size: 0.8125rem;
+}

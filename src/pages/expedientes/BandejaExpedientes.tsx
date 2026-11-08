@@ -90,12 +90,6 @@ const TEXTOS: Record<string, { titulo: string; descripcion: string; vacio: strin
     descripcion: 'Pólizas con todos sus documentos validados.',
     vacio: 'Todavía no hay expedientes completos',
   },
-  sin_informacion: {
-    titulo: 'Sin información documental',
-    descripcion:
-      'Pólizas que quedaron registradas antes de que el monitor empezara a recibir los documentos y los datos de quién emite, o que llegaron por un flujo que no los envía. Por eso no se sabe qué documentos se cargaron ni quién la emitió. Se muestran para no perder ninguna póliza, pero no cuentan como incompletas ni reciben correos.',
-    vacio: 'No hay pólizas sin información documental',
-  },
 };
 
 /** El panel de filtros arranca abierto en escritorio y cerrado en el móvil. */
@@ -114,8 +108,18 @@ function useDebounced<T>(value: T, ms = 400): T {
   return v;
 }
 
+/** Canal o productor elegido en el ranking de Indicadores. */
+export interface FiltroActor {
+  grupo: 'canal' | 'productor';
+  codigo: string;
+  nombre: string;
+}
+
 interface Props {
   estadoDoc: EstadoDocumental;
+  /** Canal (incluye sus gestores y puntos) o productor elegido en Indicadores. */
+  filtroActor?: FiltroActor | null;
+  onQuitarActor?: () => void;
   /** Cambia cuando hay que volver a consultar (Actualizar, validación, carga…). */
   recargaKey: number;
   onAbrir: (id: string) => void;
@@ -123,7 +127,14 @@ interface Props {
   modoValidacion?: ModoValidacion;
 }
 
-export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidacion }: Props) {
+export function BandejaExpedientes({
+  estadoDoc,
+  recargaKey,
+  onAbrir,
+  modoValidacion,
+  filtroActor,
+  onQuitarActor,
+}: Props) {
   const [filtros, setFiltros] = useState<FiltrosUI>(FILTROS_INICIALES);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -142,6 +153,16 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
   const conErrores = estadoDoc === 'incompleto' && filtros.conErrores;
   // Datos cambiados = documento observado: también solo en los incompletos.
   const datosModificados = estadoDoc === 'incompleto' && filtros.datosModificados;
+  const canal = filtroActor?.grupo === 'canal' ? filtroActor.codigo : undefined;
+  const productor = filtroActor?.grupo === 'productor' ? filtroActor.codigo : undefined;
+
+  // Al elegir otro canal o productor en Indicadores se vuelve a la primera página.
+  const claveActor = `${canal ?? ''}|${productor ?? ''}`;
+  const [actorPrevio, setActorPrevio] = useState(claveActor);
+  if (actorPrevio !== claveActor) {
+    setActorPrevio(claveActor);
+    setPage(1);
+  }
 
   useEffect(() => {
     const n = ++peticion.current;
@@ -159,6 +180,8 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
       agrupar,
       conErrores,
       datosModificados,
+      canal,
+      productor,
       page,
       pageSize,
     })
@@ -173,7 +196,7 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
       .finally(() => {
         if (n === peticion.current) setCargando(false);
       });
-  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, datosModificados, page, pageSize, recargaKey, reintento]);
+  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, datosModificados, canal, productor, page, pageSize, recargaKey, reintento]);
 
   const cambiar = <K extends keyof FiltrosUI>(k: K, v: FiltrosUI[K]) => {
     setFiltros((p) => ({ ...p, [k]: v }));
@@ -256,6 +279,25 @@ export function BandejaExpedientes({ estadoDoc, recargaKey, onAbrir, modoValidac
           </button>
         )}
       </div>
+
+      {filtroActor && (
+        <p className="mx-filtro-actor" role="status">
+          <span>
+            {filtroActor.grupo === 'canal' ? 'Canal' : 'Productor'}: <strong>{filtroActor.nombre}</strong>
+          </span>
+          {onQuitarActor && (
+            <button
+              type="button"
+              className="mx-btn mx-btn--ghost mx-btn--sm"
+              onClick={onQuitarActor}
+              aria-label={`Quitar el filtro ${filtroActor.nombre}`}
+            >
+              <XCircle size={14} aria-hidden />
+              Quitar
+            </button>
+          )}
+        </p>
+      )}
 
       {/* Búsqueda y Filtros: hijos directos del panel para quedar fijos arriba en el móvil. */}
       <div className="mx-buscar-fija" role="search">

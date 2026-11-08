@@ -1,24 +1,23 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BarChart3, CheckCircle2, CircleHelp, FileWarning, RefreshCw, Settings2 } from 'lucide-react';
+import { BarChart3, CheckCircle2, FileWarning, RefreshCw, Settings2 } from 'lucide-react';
 import { getCurrentUser } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
 import { esAccesoLibre, obtenerConfig, type ModoValidacion } from '@/lib/expedientes-api';
-import { BandejaExpedientes } from './expedientes/BandejaExpedientes';
+import { BandejaExpedientes, type FiltroActor } from './expedientes/BandejaExpedientes';
 import { IndicadoresExpedientes } from './expedientes/IndicadoresExpedientes';
 import { ConfiguracionExpedientes } from './expedientes/ConfiguracionExpedientes';
 import { DetalleExpediente } from './expedientes/DetalleExpediente';
 import { ResumenExpedientes } from './expedientes/ResumenExpedientes';
 import './expedientes/expedientes.css';
 
-type TabId = 'incompletos' | 'completos' | 'sin_informacion' | 'indicadores' | 'configuracion';
+type TabId = 'incompletos' | 'completos' | 'indicadores' | 'configuracion';
 
 /** Indicadores es la primera pestaña y la que se abre por defecto. */
 const TABS: { id: TabId; label: string; Icon: typeof FileWarning; admin?: boolean }[] = [
   { id: 'indicadores', label: 'Indicadores', Icon: BarChart3 },
   { id: 'incompletos', label: 'Incompletos', Icon: FileWarning },
   { id: 'completos', label: 'Completos', Icon: CheckCircle2 },
-  { id: 'sin_informacion', label: 'Sin información', Icon: CircleHelp },
   { id: 'configuracion', label: 'Configuración', Icon: Settings2, admin: true },
 ];
 const TAB_INICIAL: TabId = 'indicadores';
@@ -27,7 +26,9 @@ const TAB_INICIAL: TabId = 'indicadores';
  * Monitor de expedientes Marketplace (solo lectura).
  * Visual nueva para abrir desde Sis2000 por SSO (iframe): sin menú ni encabezado del portal,
  * a ancho completo. Entrada: /sso?nexus_token=…&next=/monitor-expedientes
- * Parámetros: ?tab=indicadores|incompletos|completos|sin_informacion|configuracion · ?exp=<id> abre el detalle.
+ * Parámetros: ?tab=indicadores|incompletos|completos|configuracion · ?exp=<id> abre el detalle ·
+ * ?canal=<código>|?productor=<código> (clic en el ranking de Indicadores) filtra la bandeja.
+ * «Sin información» ya no es pestaña: Nexus concilia esas pólizas con el OCR o las descarta.
  * El encabezado muestra un resumen compacto en todas las pestañas.
  */
 export const MonitorExpedientesPage: React.FC = () => {
@@ -78,6 +79,44 @@ export const MonitorExpedientesPage: React.FC = () => {
     },
     [setParams],
   );
+
+  // Canal o productor elegido en el ranking de Indicadores (?canal= / ?productor=, ?actor=nombre).
+  const canalParam = params.get('canal');
+  const productorParam = params.get('productor');
+  const filtroActor: FiltroActor | null = canalParam
+    ? { grupo: 'canal', codigo: canalParam, nombre: params.get('actor') || canalParam }
+    : productorParam
+      ? { grupo: 'productor', codigo: productorParam, nombre: params.get('actor') || productorParam }
+      : null;
+  const elegirActor = useCallback(
+    (grupo: 'canal' | 'productor', codigo: string, nombre: string) => {
+      setParams(
+        (prev) => {
+          const n = new URLSearchParams(prev);
+          n.delete('canal');
+          n.delete('productor');
+          n.set(grupo, codigo);
+          n.set('actor', nombre);
+          n.set('tab', 'incompletos');
+          return n;
+        },
+        { replace: true },
+      );
+    },
+    [setParams],
+  );
+  const quitarActor = useCallback(() => {
+    setParams(
+      (prev) => {
+        const n = new URLSearchParams(prev);
+        n.delete('canal');
+        n.delete('productor');
+        n.delete('actor');
+        return n;
+      },
+      { replace: true },
+    );
+  }, [setParams]);
 
   const cerrarDetalle = useCallback(() => setParam('exp', null), [setParam]);
   const recargar = useCallback(() => setRecargaKey((n) => n + 1), []);
@@ -175,6 +214,8 @@ export const MonitorExpedientesPage: React.FC = () => {
               {id === 'incompletos' && (
                 <BandejaExpedientes
                   estadoDoc="incompleto"
+                  filtroActor={filtroActor}
+                  onQuitarActor={quitarActor}
                   recargaKey={recargaKey}
                   modoValidacion={modoValidacion}
                   onAbrir={(expId) => setParam('exp', expId)}
@@ -183,20 +224,16 @@ export const MonitorExpedientesPage: React.FC = () => {
               {id === 'completos' && (
                 <BandejaExpedientes
                   estadoDoc="completo"
+                  filtroActor={filtroActor}
+                  onQuitarActor={quitarActor}
                   recargaKey={recargaKey}
                   modoValidacion={modoValidacion}
                   onAbrir={(expId) => setParam('exp', expId)}
                 />
               )}
-              {id === 'sin_informacion' && (
-                <BandejaExpedientes
-                  estadoDoc="sin_informacion"
-                  recargaKey={recargaKey}
-                  modoValidacion={modoValidacion}
-                  onAbrir={(expId) => setParam('exp', expId)}
-                />
+              {id === 'indicadores' && (
+                <IndicadoresExpedientes recargaKey={recargaKey} onElegirActor={elegirActor} />
               )}
-              {id === 'indicadores' && <IndicadoresExpedientes recargaKey={recargaKey} />}
               {id === 'configuracion' && esAdmin && (
                 <ConfiguracionExpedientes onGuardado={(c) => setModoValidacion(c.validacion)} />
               )}

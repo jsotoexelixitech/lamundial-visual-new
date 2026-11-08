@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Building2, ChevronDown, Layers, UserRound, Users } from 'lucide-react';
+import { Building2, ChevronDown, Layers, UserRound } from 'lucide-react';
 import {
   obtenerIndicadores,
   isExpedientesError,
@@ -9,20 +9,27 @@ import {
 import { AvisoError, BarraApilada, BarrasH, Esqueleto } from './expedientes-ui';
 import { numero } from './expedientes-format';
 import { useReanimar } from './expedientes-anim';
-import { EsqueletoKpi, KpiPrincipales, PanelesKpi } from './IndicadoresKpi';
+import { EsqueletoKpi, KpiPrincipales, PanelesKpi, type GrupoRanking } from './IndicadoresKpi';
 
 type Icono = React.ComponentType<{ size?: number; 'aria-hidden'?: boolean; className?: string }>;
 
+/** Solo dos áreas: Canales (incluye gestores y puntos de comercialización) y Productores. */
 const AREAS: { key: string; area?: string; titulo: string; Icon: Icono }[] = [
   { key: 'todas', titulo: 'Consolidado', Icon: Layers },
   { key: 'C', area: 'C', titulo: 'Canales alternos', Icon: Building2 },
-  { key: 'G', area: 'G', titulo: 'Gestores', Icon: Users },
   { key: 'P', area: 'P', titulo: 'Productores', Icon: UserRound },
 ];
 
 type Resultado = { ok: true; data: Indicadores } | { ok: false; error: ExpedientesError };
 
-export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
+export function IndicadoresExpedientes({
+  recargaKey,
+  onElegirActor,
+}: {
+  recargaKey: number;
+  /** Clic en un canal o productor del ranking: la bandeja se filtra por ese código. */
+  onElegirActor?: (grupo: GrupoRanking, codigo: string, nombre: string) => void;
+}) {
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [res, setRes] = useState<Record<string, Resultado> | null>(null);
@@ -131,7 +138,7 @@ export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
           ) : (
             <>
               <KpiPrincipales d={kpiRes.data} clave={`${version}|${areaKpi}`} />
-              <PanelesKpi d={kpiRes.data} escritorio={escritorio} />
+              <PanelesKpi d={kpiRes.data} escritorio={escritorio} onElegirActor={onElegirActor} />
             </>
           )}
           <Comparativo res={res} />
@@ -155,7 +162,7 @@ export function IndicadoresExpedientes({ recargaKey }: { recargaKey: number }) {
 const esEscritorio = () =>
   typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 1024px)').matches;
 
-/** Estado documental de las tres áreas, lado a lado, para comparar de un vistazo. */
+/** Estado documental de las áreas, lado a lado, para comparar de un vistazo. */
 function Comparativo({ res }: { res: Record<string, Resultado> | null }) {
   const areas = AREAS.filter((a) => a.area);
   return (
@@ -190,7 +197,6 @@ function Comparativo({ res }: { res: Record<string, Resultado> | null }) {
 const segDocumental = (d: Indicadores) => [
   { label: 'Completos', valor: d.completos, tono: 'verde' as const },
   { label: 'Incompletos', valor: d.incompletos, tono: 'ambar' as const },
-  { label: 'Sin información', valor: d.sinInformacion, tono: 'gris' as const },
 ];
 
 /**

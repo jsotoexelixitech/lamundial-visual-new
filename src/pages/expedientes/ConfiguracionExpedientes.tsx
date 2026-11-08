@@ -161,7 +161,7 @@ function FormConfig({
 
   const sucio = JSON.stringify(nueva) !== JSON.stringify(original);
   const alcanceVacio =
-    !alcance.canales && !alcance.gestores && !alcance.productores && !alcance.desconocida;
+    !alcance.canales && !alcance.productores && !alcance.desconocida;
   const valido =
     !!cadencia && correos.malos.length === 0 && horasOk && !alcanceVacio && motivo.trim().length >= MOTIVO_MIN;
 
@@ -196,7 +196,6 @@ function FormConfig({
             {(
               [
                 ['canales', 'Canales alternos'],
-                ['gestores', 'Gestores'],
                 ['productores', 'Productores'],
                 ['desconocida', 'Sin datos de quién la emitió (pólizas anteriores)'],
               ] as const
@@ -205,7 +204,14 @@ function FormConfig({
                 <input
                   type="checkbox"
                   checked={alcance[k]}
-                  onChange={(e) => setAlcance((p) => ({ ...p, [k]: e.target.checked }))}
+                  onChange={(e) =>
+                    // La red de cada canal sigue el alcance de canales (Nexus hace lo mismo).
+                    setAlcance((p) => ({
+                      ...p,
+                      [k]: e.target.checked,
+                      ...(k === 'canales' ? { gestores: e.target.checked } : {}),
+                    }))
+                  }
                 />
                 {label}
               </label>

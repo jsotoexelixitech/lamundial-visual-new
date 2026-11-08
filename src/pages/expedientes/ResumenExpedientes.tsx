@@ -19,7 +19,6 @@ const CIFRAS: { key: Exclude<keyof Indicadores, 'kpis'>; label: string; tono?: T
   { key: 'pendientesPago', label: 'Pendientes de pago' },
   { key: 'completos', label: 'Completos' },
   { key: 'validadosIa', label: 'Validados por IA' },
-  { key: 'sinInformacion', label: 'Sin información' },
   { key: 'total', label: 'Total' },
 ];
 const VISIBLES_MOVIL = 4;

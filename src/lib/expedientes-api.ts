@@ -17,7 +17,7 @@ import { getToken } from './nexus-auth';
 // Un estado que Nexus agregue después se muestra tal cual: nunca se convierte a otro.
 type OtroEstado = string & {};
 export type EstadoPago = 'pagada' | 'pendiente' | OtroEstado;
-/** sin_informacion: póliza anterior al monitor o sin datos de documentos; no es incompleto. */
+/** sin_informacion / descartada: Nexus los saca del monitor; si aún llegan, la pantalla los ignora. */
 export type EstadoDocumental = 'completo' | 'incompleto' | 'sin_informacion' | OtroEstado;
 export type EstadoRequisitoConocido = 'faltante' | 'recibido' | 'observado' | 'validado' | 'sin_informacion';
 export type EstadoRequisito = EstadoRequisitoConocido | OtroEstado;
@@ -25,7 +25,7 @@ export type EstadoRequisito = EstadoRequisitoConocido | OtroEstado;
 export type TipoRequisito = string;
 /** rcv | personas | patrimonial */
 export type ProductoExpediente = string;
-/** Área desde la metadata del SSO: C = canal alterno, G = gestor, P = productor. */
+/** Área: C = canales (incluye gestores y puntos de comercialización), P = productores. */
 export type AreaExpediente = string;
 export type ModoValidacion = 'manual' | 'automatica';
 export type Agrupacion = 'poliza' | 'asegurado';
@@ -184,11 +184,18 @@ export interface Indicadores {
   kpis?: KpisExpedientes;
 }
 
-export interface TopIncompleto {
+/** Fila del ranking por canal o por productor (dónde quedan pólizas sin documentos). */
+export interface RankingActor {
+  /** ccanalalt / cproductor, o SIN_IDENTIFICAR. */
   codigo: string;
-  incompletos: number;
+  nombre: string | null;
   total: number;
+  completos: number;
+  incompletos: number;
+  /** 0..1: incompletos / total. */
+  pctIncompletos: number | null;
 }
+
 
 /** `null` = Nexus no pudo calcular el dato: la pantalla dice «sin dato». */
 export interface KpisExpedientes {
@@ -211,7 +218,9 @@ export interface KpisExpedientes {
   };
   porProducto: { producto: string; total: number; completos: number; incompletos: number }[];
   porDocumento: { tipo: string; faltante: number; recibido: number; observado: number; validado: number }[];
-  topIncompletos: { canales: TopIncompleto[]; gestores: TopIncompleto[]; productores: TopIncompleto[] };
+  /** Por canal (gestores y puntos de comercialización cuentan en su canal) y por productor. */
+  porCanal: RankingActor[];
+  porProductor: RankingActor[];
   /** Últimos 30 días, hora Caracas. */
   tendencia: { fecha: string; emitidas: number; completadas: number }[];
 }
@@ -303,6 +312,10 @@ export interface FiltrosBandeja {
   vendedor?: string;
   q?: string;
   agrupar?: Agrupacion;
+  /** Canal del ranking de Indicadores (incluye sus gestores y puntos de comercialización). */
+  canal?: string;
+  /** Productor del ranking de Indicadores. */
+  productor?: string;
   /** Solo pólizas con algún documento errado. Se envía como `conErrores=true`. */
   conErrores?: boolean;
   /** v1.3: solo pólizas con datos cambiados en el formulario. Se envía como `datosModificados=true`. */
@@ -729,9 +742,15 @@ function normalizarKpis(v: unknown): KpisExpedientes | undefined {
   if (!v || typeof v !== 'object') return undefined;
   const k = v as Record<string, unknown>;
   const rec = (k.recordatorios ?? {}) as Record<string, unknown>;
-  const top = (k.topIncompletos ?? {}) as Record<string, unknown>;
-  const tops = (x: unknown): TopIncompleto[] =>
-    lista(x).map((t) => ({ codigo: String(t.codigo ?? ''), incompletos: num(t.incompletos), total: num(t.total) }));
+  const ranking = (x: unknown): RankingActor[] =>
+    lista(x).map((t) => ({
+      codigo: String(t.codigo ?? ''),
+      nombre: typeof t.nombre === 'string' && t.nombre.trim() ? t.nombre.trim() : null,
+      total: num(t.total),
+      completos: num(t.completos),
+      incompletos: num(t.incompletos),
+      pctIncompletos: numONull(t.pctIncompletos),
+    }));
   return {
     tasaCompletitud: numONull(k.tasaCompletitud),
     tiempoMedioCompletarDias: numONull(k.tiempoMedioCompletarDias),
@@ -761,7 +780,8 @@ function normalizarKpis(v: unknown): KpisExpedientes | undefined {
       observado: num(d.observado),
       validado: num(d.validado),
     })),
-    topIncompletos: { canales: tops(top.canales), gestores: tops(top.gestores), productores: tops(top.productores) },
+    porCanal: ranking(k.porCanal),
+    porProductor: ranking(k.porProductor),
     tendencia: lista(k.tendencia).map((t) => ({
       fecha: String(t.fecha ?? ''),
       emitidas: num(t.emitidas),
@@ -778,10 +798,11 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
     });
     const r = (unwrap<Record<string, unknown>>(data) ?? {}) as Record<string, unknown>;
     return {
-      total: num(r.total),
+      // «Sin información» ya no se muestra: si Nexus aún la manda, no suma al total.
+      total: Math.max(0, num(r.total) - num(r.sinInformacion)),
       completos: num(r.completos),
       incompletos: num(r.incompletos),
-      sinInformacion: num(r.sinInformacion),
+      sinInformacion: 0,
       pagadas: num(r.pagadas),
       pendientesPago: num(r.pendientesPago),
       porValidar: num(r.porValidar),
