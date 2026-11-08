@@ -542,7 +542,7 @@ function Exclusiones() {
         .map((a) => ({
           valor: a.valor,
           titulo: a.nombre ? `${a.valor} · ${a.nombre}` : a.valor,
-          detalle: pluralPolizas(a.polizas),
+          detalle: a.polizas ? pluralPolizas(a.polizas) : 'Sin pólizas en el monitor',
           excluido: a.excluido,
         }));
     }
@@ -626,7 +626,9 @@ function Exclusiones() {
     }
   };
 
-  const ayudaBusqueda = ES_ACTOR(tipo)
+  const ayudaBusqueda = tipo === 'canal'
+    ? 'Código o nombre del canal. Salen los canales activos; las pólizas de sus gestores cuentan en el canal.'
+    : ES_ACTOR(tipo)
     ? `Código o nombre del ${opcion.label.toLowerCase()}. La lista sale de las pólizas registradas en el monitor.`
     : tipo === 'asegurado'
       ? 'Cédula, RIF o nombre (mínimo 2 caracteres).'
