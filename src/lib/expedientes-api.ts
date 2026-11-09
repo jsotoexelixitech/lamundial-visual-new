@@ -160,6 +160,18 @@ export interface PaginaExpedientes {
   pageSize: number;
 }
 
+/** Pólizas incompletas por motivo, en orden de prioridad (cuenta el primero que aplica). */
+export interface DesgloseIncompletos {
+  conErrores: number;
+  datosCambiados: number;
+  noLeidos: number;
+  porValidar: number;
+  analizando: number;
+  faltanDocumentos: number;
+  otros: number;
+}
+export type CategoriaIncompleto = keyof DesgloseIncompletos;
+
 export interface Indicadores {
   total: number;
   completos: number;
@@ -183,6 +195,12 @@ export interface Indicadores {
   noLeidos: number;
   /** v1.3: pólizas con datos cambiados en el formulario respecto al documento. */
   datosModificados: number;
+  /**
+   * Por qué siguen incompletas: cada póliza incompleta en UNA sola categoría, así la suma es
+   * `incompletos`. Los contadores sueltos de arriba se pisan («con algún documento en X»).
+   * `null` si Nexus aún no lo manda.
+   */
+  desglose: DesgloseIncompletos | null;
   /** Modo de validación; `undefined` si Nexus aún no lo manda. */
   validacion?: ModoValidacion;
   /** No pasaron por el OCR: fuera del monitor. `null` si Nexus aún no lo manda. */
@@ -749,6 +767,20 @@ const lista = (v: unknown): Record<string, unknown>[] =>
   Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object') : [];
 
 /** Reparto del total por quién emitió; null si Nexus aún no lo manda. */
+function normalizarDesglose(v: unknown): DesgloseIncompletos | null {
+  if (!v || typeof v !== 'object') return null;
+  const d = v as Record<string, unknown>;
+  return {
+    conErrores: num(d.conErrores),
+    datosCambiados: num(d.datosCambiados),
+    noLeidos: num(d.noLeidos),
+    porValidar: num(d.porValidar),
+    analizando: num(d.analizando),
+    faltanDocumentos: num(d.faltanDocumentos),
+    otros: num(d.otros),
+  };
+}
+
 function normalizarPorArea(v: unknown): Indicadores['porArea'] {
   if (!v || typeof v !== 'object') return null;
   const p = v as Record<string, unknown>;
@@ -835,6 +867,7 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       analizando: num(r.analizando ?? r.enAnalisis),
       noLeidos: num(r.noLeidos),
       datosModificados: num(r.datosModificados),
+      desglose: normalizarDesglose(r.desglose),
       validacion:
         r.validacion === 'manual' || r.validacion === 'automatica' ? r.validacion : undefined,
       descartadas: numONull(r.descartadas),

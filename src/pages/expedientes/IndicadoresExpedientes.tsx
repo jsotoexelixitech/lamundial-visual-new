@@ -6,8 +6,8 @@ import {
   ExpedientesError,
   type Indicadores,
 } from '@/lib/expedientes-api';
-import { AvisoError, BarraApilada, BarrasH, Esqueleto } from './expedientes-ui';
-import { numero } from './expedientes-format';
+import { AvisoError, BarraApilada, BarrasH, Esqueleto, type TonoGrafico } from './expedientes-ui';
+import { categoriasVisibles, numero } from './expedientes-format';
 import { useReanimar } from './expedientes-anim';
 import { EsqueletoKpi, KpiPrincipales, PanelesKpi, type GrupoRanking } from './IndicadoresKpi';
 
@@ -189,6 +189,32 @@ function RepartoConsolidado({ d }: { d: Indicadores }) {
   );
 }
 
+/**
+ * Documentos: con el desglose de Nexus, los mismos motivos y cifras del resumen (cada póliza
+ * incompleta en uno solo, así suman los incompletos); sin él, los contadores anteriores.
+ */
+function filasDocumentos(d: Indicadores): { label: string; valor: number; tono?: TonoGrafico }[] {
+  const ia = { label: 'Validados por IA', valor: d.validadosIa, tono: 'verde' as const };
+  const desglose = d.desglose;
+  if (desglose) {
+    return [
+      ...categoriasVisibles(desglose, d.validacion).map((c) => ({
+        label: c.label,
+        valor: desglose[c.key],
+        tono: c.tono,
+      })),
+      ia,
+    ];
+  }
+  return [
+    { label: 'Con errores', valor: d.conErrores, tono: 'rojo' },
+    { label: 'Datos cambiados', valor: d.datosModificados ?? 0, tono: 'violeta' },
+    { label: 'Observados', valor: d.observados, tono: 'ambar' },
+    ...filasValidacion(d),
+    ia,
+  ];
+}
+
 /** Filas de validación según el modo: «Por validar» solo en manual; en automática, la IA. */
 function filasValidacion(d: Indicadores): { label: string; valor: number; tono: 'azul' | 'gris' }[] {
   const porValidar = { label: 'Por validar', valor: d.porValidar, tono: 'azul' as const };
@@ -287,7 +313,7 @@ function TarjetaArea({
 }
 
 /**
- * Las 16 cifras del área en cuatro gráficos sencillos, cada uno con su número visible.
+ * Las cifras del área en cuatro gráficos sencillos, cada uno con su número visible.
  * El color sigue el mismo código de estados del monitor; pago y recordatorios van en tinta neutra.
  */
 function Contenido({ d }: { d: Indicadores }) {
@@ -295,14 +321,12 @@ function Contenido({ d }: { d: Indicadores }) {
     <>
       <BarraApilada titulo="Estado documental" segmentos={segDocumental(d)} />
       <BarrasH
-        titulo="Documentos: atención y validación"
-        filas={[
-          { label: 'Con errores', valor: d.conErrores, tono: 'rojo' },
-          { label: 'Datos cambiados', valor: d.datosModificados ?? 0, tono: 'violeta' },
-          { label: 'Observados', valor: d.observados, tono: 'ambar' },
-          ...filasValidacion(d),
-          { label: 'Validados por IA', valor: d.validadosIa, tono: 'verde' },
-        ]}
+        titulo={
+          d.desglose
+            ? 'Incompletos por motivo y validados por IA'
+            : 'Documentos: atención y validación'
+        }
+        filas={filasDocumentos(d)}
       />
       <BarraApilada
         titulo="Pago"

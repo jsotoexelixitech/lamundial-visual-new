@@ -135,6 +135,9 @@ export function KpiPrincipales({ d, clave }: { d: Indicadores; clave: unknown })
     );
   }
   const base = d.completos + d.incompletos;
+  // Las mismas cifras del resumen: cada póliza en un solo motivo (si Nexus manda el desglose).
+  const conErrores = d.desglose?.conErrores ?? d.conErrores;
+  const datosCambiados = d.desglose?.datosCambiados ?? d.datosModificados;
   const completadasDia = k.tendencia.map((t) => ({ fecha: t.fecha, valor: t.completadas }));
   return (
     <div className="mx-kpis" role="list" aria-label="Indicadores principales">
@@ -167,21 +170,21 @@ export function KpiPrincipales({ d, clave }: { d: Indicadores; clave: unknown })
       </article>
 
       <article
-        className={`mx-kpi ${d.conErrores > 0 ? 'is-rojo' : d.datosModificados > 0 ? 'is-violeta' : ''}`}
+        className={`mx-kpi ${conErrores > 0 ? 'is-rojo' : datosCambiados > 0 ? 'is-violeta' : ''}`}
         role="listitem"
       >
         <h3 className="mx-kpi-tit">Piden atención</h3>
         <p className="mx-kpi-desc">Pólizas con algún documento errado o con datos cambiados.</p>
         <div className="mx-kpi-par">
-          <div className={d.conErrores > 0 ? 'is-rojo' : ''}>
+          <div className={conErrores > 0 ? 'is-rojo' : ''}>
             <strong className="mx-kpi-valor mx-num">
-              <Cifra valor={d.conErrores} clave={clave} />
+              <Cifra valor={conErrores} clave={clave} />
             </strong>
             <span>con errores</span>
           </div>
-          <div className={d.datosModificados > 0 ? 'is-violeta' : ''}>
+          <div className={datosCambiados > 0 ? 'is-violeta' : ''}>
             <strong className="mx-kpi-valor mx-num">
-              <Cifra valor={d.datosModificados ?? null} clave={clave} />
+              <Cifra valor={datosCambiados} clave={clave} />
             </strong>
             <span>datos cambiados</span>
           </div>
@@ -189,6 +192,8 @@ export function KpiPrincipales({ d, clave }: { d: Indicadores; clave: unknown })
         <QueMide>
           Con errores: algún documento no coincide, es ilegible o la IA no tuvo certeza. Datos
           cambiados: la póliza se emitió con datos distintos a los que se leyeron del documento.
+          Son las mismas cifras del resumen: cada póliza cuenta una sola vez, y si tiene un error y
+          también datos cambiados, cuenta en «con errores».
         </QueMide>
       </article>
 

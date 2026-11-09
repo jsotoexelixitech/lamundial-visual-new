@@ -2,6 +2,8 @@
 import { portalConfig } from '@/lib/portal-config';
 import type {
   AlcanceExclusion,
+  CategoriaIncompleto,
+  DesgloseIncompletos,
   ExclusionAplicada,
   ModoValidacion,
   Requisito,
@@ -94,6 +96,106 @@ export function tonoDocumental(estado: string): Tono {
   if (estado === 'completo') return 'verde';
   if (estado === 'incompleto') return 'ambar';
   return 'gris';
+}
+
+// ─── Por qué siguen incompletas (desglose de Nexus: una categoría por póliza) ──
+
+export interface CategoriaIncompletoInfo {
+  key: CategoriaIncompleto;
+  label: string;
+  /** Para la línea de suma: «133 con errores». */
+  enSuma: string;
+  desc: string;
+  tono: Tono;
+  /** Se muestra siempre en ese modo de validación; en el otro, solo si tiene pólizas. */
+  modo?: ModoValidacion;
+  /** Solo se muestra si tiene pólizas. */
+  siHay?: boolean;
+}
+
+/** En el orden de prioridad de Nexus: cada póliza cuenta en el primero que aplica. */
+export const CATEGORIAS_INCOMPLETO: CategoriaIncompletoInfo[] = [
+  {
+    key: 'conErrores',
+    label: 'Con errores',
+    enSuma: 'con errores',
+    desc: 'Algún documento no coincide con la póliza, es ilegible o necesita revisión.',
+    tono: 'rojo',
+  },
+  {
+    key: 'datosCambiados',
+    label: 'Datos cambiados',
+    enSuma: 'datos cambiados',
+    desc: 'Los datos de la póliza cambiaron después de leer el documento.',
+    tono: 'violeta',
+  },
+  {
+    key: 'noLeidos',
+    label: 'No se pudo leer',
+    enSuma: 'no se pudo leer',
+    desc: 'El sistema no pudo leer un archivo; se reintenta solo.',
+    tono: 'gris',
+    modo: 'automatica',
+  },
+  {
+    key: 'porValidar',
+    label: 'Por validar',
+    enSuma: 'por validar',
+    desc: 'Pólizas con documentos que esperan revisión de un analista.',
+    tono: 'azul',
+    modo: 'manual',
+  },
+  {
+    key: 'analizando',
+    label: 'Analizando',
+    enSuma: 'analizando',
+    desc: 'Pólizas con documentos que la IA está revisando.',
+    tono: 'azul',
+    modo: 'automatica',
+  },
+  {
+    key: 'faltanDocumentos',
+    label: 'Faltan documentos',
+    enSuma: 'faltan documentos',
+    desc: 'Pólizas que solo esperan que el asegurado envíe documentos.',
+    tono: 'gris',
+  },
+  {
+    key: 'otros',
+    label: 'Otros',
+    enSuma: 'otros',
+    desc: 'Pólizas que no encajan en los grupos anteriores.',
+    tono: 'gris',
+    siHay: true,
+  },
+];
+
+/**
+ * Categorías que se muestran: las del modo de validación y cualquier otra que tenga pólizas,
+ * para que la suma siempre se vea completa. Sin modo conocido se toma la validación automática.
+ */
+export function categoriasVisibles(
+  d: DesgloseIncompletos | null,
+  validacion?: ModoValidacion,
+): CategoriaIncompletoInfo[] {
+  const modo = validacion ?? 'automatica';
+  return CATEGORIAS_INCOMPLETO.filter((c) => {
+    if (d && d[c.key] > 0) return true;
+    if (c.siHay) return false;
+    return !c.modo || c.modo === modo;
+  });
+}
+
+/** «231 incompletos = 133 con errores + 0 datos cambiados + … + 77 faltan documentos». */
+export function lineaSumaIncompletos(
+  incompletos: number,
+  d: DesgloseIncompletos,
+  validacion?: ModoValidacion,
+): string {
+  const partes = categoriasVisibles(d, validacion).map(
+    (c) => `${numero(d[c.key])} ${c.enSuma}`,
+  );
+  return `${numero(incompletos)} ${incompletos === 1 ? 'incompleto' : 'incompletos'} = ${partes.join(' + ')}`;
 }
 
 /** Primero lo que está mal, luego lo que falta, luego lo que está en curso y al final lo listo. */

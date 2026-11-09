@@ -1,85 +1,18 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { obtenerIndicadores, type FiltrosIndicadores, type Indicadores } from '@/lib/expedientes-api';
-import { numero } from './expedientes-format';
+import {
+  obtenerIndicadores,
+  type CategoriaIncompleto,
+  type FiltrosIndicadores,
+  type Indicadores,
+} from '@/lib/expedientes-api';
+import { categoriasVisibles, lineaSumaIncompletos, numero } from './expedientes-format';
 
-type TonoResumen = 'rojo' | 'ambar' | 'violeta';
-type CifraClave = {
-  [K in keyof Indicadores]-?: Indicadores[K] extends number ? K : never;
-}[keyof Indicadores];
-/** manual / automatica: solo en ese modo de validación (sin modo conocido se muestran como antes). */
-type Modo = 'manual' | 'automatica';
-
-/**
- * Primero lo que pide atención (qué falta y qué está mal); luego el resto.
- * El tono solo se pinta si la cifra es mayor que cero. Cada cifra lleva su descripción visible.
- * En el móvil se ven las cuatro primeras y «Ver todo el resumen» abre las demás.
- */
-const CIFRAS: {
-  key: CifraClave;
-  label: string;
-  desc: string;
-  tono?: TonoResumen;
-  modo?: Modo;
-  /** Nuevo en Nexus: si la versión instalada no conoce el modo, no se muestra. */
-  requiereModo?: boolean;
-}[] = [
-  {
-    key: 'incompletos',
-    label: 'Incompletos',
-    desc: 'Les falta al menos un documento por recibir, validar o corregir.',
-    tono: 'ambar',
-  },
-  {
-    key: 'conErrores',
-    label: 'Con errores',
-    desc: 'Algún documento no coincide con la póliza, es ilegible o necesita revisión.',
-    tono: 'rojo',
-  },
-  {
-    key: 'datosModificados',
-    label: 'Datos cambiados',
-    desc: 'Los datos de la póliza cambiaron después de leer el documento.',
-    tono: 'violeta',
-  },
-  {
-    key: 'porValidar',
-    label: 'Por validar',
-    desc: 'Pólizas con documentos que esperan revisión de un analista.',
-    tono: 'ambar',
-    modo: 'manual',
-  },
-  {
-    key: 'analizando',
-    label: 'Analizando',
-    desc: 'Pólizas con documentos que la IA está revisando.',
-    modo: 'automatica',
-  },
-  {
-    key: 'noLeidos',
-    label: 'No se pudo leer',
-    desc: 'El sistema no pudo leer un archivo; se reintenta solo.',
-    modo: 'automatica',
-    requiereModo: true,
-  },
-  { key: 'pendientesPago', label: 'Pendientes de pago', desc: 'Emitidas como pendientes de cobro.' },
-  { key: 'completos', label: 'Completos', desc: 'Todos los documentos requeridos están validados.' },
-  {
-    key: 'validadosIa',
-    label: 'Validados por IA',
-    desc: 'Completos validados por la IA, sin intervención manual.',
-  },
-  {
-    key: 'total',
-    label: 'Total',
-    desc: 'Pólizas emitidas por el Marketplace que pasaron por el OCR.',
-  },
-];
-const VISIBLES_MOVIL = 4;
-
-/** Cifras del modo de validación vigente («Por validar» solo en manual). */
-const cifrasDe = (validacion?: Modo) =>
-  CIFRAS.filter((c) => (validacion ? !c.modo || c.modo === validacion : !c.requiereModo));
+/** Sobre la banda oscura solo se pinta lo que pide atención, y solo si la cifra es mayor que cero. */
+const TONO_BANDA: Partial<Record<CategoriaIncompleto, 'rojo' | 'violeta'>> = {
+  conErrores: 'rojo',
+  datosCambiados: 'violeta',
+};
 
 /** Hacia abajo: nunca 100 % si falta alguna póliza. */
 const pctCompletos = (d: Indicadores) =>
@@ -119,10 +52,38 @@ function textoCuadre(d: Indicadores): string | null {
   return partes.join(' ');
 }
 
+/** Una cifra con su descripción siempre visible. */
+function Cifra({
+  label,
+  valor,
+  desc,
+  className = '',
+  children,
+}: {
+  label: string;
+  valor: number | null;
+  desc: string;
+  className?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <dl className={`mx-resumen-item ${className}`}>
+      <dt>{label}</dt>
+      <dd className="mx-num">{valor === null ? '…' : numero(valor)}</dd>
+      <dd className="mx-resumen-desc">{desc}</dd>
+      {children}
+    </dl>
+  );
+}
+
 /**
- * Resumen compacto del encabezado, visible en todas las pestañas.
+ * Resumen compacto del encabezado, visible en todas las pestañas. Se lee como una suma:
+ * Total = Completos + Incompletos, y los incompletos por motivo (cada póliza en uno solo, según
+ * el desglose de Nexus). El pago va aparte: es otra dimensión y no suma con lo documental.
  * Respeta los filtros globales (fecha y área) si la página los pasa; sin filtros es el acumulado
  * de las áreas en alcance. Si Nexus no responde, no se muestra (cada pestaña informa el error).
+ * En el móvil se ven la suma principal y la línea de motivos; «Ver todo el resumen» abre las
+ * tarjetas de cada motivo y el pago.
  */
 export function ResumenExpedientes({
   recargaKey,
@@ -135,6 +96,7 @@ export function ResumenExpedientes({
   const [fallo, setFallo] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const gridId = useId();
+  const pagoId = useId();
   const { area, desde, hasta } = filtros;
   // Cargando = la última respuesta no corresponde a los filtros/recarga actuales.
   const clave = `${area ?? ''}|${desde ?? ''}|${hasta ?? ''}|${recargaKey}`;
@@ -163,9 +125,19 @@ export function ResumenExpedientes({
   if (fallo && !datos) return null;
 
   const filtrado = !!(area || desde || hasta);
-  const cifras = cifrasDe(datos?.validacion);
   // Las emisiones de Nexus no tienen área: el cuadre solo se muestra sin filtro de área.
   const cuadre = datos && !area ? textoCuadre(datos) : null;
+  const valor = (k: 'total' | 'completos' | 'incompletos' | 'pendientesPago') =>
+    datos ? datos[k] : null;
+  // Mientras carga se muestran los motivos de siempre; si Nexus aún no manda el desglose, no.
+  const desglose = datos ? datos.desglose : null;
+  const verDesglose = !datos || !!desglose;
+  const categorias = categoriasVisibles(desglose, datos?.validacion);
+  // «Validados por IA» es parte de los completos (en validación manual, solo si hay alguno).
+  const verIa = !!datos && (datos.validacion !== 'manual' || datos.validadosIa > 0);
+  const atenuado = cargando && datos ? 'is-cargando' : '';
+  const incompletos = datos?.incompletos ?? 0;
+
   return (
     <section
       className={`mx-resumen ${abierto ? 'is-abierto' : ''}`}
@@ -173,7 +145,7 @@ export function ResumenExpedientes({
       aria-busy={cargando}
     >
       {datos && (
-        <div className={`mx-resumen-avance ${cargando ? 'opacity-70' : ''}`}>
+        <div className={`mx-resumen-avance ${atenuado}`}>
           <div className="mx-resumen-avance-fila">
             <span>
               Expedientes completos:{' '}
@@ -195,27 +167,87 @@ export function ResumenExpedientes({
           </div>
         </div>
       )}
-      <dl id={gridId} className={`mx-resumen-grid ${cargando && datos ? 'opacity-70' : ''}`}>
-        {cifras.map(({ key, label, desc, tono }, i) => {
-          const valor = datos ? datos[key] : null;
-          const clases = [
-            'mx-resumen-item',
-            i >= VISIBLES_MOVIL ? 'mx-resumen-item--extra' : '',
-            tono && valor ? `is-${tono}` : '',
-          ]
-            .filter(Boolean)
-            .join(' ');
-          return (
-            <div key={key} className={clases}>
-              <dt>{label}</dt>
-              <dd className="mx-num">{valor === null ? '…' : numero(valor)}</dd>
-              <dd className="mx-resumen-desc">{desc}</dd>
+
+      <div className={`mx-resumen-cuerpo ${atenuado}`}>
+        {/* Total = Completos + Incompletos */}
+        <div className="mx-resumen-ecuacion">
+          <Cifra
+            label="Total"
+            valor={valor('total')}
+            desc="Pólizas emitidas por el Marketplace que pasaron por el OCR."
+            className="mx-resumen-ec-total"
+          />
+          <span className="mx-resumen-op mx-resumen-ec-igual">=</span>
+          <Cifra
+            label="Completos"
+            valor={valor('completos')}
+            desc="Todos los documentos requeridos están validados."
+            className="mx-resumen-ec-comp"
+          >
+            {datos && verIa && (
+              <dd className="mx-resumen-sub">
+                De ellos, <span className="mx-num">{numero(datos.validadosIa)}</span>{' '}
+                {plural(datos.validadosIa, 'validado', 'validados')} por IA.
+              </dd>
+            )}
+          </Cifra>
+          <span className="mx-resumen-op mx-resumen-ec-mas">+</span>
+          <Cifra
+            label="Incompletos"
+            valor={valor('incompletos')}
+            desc="Les falta al menos un documento por recibir, validar o corregir."
+            className={`mx-resumen-ec-incomp ${incompletos > 0 ? 'is-ambar' : ''}`}
+          />
+        </div>
+
+        {/* Incompletos = suma de los motivos (cada póliza en uno solo) */}
+        {verDesglose && (
+          <div className="mx-resumen-desglose">
+            <p className="mx-resumen-grupo-tit">
+              {datos
+                ? `Por qué siguen incompletas las ${numero(incompletos)} pólizas`
+                : 'Por qué siguen incompletas'}
+              <span className="mx-resumen-grupo-nota">
+                Cada póliza cuenta una sola vez, en el primer motivo que aplica.
+              </span>
+            </p>
+            <div id={gridId} className="mx-resumen-grid">
+              {categorias.map(({ key, label, desc }) => {
+                const v = desglose ? desglose[key] : null;
+                const tono = TONO_BANDA[key];
+                return (
+                  <Cifra
+                    key={key}
+                    label={label}
+                    valor={v}
+                    desc={desc}
+                    className={`mx-resumen-item--extra ${tono && v ? `is-${tono}` : ''}`}
+                  />
+                );
+              })}
             </div>
-          );
-        })}
-      </dl>
+            {datos && desglose && (
+              <p className="mx-resumen-suma mx-num">
+                {lineaSumaIncompletos(datos.incompletos, desglose, datos.validacion)}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Pago: otra dimensión, no suma con el estado documental */}
+        <div id={pagoId} className="mx-resumen-pago">
+          <p className="mx-resumen-grupo-tit">Pago, aparte del estado documental</p>
+          <Cifra
+            label="Pendientes de pago"
+            valor={valor('pendientesPago')}
+            desc="Emitidas como pendientes de cobro. No suma con lo demás: una póliza completa o incompleta puede estar pendiente de pago."
+          />
+        </div>
+      </div>
+
       <div className="mx-resumen-pie">
         <p className={cuadre ? 'mx-resumen-cuadre' : 'mx-resumen-nota'}>
+          Cifras en pólizas.{' '}
           {cuadre
             ? `${filtrado ? 'En las fechas elegidas: ' : ''}${cuadre}`
             : filtrado
@@ -226,10 +258,10 @@ export function ResumenExpedientes({
           type="button"
           className="mx-resumen-mas"
           aria-expanded={abierto}
-          aria-controls={gridId}
+          aria-controls={verDesglose ? `${gridId} ${pagoId}` : pagoId}
           onClick={() => setAbierto((a) => !a)}
         >
-          {abierto ? 'Ver menos' : `Ver todo el resumen (${cifras.length})`}
+          {abierto ? 'Ver menos' : 'Ver todo el resumen'}
           {abierto ? <ChevronUp size={14} aria-hidden /> : <ChevronDown size={14} aria-hidden />}
         </button>
       </div>
