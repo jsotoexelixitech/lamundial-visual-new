@@ -5,14 +5,19 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { MundialBrand } from '@/components/brand/MundialBrand';
 import { VitrinaBackdrop } from '@/components/dashboard/VitrinaBackdrop';
 import { startSsoSession } from '@/lib/nexus-auth';
+import { rutaInternaSegura } from '@/lib/sso-next';
 
 /**
- * Entrada desde el menú de Sis2000: /sso?nexus_token=…
- * Canjea el pase por la sesión y abre el marketplace sin pantalla de login.
+ * Entrada desde el menú de Sis2000: /sso?nexus_token=…[&next=/monitor-expedientes]
+ * Canjea el pase por la sesión y abre el marketplace (o la ruta interna permitida en `next`)
+ * sin pantalla de login.
  */
 export const SsoEntryPage: React.FC = () => {
   const navigate = useNavigate();
   const [token] = useState(() => new URLSearchParams(window.location.search).get('nexus_token'));
+  const [destino] = useState(
+    () => rutaInternaSegura(new URLSearchParams(window.location.search).get('next')) ?? '/dashboard',
+  );
   const [error, setError] = useState(
     token ? '' : 'Para entrar al marketplace, ábralo desde el menú de La Mundial.',
   );
@@ -26,7 +31,7 @@ export const SsoEntryPage: React.FC = () => {
     if (!token) return;
 
     startSsoSession(token)
-      .then(() => navigate('/dashboard', { replace: true }))
+      .then(() => navigate(destino, { replace: true }))
       .catch((err: unknown) => {
         const apiMsg =
           axios.isAxiosError(err) &&
@@ -39,7 +44,7 @@ export const SsoEntryPage: React.FC = () => {
           apiMsg || 'No se pudo abrir el marketplace. Vuelva a entrar desde el menú de La Mundial.',
         );
       });
-  }, [navigate, token]);
+  }, [navigate, token, destino]);
 
   return (
     <div className="lm-desk lm-sso">
