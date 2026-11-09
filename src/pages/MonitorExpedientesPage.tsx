@@ -1,9 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { BarChart3, CheckCircle2, FileWarning, RefreshCw, Settings2 } from 'lucide-react';
+import { BarChart3, CheckCircle2, FileWarning, Lock, RefreshCw, Settings2 } from 'lucide-react';
 import { getCurrentUser } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
-import { esAccesoLibre, obtenerConfig, type ModoValidacion } from '@/lib/expedientes-api';
+import {
+  esAccesoLibre,
+  ExpedientesError,
+  isExpedientesError,
+  obtenerAccesoMonitor,
+  obtenerConfig,
+  type ModoValidacion,
+} from '@/lib/expedientes-api';
+import { AvisoError, Cargando } from './expedientes/expedientes-ui';
 import { BandejaExpedientes, type FiltroActor } from './expedientes/BandejaExpedientes';
 import { IndicadoresExpedientes } from './expedientes/IndicadoresExpedientes';
 import { ConfiguracionExpedientes } from './expedientes/ConfiguracionExpedientes';
@@ -32,6 +40,66 @@ const TAB_INICIAL: TabId = 'indicadores';
  * El encabezado muestra un resumen compacto en todas las pestañas.
  */
 export const MonitorExpedientesPage: React.FC = () => {
+  // Lista de acceso de Nexus (EXPEDIENTES_USUARIOS): quien no está, no ve el monitor.
+  const [acceso, setAcceso] = useState<boolean | null>(null);
+  const [error, setError] = useState<ExpedientesError | null>(null);
+
+  useEffect(() => {
+    let vigente = true;
+    obtenerAccesoMonitor()
+      .then((r) => {
+        if (vigente) setAcceso(r.acceso);
+      })
+      .catch((err: unknown) => {
+        if (!vigente) return;
+        setError(
+          isExpedientesError(err)
+            ? err
+            : new ExpedientesError('servidor', 'No se pudo abrir el monitor de expedientes.'),
+        );
+      });
+    return () => {
+      vigente = false;
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <div className="mx-app">
+        <main className="mx-body">
+          <AvisoError error={error} />
+        </main>
+      </div>
+    );
+  }
+  if (acceso === null) {
+    return (
+      <div className="mx-app">
+        <main className="mx-body">
+          <Cargando texto="Abriendo el monitor…" />
+        </main>
+      </div>
+    );
+  }
+  if (!acceso) {
+    return (
+      <div className="mx-app">
+        <main className="mx-body">
+          <div className="mx-estado" role="alert">
+            <span className="mx-estado-icono" aria-hidden>
+              <Lock size={26} />
+            </span>
+            <p className="mx-estado-titulo">No tiene acceso al monitor de expedientes</p>
+            <p>Si lo necesita, solicítelo al equipo de Exélixi.</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  return <MonitorExpedientes />;
+};
+
+const MonitorExpedientes: React.FC = () => {
   const user = getCurrentUser();
   // QA sin login (Nexus con EXPEDIENTES_ACCESO_LIBRE): todas las pestañas y acciones.
   const accesoLibre = !user && esAccesoLibre();

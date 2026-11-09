@@ -529,6 +529,44 @@ api.interceptors.response.use(undefined, async (error: AxiosError) => {
   return Promise.reject(error);
 });
 
+export interface AccesoMonitor {
+  /** La sesión está en la lista EXPEDIENTES_USUARIOS de Nexus (o QA abierto). */
+  acceso: boolean;
+  /** «OCR por canal» editable (EXPEDIENTES_OCR_CANAL_ESCRITURA). */
+  ocrPorCanalEscritura: boolean;
+}
+
+/**
+ * ¿Esta sesión puede ver el monitor? GET /api/expedientes/acceso. Cualquier respuesta que no sea
+ * un sí explícito (403, 404 del módulo apagado, Nexus sin el endpoint) cuenta como sin acceso.
+ * Solo un 401 sube como error de sesión (sesión vencida).
+ */
+export async function obtenerAccesoMonitor(): Promise<AccesoMonitor> {
+  const token = ignorarTokenGuardado ? null : getToken();
+  try {
+    const r = await api.get(`${BASE}/acceso`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      validateStatus: () => true,
+    });
+    if (r.status === 401) {
+      // QA: un JWT vencido guardado no debe tapar el acceso libre (mismo criterio que el interceptor).
+      if (token && (await probarAccesoLibre())) {
+        ignorarTokenGuardado = true;
+        return obtenerAccesoMonitor();
+      }
+      throw new ExpedientesError('sesion', MENSAJES.sesion, 401);
+    }
+    const d = (r.data as { data?: { acceso?: unknown; ocrPorCanalEscritura?: unknown } } | null)?.data;
+    return {
+      acceso: r.status === 200 && d?.acceso === true,
+      ocrPorCanalEscritura: r.status === 200 && d?.ocrPorCanalEscritura === true,
+    };
+  } catch (err) {
+    if (err instanceof ExpedientesError) throw err;
+    throw toExpedientesError(err, 'coleccion');
+  }
+}
+
 function authHeaders(): Record<string, string> {
   const token = ignorarTokenGuardado ? null : getToken();
   if (token) return { Authorization: `Bearer ${token}` };
@@ -1173,6 +1211,8 @@ export interface OcrPorCanal {
   /** Códigos con OCR opcional tal como están guardados. */
   opcionales: string[];
   cambios: CambioOcrPorCanal[];
+  /** Nexus permite guardar (EXPEDIENTES_OCR_CANAL_ESCRITURA). Sin el dato: solo lectura. */
+  escrituraHabilitada: boolean;
 }
 
 function codigos(v: unknown): string[] {
@@ -1207,6 +1247,7 @@ function normalizarOcrPorCanal(raw: unknown, producto: ProductoOcr): OcrPorCanal
         agregados: codigos(c.agregados),
         quitados: codigos(c.quitados),
       })),
+    escrituraHabilitada: r.escrituraHabilitada === true,
   };
 }
 
@@ -1268,7 +1309,8 @@ export async function guardarOcrPorCanal(
       { producto, canales, base, motivo: motivo.trim() },
       { headers: authHeaders() },
     );
-    return normalizarOcrPorCanal(unwrap<unknown>(data), producto);
+    // Si Nexus aceptó el cambio, la escritura está habilitada (el PUT no repite el dato).
+    return { ...normalizarOcrPorCanal(unwrap<unknown>(data), producto), escrituraHabilitada: true };
   } catch (err) {
     throw toExpedientesError(err, 'coleccion');
   }

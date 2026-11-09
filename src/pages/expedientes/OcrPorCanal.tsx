@@ -197,6 +197,8 @@ export function OcrPorCanal() {
     void cargar(producto);
   }, [producto, cargar]);
 
+  // Nexus sin EXPEDIENTES_OCR_CANAL_ESCRITURA: se consulta, no se cambia (afecta la emisión).
+  const soloLectura = !!datos && !datos.escrituraHabilitada;
   const sucio = !!datos && !mismoConjunto(opcionales, datos.opcionales);
   const motivoOk = motivo.trim().length >= MOTIVO_MIN;
   const marcados = useMemo(() => new Set(opcionales), [opcionales]);
@@ -398,7 +400,7 @@ export function OcrPorCanal() {
                             aria-label={`OCR obligatorio para ${nombre}`}
                             className="mx-switch"
                             onClick={() => alternar(c.codigo, opcional)}
-                            disabled={guardando}
+                            disabled={guardando || soloLectura}
                           >
                             <span className="mx-switch-texto" aria-hidden>
                               OCR obligatorio
@@ -416,6 +418,15 @@ export function OcrPorCanal() {
               </div>
             </div>
 
+            {soloLectura ? (
+              <div className="mx-aviso mx-aviso--info" role="note">
+                <p>
+                  En este ambiente el OCR por canal es <strong>solo de consulta</strong>: cambiarlo modifica
+                  si el OCR es obligatorio al emitir. Los cambios se solicitan al equipo de Exélixi.
+                </p>
+              </div>
+            ) : (
+              <>
             <label className="mx-field" htmlFor="mx-ocr-motivo">
               <span>Motivo del cambio (obligatorio)</span>
               <textarea
@@ -471,6 +482,8 @@ export function OcrPorCanal() {
               )}
               {!sucio && <span className="text-xs mx-muted">Sin cambios por guardar.</span>}
             </div>
+              </>
+            )}
 
             {datos.cambios.length > 0 && (
               <div className="grid gap-1.5 border-t border-[#eceef4] pt-3">
