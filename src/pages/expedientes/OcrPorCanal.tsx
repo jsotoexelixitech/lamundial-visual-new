@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Loader2, RefreshCw, ScanLine, Search } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Loader2, RefreshCw, ScanLine, Search } from 'lucide-react';
 import {
   guardarOcrPorCanal,
   isExpedientesError,
   obtenerOcrPorCanal,
+  obtenerPuntosCanal,
   ExpedientesError,
   type CanalOcr,
   type OcrPorCanal as DatosOcr,
   type ProductoOcr,
+  type PuntoComercializacion,
 } from '@/lib/expedientes-api';
 import { AvisoError, Cargando } from './expedientes-ui';
 import { fechaHora } from './expedientes-format';
@@ -36,13 +38,127 @@ function nombreCanal(c: Pick<CanalOcr, 'codigo' | 'nombre'>): string {
   return c.nombre || `Canal ${c.codigo}`;
 }
 
+const etiquetaPuntos = (n: number) =>
+  `${n.toLocaleString('es-VE')} ${n === 1 ? 'punto de comercialización' : 'puntos de comercialización'}`;
+
+/**
+ * Puntos de comercialización de un canal (solo lectura). Se cargan al desplegar, de 50 en 50:
+ * hay canales con miles. Heredan el OCR obligatorio u opcional del canal.
+ */
+function PuntosCanal({ canal, nombre }: { canal: string; nombre: string }) {
+  const [puntos, setPuntos] = useState<PuntoComercializacion[]>([]);
+  const [total, setTotal] = useState(0);
+  const [pagina, setPagina] = useState(0);
+  const [buscar, setBuscar] = useState('');
+  const [consulta, setConsulta] = useState('');
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
+  const peticion = useRef(0);
+
+  const cargar = useCallback(
+    async (p: number, q: string) => {
+      const n = ++peticion.current;
+      setCargando(true);
+      setError('');
+      try {
+        const r = await obtenerPuntosCanal(canal, p, q);
+        if (n !== peticion.current) return;
+        setPuntos((prev) => (p === 1 ? r.puntos : [...prev, ...r.puntos]));
+        setTotal(r.total);
+        setPagina(p);
+      } catch (err) {
+        if (n !== peticion.current) return;
+        setError(isExpedientesError(err) ? err.message : 'No se pudieron cargar los puntos.');
+      } finally {
+        if (n === peticion.current) setCargando(false);
+      }
+    },
+    [canal],
+  );
+
+  // Primera página y cada búsqueda (con una pausa corta para no consultar por tecla).
+  useEffect(() => {
+    const t = window.setTimeout(() => void cargar(1, consulta), consulta ? 300 : 0);
+    return () => window.clearTimeout(t);
+  }, [cargar, consulta]);
+
+  const hayMas = puntos.length < total;
+
+  return (
+    <div className="mx-ocr-puntos" id={`mx-ocr-puntos-${canal}`}>
+      <p className="mx-ocr-puntos-nota">Siguen la configuración del canal.</p>
+      <label className="mx-ocr-puntos-buscar" htmlFor={`mx-ocr-puntos-q-${canal}`}>
+        <span className="sr-only">Buscar punto de {nombre}</span>
+        <input
+          id={`mx-ocr-puntos-q-${canal}`}
+          type="search"
+          className="mx-input"
+          value={buscar}
+          onChange={(e) => {
+            setBuscar(e.target.value);
+            setConsulta(e.target.value.trim());
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.preventDefault();
+          }}
+          placeholder="Buscar punto por código o nombre…"
+          maxLength={60}
+          autoComplete="off"
+        />
+      </label>
+      {error ? (
+        <div className="mx-ocr-puntos-estado" role="alert">
+          <span>{error}</span>
+          <button type="button" className="mx-link" onClick={() => void cargar(pagina + 1, consulta)}>
+            Reintentar
+          </button>
+        </div>
+      ) : puntos.length === 0 && !cargando ? (
+        <p className="mx-ocr-puntos-estado">
+          {consulta ? 'Ningún punto coincide.' : 'Este canal no tiene puntos activos.'}
+        </p>
+      ) : (
+        <ul className="mx-ocr-puntos-lista" aria-busy={cargando}>
+          {puntos.map((p) => (
+            <li key={p.codigo} className="mx-ocr-punto">
+              <span className="mx-num mx-ocr-punto-codigo">{p.codigo}</span>
+              <span className="mx-ocr-punto-nombre">{p.nombre ?? '—'}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="mx-ocr-puntos-pie" aria-live="polite">
+        {cargando ? (
+          <span className="mx-ocr-puntos-cargando">
+            <Loader2 size={13} className="animate-spin" aria-hidden />
+            Cargando puntos…
+          </span>
+        ) : (
+          total > 0 && (
+            <span>
+              {puntos.length.toLocaleString('es-VE')} de {total.toLocaleString('es-VE')}
+            </span>
+          )
+        )}
+        {hayMas && !cargando && !error && (
+          <button type="button" className="mx-link" onClick={() => void cargar(pagina + 1, consulta)}>
+            Ver más
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /**
  * OCR obligatorio u opcional por canal. Lee y guarda la misma configuración que la
- * pestaña «OCR por canal» del parametrizador del OCR. Solo canales: los gestores no se
- * muestran aquí (cuentan dentro de su canal) y los ya configurados en el OCR no se tocan.
+ * pestaña «OCR por canal» del parametrizador del OCR. Solo se configuran canales: sus puntos
+ * de comercialización se pueden ver (siguen al canal) y los gestores ya configurados en el
+ * OCR no se tocan.
  */
 export function OcrPorCanal() {
   const [producto, setProducto] = useState<ProductoOcr>('rcv');
+  const [abiertos, setAbiertos] = useState<Set<string>>(() => new Set());
   const [datos, setDatos] = useState<DatosOcr | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<ExpedientesError | null>(null);
@@ -243,6 +359,7 @@ export function OcrPorCanal() {
                     {visibles.map((c) => {
                       const opcional = marcados.has(c.codigo);
                       const nombre = nombreCanal(c);
+                      const abierto = abiertos.has(c.codigo);
                       return (
                         <li key={c.codigo} className={`mx-ocr-fila ${opcional ? 'is-opcional' : ''}`}>
                           <div className="min-w-0 flex-1">
@@ -254,6 +371,25 @@ export function OcrPorCanal() {
                               {!c.enCatalogo && <span>Ya no está entre los canales activos</span>}
                               {opcional && <span className="mx-chip mx-chip--ocr-opcional">OCR opcional</span>}
                             </p>
+                            {c.puntos > 0 && (
+                              <button
+                                type="button"
+                                className="mx-ocr-puntos-toggle"
+                                aria-expanded={abierto}
+                                aria-controls={abierto ? `mx-ocr-puntos-${c.codigo}` : undefined}
+                                onClick={() =>
+                                  setAbiertos((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(c.codigo)) next.delete(c.codigo);
+                                    else next.add(c.codigo);
+                                    return next;
+                                  })
+                                }
+                              >
+                                <ChevronDown size={13} aria-hidden className="mx-ocr-puntos-chevron" />
+                                {etiquetaPuntos(c.puntos)}
+                              </button>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -271,6 +407,7 @@ export function OcrPorCanal() {
                               <span className="mx-switch-perilla" />
                             </span>
                           </button>
+                          {abierto && c.puntos > 0 && <PuntosCanal canal={c.codigo} nombre={nombre} />}
                         </li>
                       );
                     })}

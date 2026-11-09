@@ -1141,6 +1141,20 @@ export interface CanalOcr {
   /** false: está en la config del OCR pero ya no entre los canales activos. */
   enCatalogo: boolean;
   ocrOpcional: boolean;
+  /** Puntos de comercialización activos del canal (siguen su configuración). */
+  puntos: number;
+}
+
+export interface PuntoComercializacion {
+  codigo: string;
+  nombre: string | null;
+}
+
+export interface PuntosDeCanal {
+  total: number;
+  pagina: number;
+  porPagina: number;
+  puntos: PuntoComercializacion[];
 }
 
 export interface CambioOcrPorCanal {
@@ -1179,6 +1193,7 @@ function normalizarOcrPorCanal(raw: unknown, producto: ProductoOcr): OcrPorCanal
         nombre: texto(c.nombre),
         enCatalogo: c.enCatalogo !== false,
         ocrOpcional: Boolean(c.ocrOpcional),
+        puntos: Number.isFinite(Number(c.puntos)) ? Math.max(0, Number(c.puntos)) : 0,
       }))
       .filter((c) => c.codigo),
     opcionales: codigos(r.opcionales),
@@ -1202,6 +1217,36 @@ export async function obtenerOcrPorCanal(producto: ProductoOcr): Promise<OcrPorC
       params: { producto },
     });
     return normalizarOcrPorCanal(unwrap<unknown>(data), producto);
+  } catch (err) {
+    throw toExpedientesError(err, 'coleccion');
+  }
+}
+
+/** Puntos de comercialización de un canal, paginados y con filtro opcional (solo lectura). */
+export async function obtenerPuntosCanal(
+  canal: string,
+  pagina: number,
+  q = '',
+): Promise<PuntosDeCanal> {
+  try {
+    const { data } = await api.get(`${BASE}/ocr-por-canal/puntos`, {
+      headers: authHeaders(),
+      params: { canal, pagina, porPagina: 50, ...(q.trim() ? { q: q.trim() } : {}) },
+    });
+    const r = (unwrap<Record<string, unknown>>(data) ?? {}) as Record<string, unknown>;
+    const num = (v: unknown, d: number) => (Number.isFinite(Number(v)) ? Number(v) : d);
+    return {
+      total: num(r.total, 0),
+      pagina: num(r.pagina, pagina),
+      porPagina: num(r.porPagina, 50),
+      puntos: arreglo<Record<string, unknown>>(r.puntos)
+        .filter((p) => !!p && typeof p === 'object')
+        .map((p) => ({
+          codigo: p.codigo == null ? '' : String(p.codigo).trim(),
+          nombre: texto(p.nombre),
+        }))
+        .filter((p) => p.codigo),
+    };
   } catch (err) {
     throw toExpedientesError(err, 'coleccion');
   }

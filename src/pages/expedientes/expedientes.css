@@ -1771,9 +1771,126 @@ textarea.mx-input {
 
 .mx-ocr-fila {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
   padding: 0.55rem 0.75rem;
+}
+
+/* Puntos de comercialización del canal: solo lectura, siguen la configuración del canal. */
+.mx-ocr-puntos-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  padding: 0.1rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mx-blue);
+  text-align: left;
+}
+
+.mx-ocr-puntos-toggle:hover {
+  text-decoration: underline;
+}
+
+.mx-ocr-puntos-toggle:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+  border-radius: 0.3rem;
+}
+
+.mx-ocr-puntos-chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.mx-ocr-puntos-toggle[aria-expanded='true'] .mx-ocr-puntos-chevron {
+  transform: rotate(180deg);
+}
+
+.mx-ocr-puntos {
+  flex-basis: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  border: 1px solid var(--mx-line-soft);
+  border-radius: 0.55rem;
+  background: #fff;
+}
+
+.mx-ocr-puntos-nota {
+  font-size: 0.75rem;
+  color: var(--mx-muted);
+}
+
+.mx-ocr-puntos-buscar {
+  display: block;
+  min-width: 0;
+}
+
+.mx-ocr-puntos-buscar .mx-input {
+  width: 100%;
+}
+
+.mx-ocr-puntos-lista {
+  max-height: 14rem;
+  overflow-y: auto;
+  display: grid;
+}
+
+.mx-ocr-punto {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 0.15rem 0.75rem;
+  padding: 0.35rem 0.15rem;
+  font-size: 0.75rem;
+}
+
+.mx-ocr-punto + .mx-ocr-punto {
+  border-top: 1px solid var(--mx-line-soft);
+}
+
+.mx-ocr-punto-codigo {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.mx-ocr-punto-nombre {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.mx-ocr-puntos-estado,
+.mx-ocr-puntos-pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--mx-muted);
+}
+
+.mx-ocr-puntos-pie:empty {
+  display: none;
+}
+
+.mx-ocr-puntos-cargando {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+@media (max-width: 480px) {
+  .mx-ocr-punto {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mx-ocr-punto-codigo {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .mx-ocr-lista > ul > li + li {
