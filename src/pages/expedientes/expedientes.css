@@ -1485,7 +1485,8 @@ textarea.mx-input {
 
 .mx-resumen-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
+  /* Ancho mínimo para que la descripción de cada cifra no quede en una columna angosta */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
   gap: 0.5rem;
   transition: opacity 0.15s ease;
 }
@@ -1529,6 +1530,16 @@ textarea.mx-input {
   color: #fff;
 }
 
+/* Qué cuenta cada cifra: siempre visible, puede ocupar varias líneas (nunca se corta) */
+.mx-resumen-item dd.mx-resumen-desc {
+  margin-top: 0.2rem;
+  font-size: 0.64rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.7);
+  overflow-wrap: anywhere;
+}
+
 .mx-resumen-pie {
   display: flex;
   flex-wrap: wrap;
@@ -1541,6 +1552,16 @@ textarea.mx-input {
 .mx-resumen-nota {
   font-size: 0.66rem;
   color: rgba(255, 255, 255, 0.55);
+}
+
+/* Cuadre con Nexus: monitor vs. emisiones registradas */
+.mx-resumen-cuadre {
+  flex: 1 1 16rem;
+  min-width: 0;
+  padding: 0.25rem 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .mx-resumen-mas {
@@ -2768,6 +2789,46 @@ textarea.mx-input {
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: var(--mx-muted);
+}
+
+/* Qué cuenta la tarjeta: siempre visible bajo el título */
+.mx-kpi-desc {
+  margin-top: -0.2rem;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: var(--mx-gris-fg);
+}
+
+/* Consolidado = Canales alternos + Productores + sin datos de quién emitió */
+.mx-kpi-reparto {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--mx-line);
+  background: var(--mx-surface);
+  font-size: 0.8rem;
+  color: var(--mx-gris-fg);
+}
+
+.mx-kpi-reparto > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}
+
+.mx-kpi-reparto > ul > li {
+  min-width: 0;
+}
+
+.mx-kpi-reparto strong {
+  font-size: 0.95rem;
+  color: var(--mx-ink);
+}
+
+.mx-kpi-reparto > p {
+  font-size: 0.72rem;
   color: var(--mx-muted);
 }
 

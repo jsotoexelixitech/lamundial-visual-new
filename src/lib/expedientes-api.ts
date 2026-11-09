@@ -177,9 +177,20 @@ export interface Indicadores {
   /** Validación automática con IA. */
   validadosIa: number;
   conErrores: number;
+  /** Con documentos recibidos que la IA está revisando (sin los de error técnico). */
   analizando: number;
+  /** Con algún archivo que el OCR no pudo leer (error técnico; se reintenta solo). */
+  noLeidos: number;
   /** v1.3: pólizas con datos cambiados en el formulario respecto al documento. */
   datosModificados: number;
+  /** Modo de validación; `undefined` si Nexus aún no lo manda. */
+  validacion?: ModoValidacion;
+  /** No pasaron por el OCR: fuera del monitor. `null` si Nexus aún no lo manda. */
+  descartadas: number | null;
+  /** Emisiones registradas en Nexus en el mismo rango de fechas (sin filtro de área). */
+  emisionesNexus: number | null;
+  /** El total por quién emitió: canales (con sus gestores), productores o sin datos. */
+  porArea: { canales: number; productores: number; sinDatos: number } | null;
   /** v1.4: KPI agregados con el mismo filtro. Puede faltar si Nexus aún no lo publica. */
   kpis?: KpisExpedientes;
 }
@@ -737,6 +748,13 @@ const numONull = (v: unknown): number | null => {
 const lista = (v: unknown): Record<string, unknown>[] =>
   Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object') : [];
 
+/** Reparto del total por quién emitió; null si Nexus aún no lo manda. */
+function normalizarPorArea(v: unknown): Indicadores['porArea'] {
+  if (!v || typeof v !== 'object') return null;
+  const p = v as Record<string, unknown>;
+  return { canales: num(p.canales), productores: num(p.productores), sinDatos: num(p.sinDatos) };
+}
+
 /** v1.4: KPI de Nexus. Si Nexus aún no los publica, undefined (la pantalla lo avisa). */
 function normalizarKpis(v: unknown): KpisExpedientes | undefined {
   if (!v || typeof v !== 'object') return undefined;
@@ -815,7 +833,13 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       validadosIa: num(r.validadosIa ?? r.validadosIA ?? r.validadosPorIa),
       conErrores: num(r.conErrores ?? r.errados),
       analizando: num(r.analizando ?? r.enAnalisis),
+      noLeidos: num(r.noLeidos),
       datosModificados: num(r.datosModificados),
+      validacion:
+        r.validacion === 'manual' || r.validacion === 'automatica' ? r.validacion : undefined,
+      descartadas: numONull(r.descartadas),
+      emisionesNexus: numONull(r.emisionesNexus),
+      porArea: normalizarPorArea(r.porArea),
       kpis: normalizarKpis(r.kpis),
     };
   } catch (err) {

@@ -140,6 +140,7 @@ export function KpiPrincipales({ d, clave }: { d: Indicadores; clave: unknown })
     <div className="mx-kpis" role="list" aria-label="Indicadores principales">
       <article className="mx-kpi mx-kpi--anillo" role="listitem">
         <h3 className="mx-kpi-tit">Expedientes completos</h3>
+        <p className="mx-kpi-desc">Pólizas con todos sus documentos validados.</p>
         <div className="mx-kpi-anillo-fila">
           <div className="mx-anillo-caja">
             <Anillo valor={k.tasaCompletitud} />
@@ -170,6 +171,7 @@ export function KpiPrincipales({ d, clave }: { d: Indicadores; clave: unknown })
         role="listitem"
       >
         <h3 className="mx-kpi-tit">Piden atención</h3>
+        <p className="mx-kpi-desc">Pólizas con algún documento errado o con datos cambiados.</p>
         <div className="mx-kpi-par">
           <div className={d.conErrores > 0 ? 'is-rojo' : ''}>
             <strong className="mx-kpi-valor mx-num">
@@ -192,30 +194,39 @@ export function KpiPrincipales({ d, clave }: { d: Indicadores; clave: unknown })
 
       <article className="mx-kpi mx-kpi--spark" role="listitem">
         <h3 className="mx-kpi-tit">Completados en 7 días</h3>
+        <p className="mx-kpi-desc">
+          Por la fecha en que quedaron completos: incluye pólizas antiguas validadas en estos días.
+        </p>
         <p className="mx-kpi-valor mx-num">
           <Cifra valor={k.completadosUltimos7Dias} clave={clave} />
         </p>
         <Tendencia30 dias={completadasDia} titulo="Completados por día" resaltar={7} tono="verde" />
         <QueMide>
-          Expedientes que quedaron completos en los últimos 7 días. El gráfico muestra los 30 días
-          (hora de Caracas); los 7 últimos van en verde.
+          Expedientes que quedaron completos en los últimos 7 días, sin importar cuándo se emitió la
+          póliza: si hoy se valida una póliza de hace meses, cuenta hoy. El gráfico muestra los 30
+          días (hora de Caracas); los 7 últimos van en verde.
         </QueMide>
       </article>
 
       <article className="mx-kpi" role="listitem">
         <h3 className="mx-kpi-tit">Tiempo medio para completar</h3>
+        <p className="mx-kpi-desc">
+          De la emisión al día en que quedó completo: las pólizas antiguas validadas hace poco lo suben.
+        </p>
         <p className="mx-kpi-valor mx-num">
           <Cifra valor={k.tiempoMedioCompletarDias} clave={clave} formato={dias} />
           {k.tiempoMedioCompletarDias != null && <small> días</small>}
         </p>
         <QueMide>
-          Días, en promedio, desde la emisión hasta que el expediente quedó completo. Solo cuenta
-          los completos que tienen fecha de completado.
+          Días, en promedio, desde la emisión hasta la fecha en que el expediente quedó completo.
+          Cuenta todos los completos con fecha de completado: una póliza de hace meses validada
+          esta semana suma todos esos días.
         </QueMide>
       </article>
 
       <article className="mx-kpi" role="listitem">
         <h3 className="mx-kpi-tit">Recuperación por recordatorios</h3>
+        <p className="mx-kpi-desc">Pólizas que completaron sus documentos después de recibir un correo.</p>
         <p className="mx-kpi-valor mx-num">
           {k.tasaRecuperacion == null ? (
             <span className="mx-kpi-sindato">{SIN_DATO}</span>

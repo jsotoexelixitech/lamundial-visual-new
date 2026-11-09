@@ -4,28 +4,120 @@ import { obtenerIndicadores, type FiltrosIndicadores, type Indicadores } from '@
 import { numero } from './expedientes-format';
 
 type TonoResumen = 'rojo' | 'ambar' | 'violeta';
+type CifraClave = {
+  [K in keyof Indicadores]-?: Indicadores[K] extends number ? K : never;
+}[keyof Indicadores];
+/** manual / automatica: solo en ese modo de validación (sin modo conocido se muestran como antes). */
+type Modo = 'manual' | 'automatica';
 
 /**
  * Primero lo que pide atención (qué falta y qué está mal); luego el resto.
- * El tono solo se pinta si la cifra es mayor que cero.
+ * El tono solo se pinta si la cifra es mayor que cero. Cada cifra lleva su descripción visible.
  * En el móvil se ven las cuatro primeras y «Ver todo el resumen» abre las demás.
  */
-const CIFRAS: { key: Exclude<keyof Indicadores, 'kpis'>; label: string; tono?: TonoResumen }[] = [
-  { key: 'incompletos', label: 'Incompletos', tono: 'ambar' },
-  { key: 'conErrores', label: 'Con errores', tono: 'rojo' },
-  { key: 'datosModificados', label: 'Datos cambiados', tono: 'violeta' },
-  { key: 'porValidar', label: 'Por validar', tono: 'ambar' },
-  { key: 'analizando', label: 'Analizando' },
-  { key: 'pendientesPago', label: 'Pendientes de pago' },
-  { key: 'completos', label: 'Completos' },
-  { key: 'validadosIa', label: 'Validados por IA' },
-  { key: 'total', label: 'Total' },
+const CIFRAS: {
+  key: CifraClave;
+  label: string;
+  desc: string;
+  tono?: TonoResumen;
+  modo?: Modo;
+  /** Nuevo en Nexus: si la versión instalada no conoce el modo, no se muestra. */
+  requiereModo?: boolean;
+}[] = [
+  {
+    key: 'incompletos',
+    label: 'Incompletos',
+    desc: 'Les falta al menos un documento por recibir, validar o corregir.',
+    tono: 'ambar',
+  },
+  {
+    key: 'conErrores',
+    label: 'Con errores',
+    desc: 'Algún documento no coincide con la póliza, es ilegible o necesita revisión.',
+    tono: 'rojo',
+  },
+  {
+    key: 'datosModificados',
+    label: 'Datos cambiados',
+    desc: 'Los datos de la póliza cambiaron después de leer el documento.',
+    tono: 'violeta',
+  },
+  {
+    key: 'porValidar',
+    label: 'Por validar',
+    desc: 'Pólizas con documentos que esperan revisión de un analista.',
+    tono: 'ambar',
+    modo: 'manual',
+  },
+  {
+    key: 'analizando',
+    label: 'Analizando',
+    desc: 'Pólizas con documentos que la IA está revisando.',
+    modo: 'automatica',
+  },
+  {
+    key: 'noLeidos',
+    label: 'No se pudo leer',
+    desc: 'El sistema no pudo leer un archivo; se reintenta solo.',
+    modo: 'automatica',
+    requiereModo: true,
+  },
+  { key: 'pendientesPago', label: 'Pendientes de pago', desc: 'Emitidas como pendientes de cobro.' },
+  { key: 'completos', label: 'Completos', desc: 'Todos los documentos requeridos están validados.' },
+  {
+    key: 'validadosIa',
+    label: 'Validados por IA',
+    desc: 'Completos validados por la IA, sin intervención manual.',
+  },
+  {
+    key: 'total',
+    label: 'Total',
+    desc: 'Pólizas emitidas por el Marketplace que pasaron por el OCR.',
+  },
 ];
 const VISIBLES_MOVIL = 4;
+
+/** Cifras del modo de validación vigente («Por validar» solo en manual). */
+const cifrasDe = (validacion?: Modo) =>
+  CIFRAS.filter((c) => (validacion ? !c.modo || c.modo === validacion : !c.requiereModo));
 
 /** Hacia abajo: nunca 100 % si falta alguna póliza. */
 const pctCompletos = (d: Indicadores) =>
   d.total > 0 ? Math.floor((d.completos / d.total) * 100) : 0;
+
+const plural = (n: number, uno: string, varios: string) => (n === 1 ? uno : varios);
+
+/**
+ * Cuadre con Nexus: cuántas de las emisiones registradas están en el monitor y por qué falta
+ * el resto. Sin el dato de Nexus (versión anterior) no se muestra.
+ */
+function textoCuadre(d: Indicadores): string | null {
+  if (d.emisionesNexus == null) return null;
+  const descartadas = d.descartadas ?? 0;
+  const partes = [
+    `${numero(d.total)} en el monitor de ${numero(d.emisionesNexus)} ${plural(
+      d.emisionesNexus,
+      'póliza registrada',
+      'pólizas registradas',
+    )} en Nexus.`,
+  ];
+  if (descartadas > 0) {
+    partes.push(
+      `${numero(descartadas)} ${plural(
+        descartadas,
+        'no se controla porque no pasó',
+        'no se controlan porque no pasaron',
+      )} por el OCR.`,
+    );
+  }
+  const resto = d.emisionesNexus - d.total - descartadas;
+  if (resto > 0) {
+    partes.push(
+      `${numero(resto)} ${plural(resto, 'queda', 'quedan')} fuera por el alcance configurado o por conciliar.`,
+    );
+  }
+  return partes.join(' ');
+}
 
 /**
  * Resumen compacto del encabezado, visible en todas las pestañas.
@@ -71,6 +163,9 @@ export function ResumenExpedientes({
   if (fallo && !datos) return null;
 
   const filtrado = !!(area || desde || hasta);
+  const cifras = cifrasDe(datos?.validacion);
+  // Las emisiones de Nexus no tienen área: el cuadre solo se muestra sin filtro de área.
+  const cuadre = datos && !area ? textoCuadre(datos) : null;
   return (
     <section
       className={`mx-resumen ${abierto ? 'is-abierto' : ''}`}
@@ -101,7 +196,7 @@ export function ResumenExpedientes({
         </div>
       )}
       <dl id={gridId} className={`mx-resumen-grid ${cargando && datos ? 'opacity-70' : ''}`}>
-        {CIFRAS.map(({ key, label, tono }, i) => {
+        {cifras.map(({ key, label, desc, tono }, i) => {
           const valor = datos ? datos[key] : null;
           const clases = [
             'mx-resumen-item',
@@ -114,13 +209,18 @@ export function ResumenExpedientes({
             <div key={key} className={clases}>
               <dt>{label}</dt>
               <dd className="mx-num">{valor === null ? '…' : numero(valor)}</dd>
+              <dd className="mx-resumen-desc">{desc}</dd>
             </div>
           );
         })}
       </dl>
       <div className="mx-resumen-pie">
-        <p className="mx-resumen-nota">
-          {filtrado ? 'Según los filtros de fecha y área.' : 'Acumulado de las pólizas en el monitor.'}
+        <p className={cuadre ? 'mx-resumen-cuadre' : 'mx-resumen-nota'}>
+          {cuadre
+            ? `${filtrado ? 'En las fechas elegidas: ' : ''}${cuadre}`
+            : filtrado
+              ? 'Según los filtros de fecha y área.'
+              : 'Acumulado de las pólizas en el monitor.'}
         </p>
         <button
           type="button"
@@ -129,7 +229,7 @@ export function ResumenExpedientes({
           aria-controls={gridId}
           onClick={() => setAbierto((a) => !a)}
         >
-          {abierto ? 'Ver menos' : `Ver todo el resumen (${CIFRAS.length})`}
+          {abierto ? 'Ver menos' : `Ver todo el resumen (${cifras.length})`}
           {abierto ? <ChevronUp size={14} aria-hidden /> : <ChevronDown size={14} aria-hidden />}
         </button>
       </div>

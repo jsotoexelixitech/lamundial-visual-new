@@ -137,6 +137,7 @@ export function IndicadoresExpedientes({
             <AvisoError error={kpiRes.error} onReintentar={() => setReintento((n) => n + 1)} />
           ) : (
             <>
+              {areaKpi === 'todas' && <RepartoConsolidado d={kpiRes.data} />}
               <KpiPrincipales d={kpiRes.data} clave={`${version}|${areaKpi}`} />
               <PanelesKpi d={kpiRes.data} escritorio={escritorio} onElegirActor={onElegirActor} />
             </>
@@ -161,6 +162,42 @@ export function IndicadoresExpedientes({
 
 const esEscritorio = () =>
   typeof window.matchMedia !== 'function' || window.matchMedia('(min-width: 1024px)').matches;
+
+/**
+ * Consolidado = Canales alternos + Productores + pólizas sin datos de quién la emitió
+ * (estas últimas no tienen pestaña propia). Los gestores cuentan en su canal.
+ */
+function RepartoConsolidado({ d }: { d: Indicadores }) {
+  const p = d.porArea;
+  if (!p) return null;
+  const partes = [
+    { label: 'Canales alternos', valor: p.canales },
+    { label: 'Productores', valor: p.productores },
+    { label: 'Sin datos de quién la emitió', valor: p.sinDatos },
+  ];
+  return (
+    <div className="mx-kpi-reparto">
+      <ul aria-label="Pólizas del consolidado según quién la emitió">
+        {partes.map((x) => (
+          <li key={x.label}>
+            <span>{x.label}</span> <strong className="mx-num">{numero(x.valor)}</strong>
+          </li>
+        ))}
+      </ul>
+      <p>Las pólizas sin datos de quién las emitió solo cuentan en Consolidado.</p>
+    </div>
+  );
+}
+
+/** Filas de validación según el modo: «Por validar» solo en manual; en automática, la IA. */
+function filasValidacion(d: Indicadores): { label: string; valor: number; tono: 'azul' | 'gris' }[] {
+  const porValidar = { label: 'Por validar', valor: d.porValidar, tono: 'azul' as const };
+  const analizando = { label: 'Analizando', valor: d.analizando, tono: 'azul' as const };
+  if (d.validacion === 'manual') return [porValidar];
+  if (d.validacion === 'automatica')
+    return [analizando, { label: 'No se pudo leer', valor: d.noLeidos, tono: 'gris' }];
+  return [porValidar, analizando];
+}
 
 /** Estado documental de las áreas, lado a lado, para comparar de un vistazo. */
 function Comparativo({ res }: { res: Record<string, Resultado> | null }) {
@@ -263,8 +300,7 @@ function Contenido({ d }: { d: Indicadores }) {
           { label: 'Con errores', valor: d.conErrores, tono: 'rojo' },
           { label: 'Datos cambiados', valor: d.datosModificados ?? 0, tono: 'violeta' },
           { label: 'Observados', valor: d.observados, tono: 'ambar' },
-          { label: 'Por validar', valor: d.porValidar, tono: 'azul' },
-          { label: 'Analizando', valor: d.analizando, tono: 'azul' },
+          ...filasValidacion(d),
           { label: 'Validados por IA', valor: d.validadosIa, tono: 'verde' },
         ]}
       />
