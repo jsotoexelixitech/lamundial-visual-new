@@ -31,7 +31,7 @@ function Cifra({
   if (valor == null) return <span className="mx-kpi-sindato">{SIN_DATO}</span>;
   return (
     <>
-      <span aria-hidden>{formato(v)}</span>
+      <span aria-hidden className="select-none">{formato(v)}</span>
       <span className="sr-only">{formato(valor)}</span>
     </>
   );
