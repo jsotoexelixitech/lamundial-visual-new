@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, ChevronDown, Loader2, RefreshCw, ScanLine, Search } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Loader2, RefreshCw, ScanLine, Search, X } from 'lucide-react';
 import {
   guardarOcrPorCanal,
   isExpedientesError,
@@ -37,6 +37,12 @@ function mismoConjunto(a: string[], b: string[]): boolean {
 function nombreCanal(c: Pick<CanalOcr, 'codigo' | 'nombre'>): string {
   return c.nombre || `Canal ${c.codigo}`;
 }
+
+const etiquetaCanales = (n: number) =>
+  `${n.toLocaleString('es-VE')} ${n === 1 ? 'canal' : 'canales'}`;
+
+/** Cambio masivo: todos los canales visibles (los filtrados, si hay búsqueda) a un mismo estado. */
+type DestinoMasivo = 'opcional' | 'obligatorio';
 
 const etiquetaPuntos = (n: number) =>
   `${n.toLocaleString('es-VE')} ${n === 1 ? 'punto de comercialización' : 'puntos de comercialización'}`;
@@ -169,6 +175,7 @@ export function OcrPorCanal() {
   const [errGuardar, setErrGuardar] = useState('');
   const [conflicto, setConflicto] = useState(false);
   const [guardado, setGuardado] = useState('');
+  const [masivo, setMasivo] = useState<DestinoMasivo | null>(null);
   const peticion = useRef(0);
 
   const cargar = useCallback(async (p: ProductoOcr) => {
@@ -213,6 +220,26 @@ export function OcrPorCanal() {
     );
   }, [datos, filtro]);
 
+  // Lista que quedaría con cada acción masiva (sobre lo guardado) y los canales que cambian.
+  const planMasivo = useMemo(() => {
+    const base = datos?.opcionales ?? [];
+    const enBase = new Set(base);
+    const codigos = visibles.map((c) => c.codigo);
+    const enVista = new Set(codigos);
+    const aOpcional = codigos.filter((c) => !enBase.has(c));
+    return {
+      opcional: { lista: [...base, ...aOpcional], cambian: aOpcional },
+      obligatorio: {
+        lista: base.filter((c) => !enVista.has(c)),
+        cambian: codigos.filter((c) => enBase.has(c)),
+      },
+    };
+  }, [datos, visibles]);
+  const hayFiltro = filtro.trim().length > 0;
+  const alcanceMasivo = hayFiltro
+    ? `Todos los filtrados (${visibles.length.toLocaleString('es-VE')})`
+    : 'Todos';
+
   const nombres = useMemo(
     () => new Map((datos?.canales ?? []).map((c) => [c.codigo, nombreCanal(c)])),
     [datos],
@@ -229,6 +256,7 @@ export function OcrPorCanal() {
     setErrGuardar('');
     setConflicto(false);
     setGuardado('');
+    setMasivo(null);
   };
 
   // Interruptor encendido = obligatorio: el código sale de la lista de opcionales.
@@ -257,6 +285,20 @@ export function OcrPorCanal() {
     } finally {
       setGuardando(false);
     }
+  };
+
+  const abrirMasivo = (destino: DestinoMasivo) => {
+    setGuardado('');
+    setErrGuardar('');
+    setConflicto(false);
+    setMasivo(destino);
+  };
+
+  // Tras el cambio masivo se recarga la sección («Últimos cambios» trae el registro).
+  const trasMasivo = (mensaje: string) => {
+    setMasivo(null);
+    setGuardado(mensaje);
+    void cargar(producto);
   };
 
   const etiquetaCodigos = (lista: string[]) => {
@@ -347,10 +389,37 @@ export function OcrPorCanal() {
                   Canales alternos · {datos.canales.length}
                   {cargando && <Loader2 size={12} className="inline ml-1.5 animate-spin" aria-hidden />}
                 </span>
-                <span className="text-xs font-semibold mx-muted" aria-live="polite">
-                  {opcionales.length > 0 ? `${opcionales.length} con OCR opcional` : 'Todos obligatorios'}
-                </span>
+                <div className="mx-ocr-masivo">
+                  <span className="text-xs font-semibold mx-muted" aria-live="polite">
+                    {opcionales.length > 0 ? `${opcionales.length} con OCR opcional` : 'Todos obligatorios'}
+                  </span>
+                  {datos.escrituraHabilitada && visibles.length > 0 && (
+                    <div className="mx-ocr-masivo-acciones" role="group" aria-label="Cambiar todos los canales visibles">
+                      <button
+                        type="button"
+                        className="mx-btn mx-btn--ghost mx-btn--sm"
+                        onClick={() => abrirMasivo('opcional')}
+                        disabled={guardando || cargando || sucio || planMasivo.opcional.cambian.length === 0}
+                      >
+                        {alcanceMasivo} opcional
+                      </button>
+                      <button
+                        type="button"
+                        className="mx-btn mx-btn--ghost mx-btn--sm"
+                        onClick={() => abrirMasivo('obligatorio')}
+                        disabled={guardando || cargando || sucio || planMasivo.obligatorio.cambian.length === 0}
+                      >
+                        {alcanceMasivo} obligatorio
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
+              {datos.escrituraHabilitada && sucio && (
+                <p className="mx-sub">
+                  Para cambiar todos a la vez, guarde primero los cambios pendientes o desmárquelos.
+                </p>
+              )}
               <div className="mx-ocr-lista" aria-busy={cargando}>
                 {visibles.length === 0 ? (
                   <p className="p-3 text-xs mx-muted">
@@ -518,6 +587,209 @@ export function OcrPorCanal() {
           </>
         ) : null}
       </form>
+
+      {masivo && datos && (
+        <ConfirmarMasivo
+          destino={masivo}
+          producto={producto}
+          productoLabel={productoActual.label}
+          visibles={visibles.length}
+          filtrado={hayFiltro}
+          cambian={planMasivo[masivo].cambian}
+          lista={planMasivo[masivo].lista}
+          base={datos.opcionales}
+          etiquetaCodigos={etiquetaCodigos}
+          onCerrar={() => setMasivo(null)}
+          onHecho={trasMasivo}
+          onRecargar={() => {
+            setMasivo(null);
+            void cargar(producto);
+          }}
+        />
+      )}
     </section>
+  );
+}
+
+/**
+ * Confirmación del cambio masivo: un solo PUT con la lista completa resultante y `base`
+ * igual a la lista guardada (409 si otro la cambió mientras tanto). Pide motivo, como el
+ * cambio individual, porque aplica de inmediato en la emisión del producto.
+ */
+function ConfirmarMasivo({
+  destino,
+  producto,
+  productoLabel,
+  visibles,
+  filtrado,
+  cambian,
+  lista,
+  base,
+  etiquetaCodigos,
+  onCerrar,
+  onHecho,
+  onRecargar,
+}: {
+  destino: DestinoMasivo;
+  producto: ProductoOcr;
+  productoLabel: string;
+  visibles: number;
+  filtrado: boolean;
+  cambian: string[];
+  lista: string[];
+  base: string[];
+  etiquetaCodigos: (lista: string[]) => string;
+  onCerrar: () => void;
+  onHecho: (mensaje: string) => void;
+  onRecargar: () => void;
+}) {
+  const [motivo, setMotivo] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState('');
+  const [conflicto, setConflicto] = useState(false);
+  const motivoRef = useRef<HTMLTextAreaElement>(null);
+  // Mientras se envía no se cierra (ni con Escape ni con el velo).
+  const cerrarRef = useRef(onCerrar);
+  useEffect(() => {
+    cerrarRef.current = enviando ? () => {} : onCerrar;
+  });
+  const motivoOk = motivo.trim().length >= MOTIVO_MIN;
+  const opcional = destino === 'opcional';
+  const yaEstaban = visibles - cambian.length;
+
+  // Al abrir: foco en el motivo, Escape cierra y la página de fondo no se desplaza.
+  useEffect(() => {
+    motivoRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') cerrarRef.current();
+    };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const confirmar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!motivoOk || enviando || cambian.length === 0) return;
+    setEnviando(true);
+    setError('');
+    setConflicto(false);
+    try {
+      await guardarOcrPorCanal(producto, lista, base, motivo);
+      onHecho(
+        `${etiquetaCanales(cambian.length)} ${cambian.length === 1 ? 'pasó' : 'pasaron'} a OCR ${destino}. ` +
+          'Aplica a los flujos de OCR que se abran desde ahora.',
+      );
+    } catch (err) {
+      setError(isExpedientesError(err) ? err.message : 'No se pudo guardar el OCR por canal.');
+      setConflicto(isExpedientesError(err) && err.status === 409);
+      setEnviando(false);
+    }
+  };
+
+  const titulo = opcional
+    ? `Poner ${etiquetaCanales(cambian.length)} en OCR opcional`
+    : `Volver ${etiquetaCanales(cambian.length)} a OCR obligatorio`;
+
+  return (
+    <>
+      <div className="mx-velo" onClick={() => cerrarRef.current()} aria-hidden />
+      <div className="mx-modal" role="dialog" aria-modal="true" aria-labelledby="mx-ocr-masivo-titulo">
+        <form className="mx-modal-caja" onSubmit={(e) => void confirmar(e)}>
+          <div className="mx-modal-head">
+            <h3 id="mx-ocr-masivo-titulo" className="mx-h2 min-w-0">
+              {titulo}
+            </h3>
+            <button
+              type="button"
+              className="mx-modal-cerrar"
+              onClick={onCerrar}
+              disabled={enviando}
+              aria-label="Cancelar"
+            >
+              <X size={18} aria-hidden />
+            </button>
+          </div>
+
+          <div className="mx-modal-body">
+            <div className="mx-aviso mx-aviso--warn" role="note">
+              <p>
+                Aplica <strong>de inmediato</strong> en la emisión de <strong>{productoLabel}</strong>:{' '}
+                {opcional
+                  ? 'estos canales podrán continuar sin documentos y cargar los datos a mano.'
+                  : 'estos canales tendrán que cargar los documentos para continuar.'}
+              </p>
+            </div>
+
+            <div className="grid gap-1 text-xs min-w-0">
+              <p>
+                <span className="font-semibold">
+                  {cambian.length.toLocaleString('es-VE')} de {visibles.toLocaleString('es-VE')}{' '}
+                  {filtrado ? 'canales filtrados' : 'canales'}
+                </span>{' '}
+                {cambian.length === 1 ? 'cambia' : 'cambian'}
+                {yaEstaban > 0 &&
+                  ` · ${yaEstaban.toLocaleString('es-VE')} ya ${yaEstaban === 1 ? 'estaba' : 'estaban'} en OCR ${destino}`}
+                .
+              </p>
+              <p className="mx-sub break-words">{etiquetaCodigos(cambian)}</p>
+              {filtrado && <p className="mx-sub">Los canales que no coinciden con la búsqueda no cambian.</p>}
+            </div>
+
+            <label className="mx-field" htmlFor="mx-ocr-masivo-motivo">
+              <span>Motivo del cambio (obligatorio)</span>
+              <textarea
+                ref={motivoRef}
+                id="mx-ocr-masivo-motivo"
+                className="mx-input"
+                rows={2}
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                maxLength={300}
+                disabled={enviando}
+                placeholder="Ej.: contingencia del escáner en todos los canales"
+              />
+            </label>
+
+            {error && (
+              <div className="mx-aviso mx-aviso--error" role="alert">
+                <div className="min-w-0">
+                  <p>{error}</p>
+                  {conflicto && (
+                    <button
+                      type="button"
+                      className="mx-link mt-1 inline-flex items-center gap-1"
+                      onClick={onRecargar}
+                    >
+                      <RefreshCw size={13} aria-hidden />
+                      Recargar la sección
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mx-modal-pie">
+            {!motivoOk && <span className="mx-modal-pista text-xs mx-muted">Escribe el motivo para confirmar.</span>}
+            <button type="button" className="mx-btn mx-btn--ghost" onClick={onCerrar} disabled={enviando}>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="mx-btn mx-btn--primary"
+              disabled={!motivoOk || enviando || conflicto || cambian.length === 0}
+            >
+              {enviando && <Loader2 size={15} className="animate-spin" aria-hidden />}
+              {opcional ? 'Poner en OCR opcional' : 'Volver a obligatorio'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
