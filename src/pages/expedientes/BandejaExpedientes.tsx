@@ -702,9 +702,12 @@ function Fila({
           <Requisitos it={it} modo={modo} />
         </div>
       </td>
-      <td className="max-w-[10rem]">
+      <td className="min-w-[9rem] max-w-[14rem]">
         <span className="whitespace-nowrap">{etiquetaArea(it.areaCodigo || it.area)}</span>
-        <span className="mx-sub truncate">{it.vendedor || '—'}</span>
+        {/* «Emitida por» completo: salta de línea en vez de cortarse (canal/gestor con nombre largo). */}
+        <span className="mx-sub break-words" title={it.vendedor || undefined}>
+          {it.vendedor || '—'}
+        </span>
       </td>
       <td className="whitespace-nowrap">
         <span className="mx-num font-medium">
@@ -807,7 +810,7 @@ function Tarjeta({
         </div>
         <div>
           <dt>Emitida por</dt>
-          <dd>{it.vendedor || '—'}</dd>
+          <dd title={it.vendedor || undefined}>{it.vendedor || '—'}</dd>
         </div>
         <div>
           <dt>Recordatorios</dt>
