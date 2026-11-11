@@ -629,7 +629,7 @@ function Exclusiones() {
   };
 
   const ayudaBusqueda = tipo === 'canal'
-    ? 'Código o nombre del canal. Salen los canales activos; las pólizas de sus gestores cuentan en el canal.'
+    ? 'Código o nombre del canal. Salen los canales activos; todas las pólizas emitidas en el canal cuentan en él.'
     : ES_ACTOR(tipo)
     ? `Código o nombre del ${opcion.label.toLowerCase()}. La lista sale de las pólizas registradas en el monitor.`
     : tipo === 'asegurado'
