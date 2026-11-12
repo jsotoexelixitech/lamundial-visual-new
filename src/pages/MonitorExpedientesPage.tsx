@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BarChart3, CheckCircle2, FileWarning, Lock, RefreshCw, Settings2 } from 'lucide-react';
-import { getCurrentUser } from '@/lib/nexus-auth';
+import { getCurrentUser, isSsoSession } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
 import {
   esAccesoLibre,
@@ -104,11 +104,15 @@ const MonitorExpedientes: React.FC = () => {
   // QA sin login (Nexus con EXPEDIENTES_ACCESO_LIBRE): todas las pestañas y acciones.
   const accesoLibre = !user && esAccesoLibre();
   const esAdmin = accesoLibre || isPortalAdmin(user);
+  // Abierto por SSO (Sis2000/SysIP, /sso?…&next=/monitor-expedientes): sin pestaña
+  // Configuración. Nexus además rechaza con 403 los cambios de configuración de esa sesión.
+  const esSso = !accesoLibre && (isSsoSession() || user?.sso === true);
+  const puedeConfigurar = esAdmin && !esSso;
   const [params, setParams] = useSearchParams();
   const [recargaKey, setRecargaKey] = useState(0);
   const [modoValidacion, setModoValidacion] = useState<ModoValidacion | undefined>();
 
-  const tabsVisibles = TABS.filter((t) => !t.admin || esAdmin);
+  const tabsVisibles = TABS.filter((t) => !t.admin || puedeConfigurar);
   const pedido = params.get('tab') as TabId | null;
   const tab: TabId = tabsVisibles.some((t) => t.id === pedido) ? (pedido as TabId) : TAB_INICIAL;
   const detalleId = params.get('exp');
@@ -302,7 +306,7 @@ const MonitorExpedientes: React.FC = () => {
               {id === 'indicadores' && (
                 <IndicadoresExpedientes recargaKey={recargaKey} onElegirActor={elegirActor} />
               )}
-              {id === 'configuracion' && esAdmin && (
+              {id === 'configuracion' && puedeConfigurar && (
                 <ConfiguracionExpedientes onGuardado={(c) => setModoValidacion(c.validacion)} />
               )}
             </div>
