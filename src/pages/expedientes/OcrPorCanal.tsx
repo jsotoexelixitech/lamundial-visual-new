@@ -242,6 +242,15 @@ export function OcrPorCanal() {
     setGuardado('');
   };
   const catalogoProd = datos?.catalogoProductores ?? null;
+  // Historial: «Nombre (código)» con el nombre guardado o el del catálogo; si no hay nombre, solo el código.
+  const nombresProd = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of catalogoProd ?? []) if (p.nombre) m.set(p.codigo, p.nombre);
+    for (const p of datos?.productores ?? []) if (p.nombre) m.set(p.codigo, p.nombre);
+    return m;
+  }, [catalogoProd, datos?.productores]);
+  const etiquetaProductores = (codigos: string[]) =>
+    codigos.map((c) => (nombresProd.get(c) ? `${nombresProd.get(c)} (${c})` : c)).join(', ');
   const basesProd = datos?.productoresOpcionales;
   // Solo las filas visibles: los guardados con OCR opcional primero, luego el catálogo por tandas.
   const listaProd = useMemo(
@@ -862,14 +871,14 @@ export function OcrPorCanal() {
                           {c.productoresAgregados.length > 0 && (
                             <>
                               <span className="font-semibold">Productores con OCR opcional:</span>{' '}
-                              {c.productoresAgregados.join(', ')}
+                              {etiquetaProductores(c.productoresAgregados)}
                             </>
                           )}
                           {c.productoresAgregados.length > 0 && c.productoresQuitados.length > 0 && ' · '}
                           {c.productoresQuitados.length > 0 && (
                             <>
                               <span className="font-semibold">Productores que vuelven a obligatorio:</span>{' '}
-                              {c.productoresQuitados.join(', ')}
+                              {etiquetaProductores(c.productoresQuitados)}
                             </>
                           )}
                         </p>
