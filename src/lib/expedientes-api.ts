@@ -13,7 +13,9 @@ import { portalConfig } from './portal-config';
 import { getToken } from './nexus-auth';
 import {
   cuerpoProductores,
+  normalizarCatalogoProductores,
   normalizarProductores,
+  type ProductorCatalogo,
   type ProductorOcr,
 } from './ocr-productores';
 
@@ -1178,7 +1180,7 @@ export async function eliminarExclusion(id: number | string, motivo: string): Pr
 /** Productos del flujo con config OCR propia. */
 export type ProductoOcr = 'rcv' | 'funerario' | 'patrimoniales';
 
-export type { ProductorOcr };
+export type { ProductorCatalogo, ProductorOcr };
 
 export interface CanalOcr {
   codigo: string;
@@ -1226,6 +1228,8 @@ export interface OcrPorCanal {
   productoresOpcionales: string[];
   /** false: Nexus aún no maneja productores (versión anterior): no se muestra la sección. */
   productoresSoportado: boolean;
+  /** Catálogo de productores para la lista con buscador; null si Nexus no lo entregó. */
+  catalogoProductores: ProductorCatalogo[] | null;
   cambios: CambioOcrPorCanal[];
   /** Nexus permite guardar (EXPEDIENTES_OCR_CANAL_ESCRITURA). Sin el dato: solo lectura. */
   escrituraHabilitada: boolean;
@@ -1256,6 +1260,7 @@ function normalizarOcrPorCanal(raw: unknown, producto: ProductoOcr): OcrPorCanal
     productores: normalizarProductores(r.productores),
     productoresOpcionales: codigos(r.productoresOpcionales),
     productoresSoportado: Array.isArray(r.productoresOpcionales),
+    catalogoProductores: normalizarCatalogoProductores(r.catalogoProductores),
     cambios: arreglo<Record<string, unknown>>(r.cambios)
       .filter((c) => !!c && typeof c === 'object')
       .map((c, i) => ({
