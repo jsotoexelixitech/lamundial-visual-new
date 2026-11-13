@@ -228,7 +228,8 @@ const MonitorExpedientes: React.FC = () => {
           <div className="mx-hero-acciones">
             {accesoLibre && (
               <span className="mx-aviso-qa" role="note">
-                QA · acceso libre sin login
+                {/* El acceso libre ahora también puede estar activo en producción: el ambiente sale del dominio. */}
+                {/(^|.)nexusqa.|localhost|cierrelmds/i.test(window.location.hostname) ? 'QA · ' : ''}Acceso libre sin login
               </span>
             )}
             {user?.nombre && (
