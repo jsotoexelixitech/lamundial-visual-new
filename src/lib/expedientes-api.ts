@@ -11,6 +11,11 @@
 import axios, { type AxiosError, type AxiosProgressEvent } from 'axios';
 import { portalConfig } from './portal-config';
 import { getToken } from './nexus-auth';
+import {
+  cuerpoProductores,
+  normalizarProductores,
+  type ProductorOcr,
+} from './ocr-productores';
 
 // ─── Tipos del contrato ────────────────────────────────────────────────────
 
@@ -1173,6 +1178,8 @@ export async function eliminarExclusion(id: number | string, motivo: string): Pr
 /** Productos del flujo con config OCR propia. */
 export type ProductoOcr = 'rcv' | 'funerario' | 'patrimoniales';
 
+export type { ProductorOcr };
+
 export interface CanalOcr {
   codigo: string;
   nombre: string | null;
@@ -1202,6 +1209,9 @@ export interface CambioOcrPorCanal {
   motivo: string | null;
   agregados: string[];
   quitados: string[];
+  /** Productores que pasaron a OCR opcional / volvieron a obligatorio en ese cambio. */
+  productoresAgregados: string[];
+  productoresQuitados: string[];
 }
 
 export interface OcrPorCanal {
@@ -1210,6 +1220,12 @@ export interface OcrPorCanal {
   canales: CanalOcr[];
   /** Códigos con OCR opcional tal como están guardados. */
   opcionales: string[];
+  /** Productores (cproductor) con OCR opcional; los no listados quedan obligatorios. */
+  productores: ProductorOcr[];
+  /** Códigos de productor con OCR opcional tal como están guardados. */
+  productoresOpcionales: string[];
+  /** false: Nexus aún no maneja productores (versión anterior): no se muestra la sección. */
+  productoresSoportado: boolean;
   cambios: CambioOcrPorCanal[];
   /** Nexus permite guardar (EXPEDIENTES_OCR_CANAL_ESCRITURA). Sin el dato: solo lectura. */
   escrituraHabilitada: boolean;
@@ -1237,6 +1253,9 @@ function normalizarOcrPorCanal(raw: unknown, producto: ProductoOcr): OcrPorCanal
       }))
       .filter((c) => c.codigo),
     opcionales: codigos(r.opcionales),
+    productores: normalizarProductores(r.productores),
+    productoresOpcionales: codigos(r.productoresOpcionales),
+    productoresSoportado: Array.isArray(r.productoresOpcionales),
     cambios: arreglo<Record<string, unknown>>(r.cambios)
       .filter((c) => !!c && typeof c === 'object')
       .map((c, i) => ({
@@ -1246,6 +1265,8 @@ function normalizarOcrPorCanal(raw: unknown, producto: ProductoOcr): OcrPorCanal
         motivo: texto(c.motivo),
         agregados: codigos(c.agregados),
         quitados: codigos(c.quitados),
+        productoresAgregados: codigos(c.productoresAgregados),
+        productoresQuitados: codigos(c.productoresQuitados),
       })),
     escrituraHabilitada: r.escrituraHabilitada === true,
   };
@@ -1296,17 +1317,26 @@ export async function obtenerPuntosCanal(
 /**
  * Guarda la lista completa de canales con OCR opcional. `base` es la lista que se cargó:
  * si alguien guardó antes (aquí o en el panel del OCR), Nexus responde 409 y no pisa nada.
+ * `productores` (opcional): lista completa de productores con OCR opcional y la que se cargó;
+ * sin él, Nexus no toca los productores (cambio masivo de canales).
  */
 export async function guardarOcrPorCanal(
   producto: ProductoOcr,
   canales: string[],
   base: string[],
   motivo: string,
+  productores?: { lista: ProductorOcr[]; base: string[] },
 ): Promise<OcrPorCanal> {
   try {
     const { data } = await api.put(
       `${BASE}/ocr-por-canal`,
-      { producto, canales, base, motivo: motivo.trim() },
+      {
+        producto,
+        canales,
+        base,
+        motivo: motivo.trim(),
+        ...(productores ? cuerpoProductores(productores.lista, productores.base) : {}),
+      },
       { headers: authHeaders() },
     );
     // Si Nexus aceptó el cambio, la escritura está habilitada (el PUT no repite el dato).

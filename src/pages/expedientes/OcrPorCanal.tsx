@@ -9,8 +9,10 @@ import {
   type CanalOcr,
   type OcrPorCanal as DatosOcr,
   type ProductoOcr,
+  type ProductorOcr,
   type PuntoComercializacion,
 } from '@/lib/expedientes-api';
+import { agregarProductor, codigoProductorValido, quitarProductor } from '@/lib/ocr-productores';
 import { AvisoError, Cargando } from './expedientes-ui';
 import { fechaHora } from './expedientes-format';
 
@@ -160,7 +162,7 @@ function PuntosCanal({ canal, nombre }: { canal: string; nombre: string }) {
  * OCR obligatorio u opcional por canal. Lee y guarda la misma configuración que la
  * pestaña «OCR por canal» del parametrizador del OCR. Solo se configuran canales: sus puntos
  * de comercialización se pueden ver (siguen al canal) y los gestores ya configurados en el
- * OCR no se tocan.
+ * OCR no se tocan. Los productores con OCR opcional se agregan por código (no hay catálogo).
  */
 export function OcrPorCanal() {
   const [producto, setProducto] = useState<ProductoOcr>('rcv');
@@ -169,6 +171,10 @@ export function OcrPorCanal() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<ExpedientesError | null>(null);
   const [opcionales, setOpcionales] = useState<string[]>([]);
+  // Productores con OCR opcional en edición (los no listados quedan obligatorios).
+  const [productores, setProductores] = useState<ProductorOcr[]>([]);
+  const [nuevoProd, setNuevoProd] = useState('');
+  const [nuevoProdNombre, setNuevoProdNombre] = useState('');
   const [filtro, setFiltro] = useState('');
   const [motivo, setMotivo] = useState('');
   const [guardando, setGuardando] = useState(false);
@@ -187,6 +193,7 @@ export function OcrPorCanal() {
       if (n !== peticion.current) return;
       setDatos(d);
       setOpcionales(d.opcionales);
+      setProductores(d.productores);
     } catch (err) {
       if (n !== peticion.current) return;
       setDatos(null);
@@ -207,6 +214,23 @@ export function OcrPorCanal() {
   // Nexus sin EXPEDIENTES_OCR_CANAL_ESCRITURA: se consulta, no se cambia (afecta la emisión).
   const soloLectura = !!datos && !datos.escrituraHabilitada;
   const sucio = !!datos && !mismoConjunto(opcionales, datos.opcionales);
+  // Productores: se agregan por código (no hay catálogo); quitar = vuelve a obligatorio.
+  const sucioProd =
+    !!datos &&
+    datos.productoresSoportado &&
+    !mismoConjunto(
+      productores.map((p) => p.codigo),
+      datos.productoresOpcionales,
+    );
+  const hayCambios = sucio || sucioProd;
+  const codigoProdOk = codigoProductorValido(nuevoProd);
+  const agregarProd = () => {
+    if (!codigoProdOk) return;
+    setProductores((prev) => agregarProductor(prev, nuevoProd, nuevoProdNombre));
+    setNuevoProd('');
+    setNuevoProdNombre('');
+    setGuardado('');
+  };
   const motivoOk = motivo.trim().length >= MOTIVO_MIN;
   const marcados = useMemo(() => new Set(opcionales), [opcionales]);
 
@@ -247,10 +271,13 @@ export function OcrPorCanal() {
 
   const cambiarProducto = (p: ProductoOcr) => {
     if (p === producto) return;
-    if (sucio && !window.confirm('Hay cambios sin guardar en este producto. ¿Descartarlos?')) return;
+    if (hayCambios && !window.confirm('Hay cambios sin guardar en este producto. ¿Descartarlos?')) return;
     setProducto(p);
     setDatos(null);
     setOpcionales([]);
+    setProductores([]);
+    setNuevoProd('');
+    setNuevoProdNombre('');
     setFiltro('');
     setMotivo('');
     setErrGuardar('');
@@ -269,14 +296,22 @@ export function OcrPorCanal() {
 
   const guardar = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!datos || !sucio || !motivoOk) return;
+    if (!datos || !hayCambios || !motivoOk) return;
     setGuardando(true);
     setErrGuardar('');
     setConflicto(false);
     try {
-      const d = await guardarOcrPorCanal(producto, opcionales, datos.opcionales, motivo);
+      const d = await guardarOcrPorCanal(
+        producto,
+        opcionales,
+        datos.opcionales,
+        motivo,
+        // Solo si cambiaron: sin el campo, Nexus no toca los productores.
+        sucioProd ? { lista: productores, base: datos.productoresOpcionales } : undefined,
+      );
       setDatos(d);
       setOpcionales(d.opcionales);
+      setProductores(d.productores);
       setMotivo('');
       setGuardado('Guardado. Aplica a los flujos de OCR que se abran desde ahora.');
     } catch (err) {
@@ -399,7 +434,7 @@ export function OcrPorCanal() {
                         type="button"
                         className="mx-btn mx-btn--ghost mx-btn--sm"
                         onClick={() => abrirMasivo('opcional')}
-                        disabled={guardando || cargando || sucio || planMasivo.opcional.cambian.length === 0}
+                        disabled={guardando || cargando || hayCambios || planMasivo.opcional.cambian.length === 0}
                       >
                         {alcanceMasivo} opcional
                       </button>
@@ -407,7 +442,7 @@ export function OcrPorCanal() {
                         type="button"
                         className="mx-btn mx-btn--ghost mx-btn--sm"
                         onClick={() => abrirMasivo('obligatorio')}
-                        disabled={guardando || cargando || sucio || planMasivo.obligatorio.cambian.length === 0}
+                        disabled={guardando || cargando || hayCambios || planMasivo.obligatorio.cambian.length === 0}
                       >
                         {alcanceMasivo} obligatorio
                       </button>
@@ -415,7 +450,7 @@ export function OcrPorCanal() {
                   )}
                 </div>
               </div>
-              {datos.escrituraHabilitada && sucio && (
+              {datos.escrituraHabilitada && hayCambios && (
                 <p className="mx-sub">
                   Para cambiar todos a la vez, guarde primero los cambios pendientes o desmárquelos.
                 </p>
@@ -487,6 +522,124 @@ export function OcrPorCanal() {
               </div>
             </div>
 
+            {datos.productoresSoportado && (
+              <div className="grid gap-1.5 min-w-0">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="mx-label">Productores · {productores.length}</span>
+                  <span className="text-xs font-semibold mx-muted" aria-live="polite">
+                    {productores.length > 0
+                      ? `${productores.length} con OCR opcional`
+                      : 'Todos obligatorios'}
+                  </span>
+                </div>
+                <p className="mx-sub">
+                  Todo productor que no esté en esta lista sigue con el OCR obligatorio. Para dejarle el
+                  OCR opcional, agregue su código de productor.
+                </p>
+                {!soloLectura && (
+                  <div className="flex flex-wrap items-end gap-2">
+                    <label className="mx-field" htmlFor="mx-ocr-prod-codigo">
+                      <span>Código del productor</span>
+                      <input
+                        id="mx-ocr-prod-codigo"
+                        type="text"
+                        className="mx-input"
+                        value={nuevoProd}
+                        onChange={(e) => setNuevoProd(e.target.value)}
+                        // Enter agrega el productor; no debe guardar el formulario.
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            agregarProd();
+                          }
+                        }}
+                        placeholder="Ej.: 1234"
+                        maxLength={32}
+                        autoComplete="off"
+                        disabled={guardando}
+                      />
+                    </label>
+                    <label className="mx-field flex-1 min-w-[12rem]" htmlFor="mx-ocr-prod-nombre">
+                      <span>Nombre (opcional)</span>
+                      <input
+                        id="mx-ocr-prod-nombre"
+                        type="text"
+                        className="mx-input w-full"
+                        value={nuevoProdNombre}
+                        onChange={(e) => setNuevoProdNombre(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            agregarProd();
+                          }
+                        }}
+                        placeholder="Nombre del productor"
+                        maxLength={120}
+                        autoComplete="off"
+                        disabled={guardando}
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      className="mx-btn mx-btn--ghost"
+                      onClick={agregarProd}
+                      disabled={guardando || !codigoProdOk}
+                    >
+                      Agregar con OCR opcional
+                    </button>
+                  </div>
+                )}
+                {nuevoProd.trim() && !codigoProdOk && (
+                  <p className="mx-sub" role="alert">
+                    El código solo admite letras, números, punto y guiones (máximo 32).
+                  </p>
+                )}
+                <div className="mx-ocr-lista">
+                  {productores.length === 0 ? (
+                    <p className="p-3 text-xs mx-muted">Ningún productor con OCR opcional.</p>
+                  ) : (
+                    <ul>
+                      {productores.map((p) => {
+                        const nombre = p.nombre || `Productor ${p.codigo}`;
+                        return (
+                          <li key={p.codigo} className="mx-ocr-fila is-opcional">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold truncate" title={nombre}>
+                                {nombre}
+                              </p>
+                              <p className="mx-sub mx-ocr-meta">
+                                <span className="mx-num">Código {p.codigo}</span>
+                                <span className="mx-chip mx-chip--ocr-opcional">OCR opcional</span>
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={false}
+                              aria-label={`OCR obligatorio para ${nombre}`}
+                              className="mx-switch"
+                              onClick={() => {
+                                setProductores((prev) => quitarProductor(prev, p.codigo));
+                                setGuardado('');
+                              }}
+                              disabled={guardando || soloLectura}
+                            >
+                              <span className="mx-switch-texto" aria-hidden>
+                                OCR obligatorio
+                              </span>
+                              <span className="mx-switch-pista" aria-hidden>
+                                <span className="mx-switch-perilla" />
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+
             {soloLectura ? (
               <div className="mx-aviso mx-aviso--info" role="note">
                 <p>
@@ -541,15 +694,15 @@ export function OcrPorCanal() {
               <button
                 type="submit"
                 className="mx-btn mx-btn--primary"
-                disabled={!sucio || !motivoOk || guardando || cargando}
+                disabled={!hayCambios || !motivoOk || guardando || cargando}
               >
                 {guardando && <Loader2 size={15} className="animate-spin" aria-hidden />}
                 Guardar OCR por canal
               </button>
-              {sucio && !motivoOk && (
+              {hayCambios && !motivoOk && (
                 <span className="text-xs mx-muted">Escribe el motivo para poder guardar.</span>
               )}
-              {!sucio && <span className="text-xs mx-muted">Sin cambios por guardar.</span>}
+              {!hayCambios && <span className="text-xs mx-muted">Sin cambios por guardar.</span>}
             </div>
               </>
             )}
@@ -574,6 +727,23 @@ export function OcrPorCanal() {
                           </>
                         )}
                       </p>
+                      {(c.productoresAgregados.length > 0 || c.productoresQuitados.length > 0) && (
+                        <p>
+                          {c.productoresAgregados.length > 0 && (
+                            <>
+                              <span className="font-semibold">Productores con OCR opcional:</span>{' '}
+                              {c.productoresAgregados.join(', ')}
+                            </>
+                          )}
+                          {c.productoresAgregados.length > 0 && c.productoresQuitados.length > 0 && ' · '}
+                          {c.productoresQuitados.length > 0 && (
+                            <>
+                              <span className="font-semibold">Productores que vuelven a obligatorio:</span>{' '}
+                              {c.productoresQuitados.join(', ')}
+                            </>
+                          )}
+                        </p>
+                      )}
                       <p className="mx-sub">
                         {fechaHora(c.fecha)}
                         {c.actor ? ` · ${c.actor}` : ''}
