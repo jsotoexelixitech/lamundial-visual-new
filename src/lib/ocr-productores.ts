@@ -2,8 +2,9 @@
  * OCR opcional por productor (monitor de expedientes → Configuración → «OCR por canal»).
  *
  * Nexus guarda `ocrOpcional.productores` (cproductor con OCR OPCIONAL; lo no listado queda
- * obligatorio) y `ocrOpcional.productoresNombres` (código → nombre, solo para mostrar). No hay
- * catálogo de productores: se agregan por código + nombre. Funciones puras, sin React.
+ * obligatorio) y `ocrOpcional.productoresNombres` (código → nombre, solo para mostrar). La lista
+ * sale del catálogo de productores que manda Nexus; si no carga, se agregan por código +
+ * nombre. Funciones puras, sin React.
  */
 
 export interface ProductorOcr {
@@ -77,4 +78,97 @@ export function cuerpoProductores(
     productoresNombres,
     baseProductores: base,
   };
+}
+
+// ─── Catálogo de productores (lista con buscador, como la de canales) ──────
+
+/** Productor del catálogo de Nexus (nest-api valrep/brokers). */
+export interface ProductorCatalogo {
+  codigo: string;
+  nombre: string;
+}
+
+/**
+ * `catalogoProductores` de la respuesta de Nexus. null si no vino o vino vacío (Nexus anterior
+ * o nest-api sin responder): la pantalla sigue con «agregar por código».
+ */
+export function normalizarCatalogoProductores(raw: unknown): ProductorCatalogo[] | null {
+  if (!Array.isArray(raw)) return null;
+  const vistos = new Set<string>();
+  const out: ProductorCatalogo[] = [];
+  for (const p of raw) {
+    if (!p || typeof p !== 'object') continue;
+    const r = p as Record<string, unknown>;
+    const codigo = r.codigo == null ? '' : String(r.codigo).trim();
+    if (!codigoProductorValido(codigo) || vistos.has(codigo)) continue;
+    vistos.add(codigo);
+    out.push({ codigo, nombre: nombreLimpio(r.nombre) ?? '' });
+  }
+  return out.length > 0 ? out : null;
+}
+
+export interface FilaProductor {
+  codigo: string;
+  nombre: string | null;
+  /** Está en la selección en edición (OCR opcional). */
+  opcional: boolean;
+  /** false: se agregó por código y no está en el catálogo. */
+  enCatalogo: boolean;
+}
+
+/** Minúsculas y sin acentos, para buscar «garcia» y encontrar «García». */
+function plano(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
+
+/**
+ * Filas a mostrar de la lista de productores. Orden estable (la fila no se mueve al marcar):
+ * primero los guardados con OCR opcional (`base`) y los agregados por código, luego el resto
+ * del catálogo en su orden. Pueden ser miles: de los que no están marcados solo salen
+ * `limite`; los marcados y los guardados salen siempre (si coinciden con la búsqueda).
+ */
+export function filasProductores(
+  catalogo: ProductorCatalogo[],
+  seleccion: ProductorOcr[],
+  base: string[],
+  busqueda: string,
+  limite: number,
+): { filas: FilaProductor[]; coinciden: number; total: number } {
+  const marcados = new Map(seleccion.map((p) => [p.codigo, p]));
+  const fijos = new Set(base);
+  const enCatalogo = new Set(catalogo.map((p) => p.codigo));
+  // Guardados o agregados por código que el catálogo no trae: no se pierden de vista.
+  const fuera: ProductorCatalogo[] = [];
+  for (const cod of base) {
+    if (!enCatalogo.has(cod)) fuera.push({ codigo: cod, nombre: marcados.get(cod)?.nombre ?? '' });
+  }
+  for (const p of seleccion) {
+    if (!enCatalogo.has(p.codigo) && !fijos.has(p.codigo)) {
+      fuera.push({ codigo: p.codigo, nombre: p.nombre ?? '' });
+    }
+  }
+  const orden = [
+    ...fuera,
+    ...catalogo.filter((p) => fijos.has(p.codigo)),
+    ...catalogo.filter((p) => !fijos.has(p.codigo)),
+  ];
+  const t = plano(busqueda.trim());
+  const filas: FilaProductor[] = [];
+  let coinciden = 0;
+  let libres = 0;
+  for (const p of orden) {
+    const nombre = p.nombre || marcados.get(p.codigo)?.nombre || null;
+    if (t && !plano(p.codigo).includes(t) && !plano(nombre ?? '').includes(t)) continue;
+    coinciden++;
+    const opcional = marcados.has(p.codigo);
+    if (!opcional && !fijos.has(p.codigo)) {
+      if (libres >= limite) continue;
+      libres++;
+    }
+    filas.push({ codigo: p.codigo, nombre, opcional, enCatalogo: enCatalogo.has(p.codigo) });
+  }
+  return { filas, coinciden, total: orden.length };
 }
