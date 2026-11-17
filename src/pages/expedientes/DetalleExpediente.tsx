@@ -7,14 +7,19 @@ import {
   ExternalLink,
   Loader2,
   PencilLine,
+  Upload,
   UserCheck,
   X,
   XCircle,
 } from 'lucide-react';
 import {
+  ACCEPT_ARCHIVOS,
   isExpedientesError,
+  MAX_ARCHIVO_MB,
   obtenerExpediente,
   observarRequisito,
+  subirDocumentoMonitor,
+  validarArchivo,
   validarRequisito,
   ExpedientesError,
   type ExpedienteDetalle,
@@ -95,7 +100,7 @@ interface Props {
   /** Modo de la configuración (solo se conoce si el usuario es administrador). */
   modoValidacion?: ModoValidacion;
   onCerrar: () => void;
-  /** Hubo un cambio (validar u observar): la bandeja debe recargar. */
+  /** Hubo un cambio (cargar, validar u observar): la bandeja debe recargar. */
   onCambio: () => void;
 }
 
@@ -486,8 +491,9 @@ const MODIFICADO = 'modificado_en_formulario';
 
 /**
  * Un documento del expediente: enlace para verlo, diagnóstico de la IA campo por campo
- * (póliza contra documento) y, solo para administradores y como excepción, validar u observar
- * a mano. No se piden ni se cargan documentos desde aquí.
+ * (póliza contra documento), cargar o reemplazar el archivo (cualquier usuario del monitor,
+ * salvo que ya esté validado) y, solo para administradores y como excepción, validar u observar
+ * a mano.
  */
 function TarjetaDocumento({
   expId,
@@ -551,6 +557,31 @@ function TarjetaDocumento({
   const puedeValidarEste = puedeValidar && (req.estado === 'recibido' || req.estado === 'observado');
   const puedeObservarEste = puedeValidar && (req.estado === 'recibido' || req.estado === 'validado');
 
+  // Carga desde el monitor: Nexus no acepta reemplazar un documento ya validado.
+  const archivoRef = useRef<HTMLInputElement>(null);
+  const [subiendo, setSubiendo] = useState<number | null>(null);
+  const puedeCargarEste = req.estado !== 'validado';
+  const cargarArchivo = async (file: File) => {
+    const rechazo = validarArchivo(file);
+    if (rechazo) {
+      setError(rechazo);
+      return;
+    }
+    setError('');
+    setSubiendo(0);
+    try {
+      await subirDocumentoMonitor(expId, req.tipo, file, (pct) => setSubiendo(pct));
+      onHecho(
+        `${nombre}: documento cargado.${automatica ? ' La IA lo revisará en unos minutos.' : ' Queda pendiente de validación.'}`,
+      );
+    } catch (err) {
+      setError(isExpedientesError(err) ? err.message : 'No se pudo cargar el documento.');
+    } finally {
+      setSubiendo(null);
+      if (archivoRef.current) archivoRef.current.value = '';
+    }
+  };
+
   return (
     <li className={`mx-doc-card mx-tono--${tonoVisual(visual)}`}>
       {datosCambiados && (
@@ -581,17 +612,56 @@ function TarjetaDocumento({
             {cargado && !url ? ' · sin enlace para verlo' : ''}
           </p>
         </div>
-        {url && (
-          <a
-            className="mx-btn mx-btn--ghost mx-btn--sm"
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Ver ${nombre} (se abre en otra pestaña)`}
-          >
-            <ExternalLink size={14} aria-hidden />
-            Ver documento
-          </a>
+        {(url || puedeCargarEste) && (
+          <div className="flex flex-wrap gap-1.5 shrink-0">
+            {url && (
+              <a
+                className="mx-btn mx-btn--ghost mx-btn--sm"
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Ver ${nombre} (se abre en otra pestaña)`}
+              >
+                <ExternalLink size={14} aria-hidden />
+                Ver documento
+              </a>
+            )}
+            {puedeCargarEste && (
+              <>
+                <input
+                  ref={archivoRef}
+                  type="file"
+                  accept={ACCEPT_ARCHIVOS}
+                  className="sr-only"
+                  tabIndex={-1}
+                  aria-hidden
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void cargarArchivo(f);
+                  }}
+                />
+                <button
+                  type="button"
+                  className={`mx-btn mx-btn--sm ${cargado ? 'mx-btn--ghost' : 'mx-btn--primary'}`}
+                  disabled={subiendo !== null}
+                  title={`JPG, PNG, HEIC o PDF, hasta ${MAX_ARCHIVO_MB} MB`}
+                  aria-label={`${cargado ? 'Reemplazar' : 'Cargar'} ${nombre}`}
+                  onClick={() => archivoRef.current?.click()}
+                >
+                  {subiendo !== null ? (
+                    <Loader2 size={14} className="animate-spin" aria-hidden />
+                  ) : (
+                    <Upload size={14} aria-hidden />
+                  )}
+                  {subiendo !== null
+                    ? `Cargando… ${subiendo}%`
+                    : cargado
+                      ? 'Reemplazar'
+                      : 'Cargar documento'}
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
 
