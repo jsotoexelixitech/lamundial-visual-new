@@ -975,6 +975,30 @@ export async function observarRequisito(
   }
 }
 
+/**
+ * Carga desde el monitor (usuario con sesión): el documento entra igual que el del asegurado,
+ * queda a nombre del usuario y pasa por la misma validación (IA o manual).
+ */
+export async function subirDocumentoMonitor(
+  id: number | string,
+  tipo: string,
+  file: File,
+  onProgress?: (pct: number) => void,
+): Promise<void> {
+  const fd = new FormData();
+  fd.append('tipo', tipo);
+  fd.append('file', file);
+  try {
+    await api.post(`${BASE}/${encodeURIComponent(String(id))}/upload`, fd, {
+      headers: authHeaders(),
+      timeout: TIMEOUT_UPLOAD_MS,
+      onUploadProgress: progreso(onProgress),
+    });
+  } catch (err) {
+    throw toExpedientesError(err, 'recurso');
+  }
+}
+
 // ─── Configuración y exclusiones (administrador) ───────────────────────────
 
 const CONFIG_POR_DEFECTO: ExpedientesConfig = {
