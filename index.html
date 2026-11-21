@@ -14,6 +14,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400&family=Inter+Tight:wght@400&family=Inter:wght@400&family=Poppins:wght@300;400;500;600;700;800&family=Libre+Baskerville:ital,wght@0,700;1,400&family=Roboto+Mono:wght@400&display=swap" rel="stylesheet" />
+      <!-- Marca neutra (?marca=neutra): título neutro antes de cargar JS. El resto lo hace src/lib/marca.ts. -->
+    <script>
+      (function () {
+        try {
+          var m = (new URLSearchParams(location.search).get('marca') || '').trim().toLowerCase();
+          if (m === 'neutra' || (m !== 'lm' && sessionStorage.getItem('exelixi_marca') === 'neutra')) {
+            document.title = 'Exélixi · Marketplace de seguros';
+            document.documentElement.setAttribute('data-marca', 'neutra');
+          }
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
