@@ -209,9 +209,11 @@ export const LoginPage: React.FC = () => {
                 <Lock size={13} className="text-blueprint-blue" />
                 Conexión cifrada · acceso auditado
               </span>
-              <Link to="/login-pasarela" className="text-amber-400 hover:underline font-medium">
-                Acceso Pasarela / Gestor →
-              </Link>
+              {!neutra && (
+                <Link to="/login-pasarela" className="text-amber-400 hover:underline font-medium">
+                  Acceso Pasarela / Gestor →
+                </Link>
+              )}
             </div>
           </div>
 

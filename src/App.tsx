@@ -10,6 +10,7 @@ import { PortalShell } from '@/layouts/PortalShell';
 import { PortalSessionProvider } from '@/context/PortalSessionContext';
 import { getCurrentUser, isSsoSession } from '@/lib/nexus-auth';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
+import { esMarcaNeutra } from '@/lib/marca';
 
 // Monitor de expedientes: visual aparte (Sis2000 por SSO) y página pública del asegurado.
 const MonitorExpedientesPage = lazy(() => import('@/pages/MonitorExpedientesPage'));
@@ -55,7 +56,8 @@ function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/login-pasarela" element={<LoginPasarelaPage />} />
+        {/* Marca neutra: un solo login (sin acceso Pasarela / Gestor). */}
+        <Route path="/login-pasarela" element={esMarcaNeutra() ? <Navigate to="/login" replace /> : <LoginPasarelaPage />} />
         <Route path="/sso" element={<SsoEntryPage />} />
         <Route
           path="/monitor-expedientes"
