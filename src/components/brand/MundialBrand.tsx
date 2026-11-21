@@ -1,4 +1,5 @@
 import { publicAsset } from '@/lib/public-asset';
+import { esMarcaNeutra, NOMBRE_NEUTRO } from '@/lib/marca';
 
 /** Isotipo oficial (M del logo, fondo transparente). */
 export const MUNDIAL_ISOTIPO = 'brand/mundial-isotipo.png';
@@ -23,6 +24,26 @@ export function MundialBrand({
 }: Props) {
   const titleColor = variant === 'light' ? 'text-white' : 'text-[#091133]';
   const subtitleColor = variant === 'light' ? 'text-white/65' : 'text-[#777777]';
+
+  // Marca neutra: solo wordmark tipográfico, sin isotipo ni nombre de La Mundial.
+  if (esMarcaNeutra()) {
+    return (
+      <div className="flex items-center gap-3" data-marca="neutra">
+        <div className="min-w-0">
+          <p className={`font-display text-lg sm:text-xl font-bold leading-tight ${titleColor}`}>
+            {NOMBRE_NEUTRO}
+          </p>
+          {showWordmark && (
+            <p
+              className={`text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] mt-0.5 ${subtitleColor}`}
+            >
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-3">
@@ -55,6 +76,16 @@ export function MundialLockup({
   onDark?: boolean;
   className?: string;
 }) {
+  if (esMarcaNeutra()) {
+    return (
+      <p
+        className={`font-display text-3xl font-bold ${onDark ? 'text-white' : 'text-[#091133]'}`}
+        data-marca="neutra"
+      >
+        {NOMBRE_NEUTRO}
+      </p>
+    );
+  }
   return (
     <div className="relative inline-flex items-center justify-center">
       <span

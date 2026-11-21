@@ -6,6 +6,7 @@ import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
 import { LoginAmbientLayer } from '@/components/login/LoginAmbientLayer';
+import { esMarcaNeutra, NOMBRE_NEUTRO } from '@/lib/marca';
 
 const MIN_LOADING_MS = 2200;
 
@@ -25,6 +26,7 @@ async function waitMin(totalMs: number, started: number) {
 export const LoginPasarelaPage: React.FC = () => {
   const navigate = useNavigate();
   const [xlogin, setXlogin] = useState('');
+  const neutra = esMarcaNeutra();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -104,10 +106,12 @@ export const LoginPasarelaPage: React.FC = () => {
             Ingreso Gestores & Canales Alternos
           </p>
           <h1 className="login-headline-gradient text-4xl sm:text-5xl lg:text-[3.25rem] font-semibold leading-[1.08] mb-5">
-            Acceso Pasarela La Mundial
+            {neutra ? 'Acceso Pasarela' : 'Acceso Pasarela La Mundial'}
           </h1>
           <p className="text-fog-veil text-sm sm:text-base leading-relaxed max-w-md mx-auto lg:mx-0">
-            Ingresa con el mismo usuario y contraseña del marketplace La Mundial. Verás los productos habilitados para tu canal.
+            {neutra
+              ? 'Ingresa con tu usuario y contraseña del marketplace. Verás los productos habilitados para tu canal.'
+              : 'Ingresa con el mismo usuario y contraseña del marketplace La Mundial. Verás los productos habilitados para tu canal.'}
           </p>
 
           <div className="mt-12 flex justify-center lg:justify-start">
@@ -127,7 +131,9 @@ export const LoginPasarelaPage: React.FC = () => {
                   Gestor
                 </span>
               </div>
-              <p className="text-sm text-fog-veil mb-7">Usuario y contraseña del marketplace La Mundial</p>
+              <p className="text-sm text-fog-veil mb-7">
+                {neutra ? 'Usuario y contraseña del marketplace' : 'Usuario y contraseña del marketplace La Mundial'}
+              </p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
@@ -210,7 +216,9 @@ export const LoginPasarelaPage: React.FC = () => {
           </div>
 
           <p className="mt-6 text-center text-xs text-fog-veil">
-            ¿Problemas para ingresar? Consulta con Administración de Canales La Mundial.
+            {neutra
+              ? `¿Problemas para ingresar? Consulta con el soporte de ${NOMBRE_NEUTRO}.`
+              : '¿Problemas para ingresar? Consulta con Administración de Canales La Mundial.'}
           </p>
         </main>
       </div>

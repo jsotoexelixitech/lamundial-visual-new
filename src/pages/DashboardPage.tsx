@@ -7,6 +7,7 @@ import {
   ArrowRight,
   ExternalLink,
   Inbox,
+  LayoutGrid,
   Loader2,
   Search,
   SearchX,
@@ -26,6 +27,7 @@ import { ProductSheet } from '@/components/dashboard/ProductSheet';
 import { LineArt, ProductArt } from '@/components/dashboard/ProductArt';
 import { VitrinaBackdrop } from '@/components/dashboard/VitrinaBackdrop';
 import { publicAsset } from '@/lib/public-asset';
+import { esMarcaNeutra, NOMBRE_NEUTRO } from '@/lib/marca';
 import {
   PRODUCT_LINES,
   PRODUCT_LINE_ORDER,
@@ -114,6 +116,9 @@ export const DashboardPage: React.FC = () => {
   const canal = profile?.canal;
   const canalText = user.canal || canalLabel(canal?.centidad, canal?.citem);
   const onlineCount = products.filter((p) => p.launchMode !== 'sysip').length;
+  const neutra = esMarcaNeutra();
+  // Marca neutra: sin nombre de empresa (viene de La Mundial desde el backend).
+  const empresaNombre = neutra ? undefined : profile?.empresa.nombre;
 
   const openSheet = (product: PortalProductDto) => {
     setSelectedKey(product.key);
@@ -168,7 +173,9 @@ export const DashboardPage: React.FC = () => {
           url = buildFallbackModuleUrl(product, token);
         } else {
           throw new Error(
-            'No se pudo abrir el módulo de emisión. Contacta a Tecnología La Mundial.',
+            neutra
+              ? `No se pudo abrir el módulo de emisión. Contacta al soporte de ${NOMBRE_NEUTRO}.`
+              : 'No se pudo abrir el módulo de emisión. Contacta a Tecnología La Mundial.',
           );
         }
       }
@@ -214,9 +221,9 @@ export const DashboardPage: React.FC = () => {
           <h1 className="lm-desk-title">Hola, {firstName}</h1>
           <p className="lm-desk-summary">
             {canalText && <strong>{canalText}</strong>}
-            {canalText && profile?.empresa.nombre && <span aria-hidden> · </span>}
-            {profile?.empresa.nombre && <span>{profile.empresa.nombre}</span>}
-            {(canalText || profile?.empresa.nombre) && <span aria-hidden> — </span>}
+            {canalText && empresaNombre && <span aria-hidden> · </span>}
+            {empresaNombre && <span>{empresaNombre}</span>}
+            {(canalText || empresaNombre) && <span aria-hidden> — </span>}
             <span>{summary}</span>
           </p>
         </div>
@@ -270,7 +277,16 @@ export const DashboardPage: React.FC = () => {
             onClick={() => setLineFilter('all')}
           >
             <span className="lm-rail-art lm-rail-art--all">
-              <img src={publicAsset('brand/mundial-isotipo.png')} alt="" aria-hidden />
+              {neutra ? (
+                <LayoutGrid
+                  strokeWidth={1.6}
+                  className="text-[#2E6DBF]"
+                  style={{ width: '38%', height: '38%' }}
+                  aria-hidden
+                />
+              ) : (
+                <img src={publicAsset('brand/mundial-isotipo.png')} alt="" aria-hidden />
+              )}
             </span>
             <span className="lm-rail-text">
               <span className="lm-rail-label">Todos</span>
@@ -308,7 +324,11 @@ export const DashboardPage: React.FC = () => {
           <div className="lm-empty">
             <Inbox size={34} aria-hidden />
             <p className="lm-empty-title">Tu canal aún no tiene productos</p>
-            <p>Contacta a Administración de Canales La Mundial para habilitarlos.</p>
+            <p>
+              {neutra
+                ? `Contacta al soporte de ${NOMBRE_NEUTRO} para habilitarlos.`
+                : 'Contacta a Administración de Canales La Mundial para habilitarlos.'}
+            </p>
           </div>
         )}
 

@@ -3,6 +3,7 @@ import { portalConfig } from './portal-config';
 import type { PortalProductDto, SsoDelegatePayload } from './nexus-auth';
 import { getFlowMetadataOverrides } from './portal-sso-config';
 import { getCurrentUser } from './nexus-auth';
+import { conMarca } from './marca';
 
 export type LaunchProduct = ProductConfig | PortalProductDto;
 
@@ -112,8 +113,12 @@ export function buildSsoPayload(product: LaunchProduct): SsoDelegatePayload {
   }
 }
 
-/** Fallback si sso-delegate falla: URL con token plano (legacy). */
+/** Fallback si sso-delegate falla: URL con token plano (legacy). En marca neutra agrega `marca=neutra`. */
 export function buildFallbackModuleUrl(product: LaunchProduct, token: string): string {
+  return conMarca(buildFallbackModuleUrlBase(product, token));
+}
+
+function buildFallbackModuleUrlBase(product: LaunchProduct, token: string): string {
   const { modules } = portalConfig;
   const q = new URLSearchParams({ nexus_token: token });
 

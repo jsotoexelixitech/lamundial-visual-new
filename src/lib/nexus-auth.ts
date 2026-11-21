@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { portalConfig } from './portal-config';
+import { conMarca } from './marca';
 
 const api = axios.create({ baseURL: portalConfig.nexusApiUrl });
 
@@ -175,6 +176,8 @@ export async function ssoDelegate(payload: SsoDelegatePayload): Promise<SsoDeleg
   const { data } = await api.post<SsoDelegateResponse>('/api/auth/sso-delegate', payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  // Marca neutra: el módulo que se abre también va sin La Mundial (marca=neutra).
+  if (data?.redirect_url) return { ...data, redirect_url: conMarca(data.redirect_url) };
   return data;
 }
 

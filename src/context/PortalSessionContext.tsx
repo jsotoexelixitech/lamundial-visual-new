@@ -7,6 +7,8 @@ import {
   type PortalProductDto,
   type LoginResponse,
 } from '@/lib/nexus-auth';
+import { esMarcaNeutra } from '@/lib/marca';
+import { catalogoMarcaNeutra } from '@/components/dashboard/product-lines';
 
 export type PortalSessionProfile = {
   user: {
@@ -50,7 +52,8 @@ export function PortalSessionProvider({ children }: { children: React.ReactNode 
     setProductsError('');
     try {
       const list = await fetchPortalProducts();
-      setProducts(list);
+      // Marca neutra: solo RCV y Funerario.
+      setProducts(esMarcaNeutra() ? catalogoMarcaNeutra(list) : list);
     } catch (err) {
       const detail =
         err instanceof Error && err.message

@@ -1,4 +1,5 @@
 import type { PortalProductDto } from '@/lib/nexus-auth';
+import { sinMarcaLm } from '@/lib/marca';
 
 export type ProductLineId = 'autos' | 'personas' | 'viajes' | 'funerario' | 'patrimoniales';
 
@@ -82,6 +83,32 @@ export function productLine(product: PortalProductDto): ProductLineId {
   return 'patrimoniales';
 }
 
+/**
+ * Marca neutra: la vitrina muestra solo RCV y Funerario con emisión en línea (SSO a nuestros
+ * módulos). Fuera quedan personas, viajes, patrimoniales, casco y todo lo que abre el
+ * marketplace de La Mundial (launchMode 'sysip').
+ */
+export function productoVisibleEnNeutra(product: PortalProductDto): boolean {
+  if (product.launchMode === 'sysip') return false;
+  const line = productLine(product);
+  if (line === 'funerario') return true;
+  if (line !== 'autos') return false;
+  const { text } = productSignals(product);
+  return (product.product === 'rcv' || /rcv/.test(text)) && !/casco/.test(text);
+}
+
+/**
+ * Marca neutra: filtra la vitrina y quita «La Mundial» de los textos que solo se muestran.
+ * `label` no se toca: viaja como xproducto en el SSO (el título visible pasa por productTitle).
+ */
+export function catalogoMarcaNeutra(products: PortalProductDto[]): PortalProductDto[] {
+  return products.filter(productoVisibleEnNeutra).map((p) => ({
+    ...p,
+    description: sinMarcaLm(p.description),
+    xfraccionamiento: sinMarcaLm(p.xfraccionamiento),
+  }));
+}
+
 /** Quita marcas técnicas del catálogo (ej. "(Nexus)", "(Iframe)") que no son para el cliente. */
 export function cleanCopy(text: string | undefined): string {
   return String(text ?? '')
@@ -98,7 +125,7 @@ export function productTitle(product: PortalProductDto): string {
   if (productLine(product) === 'autos' && /rcv/i.test(product.label)) {
     return 'RCV Nacional y Binacional';
   }
-  return cleanCopy(product.label);
+  return sinMarcaLm(cleanCopy(product.label));
 }
 
 /** Monto "desde" legible; algunos productos traen texto ("Desde cotización") en vez de monto. */

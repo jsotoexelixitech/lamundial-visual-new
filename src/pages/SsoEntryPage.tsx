@@ -6,6 +6,7 @@ import { MundialBrand } from '@/components/brand/MundialBrand';
 import { VitrinaBackdrop } from '@/components/dashboard/VitrinaBackdrop';
 import { startSsoSession } from '@/lib/nexus-auth';
 import { rutaInternaSegura } from '@/lib/sso-next';
+import { esMarcaNeutra } from '@/lib/marca';
 
 /**
  * Entrada desde el menú de Sis2000: /sso?nexus_token=…[&next=/monitor-expedientes]
@@ -19,7 +20,11 @@ export const SsoEntryPage: React.FC = () => {
     () => rutaInternaSegura(new URLSearchParams(window.location.search).get('next')) ?? '/dashboard',
   );
   const [error, setError] = useState(
-    token ? '' : 'Para entrar al marketplace, ábralo desde el menú de La Mundial.',
+    token
+      ? ''
+      : esMarcaNeutra()
+        ? 'Para entrar al marketplace, ábralo desde el menú de su sistema.'
+        : 'Para entrar al marketplace, ábralo desde el menú de La Mundial.',
   );
   const started = useRef(false);
 
@@ -41,7 +46,10 @@ export const SsoEntryPage: React.FC = () => {
             ? String((err.response.data as { message: unknown }).message)
             : '';
         setError(
-          apiMsg || 'No se pudo abrir el marketplace. Vuelva a entrar desde el menú de La Mundial.',
+          apiMsg ||
+            (esMarcaNeutra()
+              ? 'No se pudo abrir el marketplace. Vuelva a entrar desde el menú de su sistema.'
+              : 'No se pudo abrir el marketplace. Vuelva a entrar desde el menú de La Mundial.'),
         );
       });
   }, [navigate, token, destino]);

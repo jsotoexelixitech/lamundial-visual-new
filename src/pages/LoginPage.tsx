@@ -6,6 +6,7 @@ import { MundialBrand } from '@/components/brand/MundialBrand';
 import { LoginBrandShowcase } from '@/components/login/LoginBrandShowcase';
 import { LoginLoadingOverlay } from '@/components/login/LoginLoadingOverlay';
 import { LoginAmbientLayer } from '@/components/login/LoginAmbientLayer';
+import { esMarcaNeutra, NOMBRE_NEUTRO } from '@/lib/marca';
 
 const MIN_LOADING_MS = 2200;
 
@@ -30,6 +31,9 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [loginStep, setLoginStep] = useState(0);
   const [error, setError] = useState('');
+  const neutra = esMarcaNeutra();
+  // Marca neutra: solo RCV y Funerario.
+  const floatIcons = neutra ? FLOAT_ICONS.filter((f) => f.label !== 'Personas') : FLOAT_ICONS;
 
   useLayoutEffect(() => {
     document.body.classList.add('portal-login-route');
@@ -81,7 +85,7 @@ export const LoginPage: React.FC = () => {
       <LoginAmbientLayer intense={loading} />
       <LoginLoadingOverlay active={loading} stepIndex={loginStep} />
 
-      {FLOAT_ICONS.map(({ Icon, className, label }) => (
+      {floatIcons.map(({ Icon, className, label }) => (
         <div key={label} className={`${className} hidden md:flex`} aria-hidden>
           <Icon size={22} className="text-blueprint-blue" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-moon-mist mt-2">
@@ -107,8 +111,14 @@ export const LoginPage: React.FC = () => {
             Emisión de pólizas en minutos
           </h1>
           <p className="text-fog-veil text-sm sm:text-base leading-relaxed max-w-md mx-auto lg:mx-0">
-            Un solo acceso para cotizar y emitir: RCV, planes de personas y seguros patrimoniales,
-            con el canal comercial que La Mundial de Seguros asignó a tu equipo.
+            {neutra ? (
+              <>Un solo acceso para cotizar y emitir RCV y Funerario con el canal comercial asignado a tu equipo.</>
+            ) : (
+              <>
+                Un solo acceso para cotizar y emitir: RCV, planes de personas y seguros patrimoniales,
+                con el canal comercial que La Mundial de Seguros asignó a tu equipo.
+              </>
+            )}
           </p>
 
           <div className="mt-12 flex justify-center lg:justify-start">
@@ -123,7 +133,9 @@ export const LoginPage: React.FC = () => {
             </div>
             <div className="px-8 pt-8 pb-2 sm:px-10 sm:pt-10">
               <h2 className="text-xl font-semibold text-ice-highlight mb-1">Iniciar sesión</h2>
-              <p className="text-sm text-fog-veil mb-7">Credenciales corporativas La Mundial</p>
+              <p className="text-sm text-fog-veil mb-7">
+                {neutra ? 'Credenciales corporativas' : 'Credenciales corporativas La Mundial'}
+              </p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
@@ -134,7 +146,7 @@ export const LoginPage: React.FC = () => {
                     id="login-email"
                     type="email"
                     autoComplete="email"
-                    placeholder="nombre@lamundialdeseguros.com"
+                    placeholder={neutra ? 'nombre@empresa.com' : 'nombre@lamundialdeseguros.com'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="login-glass-input w-full"
@@ -204,7 +216,9 @@ export const LoginPage: React.FC = () => {
           </div>
 
           <p className="mt-6 text-center text-xs text-fog-veil">
-            ¿Problemas de acceso? Contacta a Tecnología La Mundial.
+            {neutra
+              ? `¿Problemas de acceso? Contacta al soporte de ${NOMBRE_NEUTRO}.`
+              : '¿Problemas de acceso? Contacta a Tecnología La Mundial.'}
           </p>
         </main>
       </div>

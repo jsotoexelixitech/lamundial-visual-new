@@ -3,6 +3,7 @@ import { ArrowRight, ExternalLink, Loader2, Store } from 'lucide-react';
 import type { PortalProductDto } from '@/lib/nexus-auth';
 import { PRODUCT_LINES, cleanCopy, priceInfo, productLine, productTitle } from './product-lines';
 import { ProductArt } from './ProductArt';
+import { esMarcaNeutra } from '@/lib/marca';
 
 interface Props {
   product: PortalProductDto;
@@ -72,7 +73,9 @@ export const ProductSheet: React.FC<Props> = ({
           <p className="ficha-note">
             {external ? <Store size={14} /> : null}
             {external
-              ? 'Se abre el formulario del marketplace La Mundial en una pestaña nueva.'
+              ? esMarcaNeutra()
+                ? 'Se abre el formulario del marketplace en una pestaña nueva.'
+                : 'Se abre el formulario del marketplace La Mundial en una pestaña nueva.'
               : 'La emisión se abre en una pestaña nueva.'}
           </p>
         </div>

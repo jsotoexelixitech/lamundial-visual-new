@@ -1,6 +1,7 @@
 import React from 'react';
 import { publicAsset } from '@/lib/public-asset';
 import { MUNDIAL_ISOTIPO } from '@/components/brand/MundialBrand';
+import { esMarcaNeutra, NOMBRE_NEUTRO } from '@/lib/marca';
 
 type Variant = 'hero' | 'overlay' | 'compact';
 type ShowcaseTheme = 'authkit' | 'mundial-light';
@@ -57,12 +58,22 @@ export function LoginBrandShowcase({ variant = 'hero', theme = 'authkit' }: Prop
       <div
         className={`${cfg.medallion} relative z-10 ${isLight ? 'login-logo-medallion--mundial-light' : ''}`}
       >
-        <img
-          src={publicAsset(MUNDIAL_ISOTIPO)}
-          alt="La Mundial de Seguros"
-          className={`${cfg.img} ${isLight ? 'login-logo-glow-mundial' : 'login-logo-glow'} login-orbit-core object-contain`}
-          draggable={false}
-        />
+        {esMarcaNeutra() ? (
+          <span
+            className={`font-display font-bold tracking-tight select-none ${
+              variant === 'hero' ? 'text-2xl sm:text-[1.65rem]' : 'text-xl'
+            } ${isLight ? 'text-[#091133]' : 'text-white'}`}
+          >
+            {NOMBRE_NEUTRO}
+          </span>
+        ) : (
+          <img
+            src={publicAsset(MUNDIAL_ISOTIPO)}
+            alt="La Mundial de Seguros"
+            className={`${cfg.img} ${isLight ? 'login-logo-glow-mundial' : 'login-logo-glow'} login-orbit-core object-contain`}
+            draggable={false}
+          />
+        )}
       </div>
     </div>
   );

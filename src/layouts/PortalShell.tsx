@@ -16,6 +16,7 @@ import { MundialBrand } from '@/components/brand/MundialBrand';
 import { isSsoSession, logout } from '@/lib/nexus-auth';
 import { usePortalSession } from '@/context/PortalSessionContext';
 import { isPortalAdmin } from '@/lib/portal-sso-config';
+import { esMarcaNeutra, NOMBRE_NEUTRO, sinMarcaLm } from '@/lib/marca';
 
 const NAV = [
   {
@@ -59,7 +60,9 @@ export function PortalShell() {
   const displayName = profile?.user.nombre ?? storageUser?.nombre ?? 'Usuario';
   const displayEmail = profile?.user.email ?? storageUser?.email ?? '';
   const displayRole = profile?.user.role ?? storageUser?.role ?? 'Operador';
-  const displayEmpresa = profile?.empresa.nombre ?? storageUser?.empresa ?? 'La Mundial de Seguros';
+  const displayEmpresa = esMarcaNeutra()
+    ? sinMarcaLm(profile?.empresa.nombre ?? storageUser?.empresa ?? NOMBRE_NEUTRO)
+    : (profile?.empresa.nombre ?? storageUser?.empresa ?? 'La Mundial de Seguros');
   const canal = profile?.canal;
   // Entrando por SSO/iframe desde Sis2000 siempre es vista de marketplace, sea cual sea el rol.
   const isAdmin = !isSsoSession() && isPortalAdmin(storageUser ?? profile?.user ?? null);
