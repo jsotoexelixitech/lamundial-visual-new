@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/pages/LoginPage';
 import { LoginPasarelaPage } from '@/pages/LoginPasarelaPage';
+import { LoginPageNeutra } from '@/pages/LoginPageNeutra';
 import { SsoEntryPage } from '@/pages/SsoEntryPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AuditPage } from '@/pages/AuditPage';
@@ -55,7 +56,8 @@ function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        {/* Marca neutra: login Auros propio (sin La Mundial); el de La Mundial no cambia. */}
+        <Route path="/login" element={esMarcaNeutra() ? <LoginPageNeutra /> : <LoginPage />} />
         {/* Marca neutra: un solo login (sin acceso Pasarela / Gestor). */}
         <Route path="/login-pasarela" element={esMarcaNeutra() ? <Navigate to="/login" replace /> : <LoginPasarelaPage />} />
         <Route path="/sso" element={<SsoEntryPage />} />
