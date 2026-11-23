@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { ChevronDown, Info } from 'lucide-react';
-import type { Indicadores, KpisExpedientes, RankingActor } from '@/lib/expedientes-api';
+import type {
+  Indicadores,
+  KpisExpedientes,
+  RankingActor,
+  RankingEmisor,
+} from '@/lib/expedientes-api';
 import { etiquetaProducto, etiquetaRequisito, numero, SIN_IDENTIFICAR } from './expedientes-format';
 import { useCuenta } from './expedientes-anim';
 import type { TonoGrafico } from './expedientes-ui';
@@ -452,6 +457,122 @@ function TablaRanking({
         </div>
       )}
     </figure>
+  );
+}
+
+/** Porcentaje de una fila del ranking con el mismo color que canal/productor. */
+function CeldaPct({ valor }: { valor: number | null }) {
+  const pct = valor == null ? null : Math.round(valor * 100);
+  return (
+    <td className={`mx-num ${pct != null && pct >= 50 ? 'is-rojo' : pct ? 'is-ambar' : ''}`}>
+      {pct == null ? '—' : `${pct} %`}
+    </td>
+  );
+}
+
+/**
+ * Por emisor («Emitida por»): el mismo texto de la bandeja. Sin canal ni productor, «Emisor sin
+ * identificar» (nunca un login ni un correo). Orden de Nexus: incompletas y luego emitidas.
+ */
+function TablaEmisores({ items }: { items: RankingEmisor[] }) {
+  return (
+    <figure className="mx-graf mx-ranking">
+      <figcaption className="sr-only">Pólizas por quién las emitió</figcaption>
+      {items.length === 0 ? (
+        <p className="text-xs mx-muted">Sin pólizas en el período.</p>
+      ) : (
+        <div className="mx-ranking-scroll">
+          <table className="mx-ranking-tabla">
+            <thead>
+              <tr>
+                <th scope="col">Emitida por</th>
+                <th scope="col">Canal / productor</th>
+                <th scope="col">Emitidas</th>
+                <th scope="col">Completas</th>
+                <th scope="col">Incompletas</th>
+                <th scope="col">% incompletas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((it) => (
+                <tr key={it.emisor}>
+                  <th scope="row">{it.emisor}</th>
+                  <td className="mx-muted">{it.contexto ?? '—'}</td>
+                  <td className="mx-num">{numero(it.total)}</td>
+                  <td className="mx-num">{numero(it.completos)}</td>
+                  <td className="mx-num">{numero(it.incompletos)}</td>
+                  <CeldaPct valor={it.pctIncompletos} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </figure>
+  );
+}
+
+/** Panel «Por emisor». No se muestra si Nexus aún no manda el dato. */
+export function PanelEmisores({ d, escritorio }: { d: Indicadores; escritorio: boolean }) {
+  const items = d.porEmisor;
+  if (!items) return null;
+  const conIncompletas = items.filter((x) => x.incompletos > 0).length;
+  return (
+    <Plegable
+      titulo="Por emisor"
+      resumen={
+        conIncompletas ? (
+          <>
+            <strong className="mx-num">{numero(conIncompletas)}</strong> con incompletas
+          </>
+        ) : (
+          'Sin incompletas'
+        )
+      }
+      abiertoInicial={escritorio}
+    >
+      <TablaEmisores items={items} />
+      <QueMide>
+        Pólizas del período según quién las emitió (el mismo «Emitida por» de la bandeja),
+        ordenadas por incompletas y luego por emitidas. Las pólizas de la red de cada canal se
+        muestran con el canal al que pertenecen. Se muestran hasta 50.
+      </QueMide>
+    </Plegable>
+  );
+}
+
+const pctTexto = (v: number | null) => (v == null ? SIN_DATO : `${pctAbajo(v)} %`);
+
+/** Pasaron por el OCR (están en el monitor) frente a las que no. No se muestra sin el dato. */
+export function BloqueOcr({ d, escritorio }: { d: Indicadores; escritorio: boolean }) {
+  const o = d.ocr;
+  if (!o) return null;
+  return (
+    <Plegable
+      titulo="Pasaron por el OCR"
+      resumen={
+        <>
+          <strong className="mx-num">{numero(o.pasaron)}</strong> de {numero(o.total)}
+        </>
+      }
+      abiertoInicial={escritorio}
+    >
+      <div className="mx-kpi-mini">
+        <div>
+          <strong className="mx-num">{numero(o.pasaron)}</strong>
+          <span>Pasaron por el OCR · {pctTexto(o.pctPasaron)}</span>
+        </div>
+        <div className={o.noPasaron > 0 ? 'is-ambar' : ''}>
+          <strong className="mx-num">{numero(o.noPasaron)}</strong>
+          <span>No pasaron por el OCR · {pctTexto(o.pctNoPasaron)}</span>
+        </div>
+      </div>
+      <QueMide>
+        Pólizas emitidas en el período. «Pasaron por el OCR»: las que están en el monitor
+        (completas, incompletas y sin información documental). «No pasaron por el OCR»: las que se
+        emitieron sin pasar por la lectura de documentos y quedan fuera del monitor.
+      </QueMide>
+    </Plegable>
   );
 }
 
