@@ -996,6 +996,100 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
   }
 }
 
+// ─── Histórico 2026 (carga histórica de Sis2000; solo cifras) ──────────────
+
+export interface CifrasHistorico {
+  total: number;
+  pasoOcr: number;
+  noPasoOcr: number;
+  pendientes: number;
+  errores: number;
+  /** 0..1 sobre las ya clasificadas (pasó + no pasó); null sin clasificadas. */
+  pctPasoOcr: number | null;
+}
+
+export interface HistoricoExpedientes {
+  habilitada: boolean;
+  carga: {
+    /** sin_iniciar | en_curso | completada | detenida */
+    estado: string;
+    desde: string | null;
+    hasta: string | null;
+    filasLeidas: number;
+    ultimaCorrida: string | null;
+    completadaEn: string | null;
+    enCurso: boolean;
+  };
+  /** Código de origen → etiqueta (nexus, nest_api, marketplace_sysip). */
+  etiquetasOrigen: Record<string, string>;
+  totales: CifrasHistorico;
+  porMes: (CifrasHistorico & { mes: string })[];
+  porOrigen: (CifrasHistorico & { origen: string })[];
+  filas: (CifrasHistorico & { mes: string; origen: string })[];
+}
+
+function cifrasHistorico(v: unknown): CifrasHistorico {
+  const o = (v && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+  const pasoOcr = num(o.pasoOcr);
+  const noPasoOcr = num(o.noPasoOcr);
+  const base = pasoOcr + noPasoOcr;
+  return {
+    total: num(o.total),
+    pasoOcr,
+    noPasoOcr,
+    pendientes: num(o.pendientes),
+    errores: num(o.errores),
+    pctPasoOcr: numONull(o.pctPasoOcr) ?? (base > 0 ? pasoOcr / base : null),
+  };
+}
+
+/** null si Nexus no manda el resumen (backend anterior a la carga histórica). */
+export function normalizarHistorico(v: unknown): HistoricoExpedientes | null {
+  if (!v || typeof v !== 'object') return null;
+  const r = v as Record<string, unknown>;
+  if (!r.totales || typeof r.totales !== 'object') return null;
+  const c = (r.carga && typeof r.carga === 'object' ? r.carga : {}) as Record<string, unknown>;
+  const etiquetas: Record<string, string> = {};
+  if (r.etiquetasOrigen && typeof r.etiquetasOrigen === 'object') {
+    for (const [k, e] of Object.entries(r.etiquetasOrigen as Record<string, unknown>)) {
+      if (typeof e === 'string' && e.trim()) etiquetas[k] = e.trim();
+    }
+  }
+  return {
+    habilitada: r.habilitada === true,
+    carga: {
+      estado: texto(c.estado) ?? 'sin_iniciar',
+      desde: texto(c.desde),
+      hasta: texto(c.hasta),
+      filasLeidas: num(c.filasLeidas),
+      ultimaCorrida: texto(c.ultimaCorrida),
+      completadaEn: texto(c.completadaEn),
+      enCurso: c.enCurso === true,
+    },
+    etiquetasOrigen: etiquetas,
+    totales: cifrasHistorico(r.totales),
+    porMes: lista(r.porMes).map((m) => ({ ...cifrasHistorico(m), mes: String(m.mes ?? '') })),
+    porOrigen: lista(r.porOrigen).map((o) => ({ ...cifrasHistorico(o), origen: String(o.origen ?? '') })),
+    filas: lista(r.filas).map((f) => ({
+      ...cifrasHistorico(f),
+      mes: String(f.mes ?? ''),
+      origen: String(f.origen ?? ''),
+    })),
+  };
+}
+
+/** Resumen de la carga histórica. null si este Nexus aún no tiene el endpoint (404). */
+export async function obtenerHistorico(): Promise<HistoricoExpedientes | null> {
+  try {
+    const { data } = await api.get(`${BASE}/historico`, { headers: authHeaders() });
+    return normalizarHistorico(unwrap<unknown>(data));
+  } catch (err) {
+    const e = toExpedientesError(err, 'coleccion');
+    if (e.status === 404 || e.kind === 'apagado') return null;
+    throw e;
+  }
+}
+
 export async function obtenerExpediente(id: number | string): Promise<ExpedienteDetalle> {
   try {
     const { data } = await api.get(`${BASE}/${encodeURIComponent(String(id))}`, {
