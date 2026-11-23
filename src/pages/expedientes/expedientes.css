@@ -1471,6 +1471,15 @@ textarea.mx-input {
   color: var(--mx-violeta-fg);
 }
 
+/* Diferencia informativa (`difiere`): neutra, no cuenta como error. */
+.mx-diag tr.mx-diag-info td {
+  background: var(--mx-gris-bg);
+}
+
+.mx-diag-informativo {
+  color: var(--mx-gris-fg);
+}
+
 .mx-excepcion {
   display: grid;
   gap: 0.4rem;
@@ -2574,6 +2583,10 @@ textarea.mx-input {
 
   .mx-diag.mx-apilable tr.mx-diag-mod {
     background: #f6eefe;
+  }
+
+  .mx-diag.mx-apilable tr.mx-diag-info {
+    background: var(--mx-gris-bg);
   }
 
   .mx-pub-upload {

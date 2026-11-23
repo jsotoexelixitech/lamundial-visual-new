@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ChevronDown,
   ExternalLink,
+  Info,
   Loader2,
   PencilLine,
   Upload,
@@ -51,6 +52,7 @@ import {
   textoNoEnviar,
   urlDocumento,
 } from './expedientes-format';
+import { claseFilaCampo, marcaCampo } from './diagnostico-campo';
 
 const MOTIVO_MIN = 5;
 
@@ -486,9 +488,6 @@ const TEXTO_RESULTADO: Record<string, string> = {
   datos_modificados: 'datos cambiados en el formulario',
 };
 
-/** v1.3: el dato de la póliza se cambió a mano en el formulario respecto a lo que leyó el OCR. */
-const MODIFICADO = 'modificado_en_formulario';
-
 /**
  * Un documento del expediente: enlace para verlo, diagnóstico de la IA campo por campo
  * (póliza contra documento), cargar o reemplazar el archivo (cualquier usuario del monitor,
@@ -705,49 +704,53 @@ function TarjetaDocumento({
                   </tr>
                 </thead>
                 <tbody>
-                  {diag.campos.map((c, i) => (
-                    <tr
-                      key={`${c.campo}-${i}`}
-                      className={
-                        c.estado === MODIFICADO
-                          ? 'mx-diag-no mx-diag-mod'
-                          : c.coincide === false
-                            ? 'mx-diag-no'
-                            : undefined
-                      }
-                    >
-                      <td className="mx-diag-dato mx-apilable-titulo">{c.etiqueta}</td>
-                      <td data-label="En la póliza">{c.enPoliza ?? <span className="mx-muted">—</span>}</td>
-                      <td className="mx-diag-doc" data-label="En el documento">
-                        {c.enDocumento ?? <span className="mx-muted">No se leyó</span>}
-                      </td>
-                      {conOcrEmision && (
-                        <td className="mx-diag-ocr" data-label="Leído por OCR al emitir">
-                          {c.enOcrAlEmitir ?? <span className="mx-muted">—</span>}
+                  {diag.campos.map((c, i) => {
+                    const marca = marcaCampo(c);
+                    return (
+                      <tr key={`${c.campo}-${i}`} className={claseFilaCampo(marca)}>
+                        <td className="mx-diag-dato mx-apilable-titulo">{c.etiqueta}</td>
+                        <td data-label="En la póliza">{c.enPoliza ?? <span className="mx-muted">—</span>}</td>
+                        <td className="mx-diag-doc" data-label="En el documento">
+                          {c.enDocumento ?? <span className="mx-muted">No se leyó</span>}
                         </td>
-                      )}
-                      <td className="mx-diag-marca" data-label="¿Coincide?">
-                        {c.estado === MODIFICADO ? (
-                          <span className="mx-diag-modificado inline-flex items-center gap-1 font-semibold">
-                            <PencilLine size={15} aria-hidden />
-                            Modificado en el formulario
-                          </span>
-                        ) : c.coincide === true ? (
-                          <span className="mx-diag-si inline-flex items-center gap-1">
-                            <CheckCircle2 size={15} aria-hidden />
-                            Coincide
-                          </span>
-                        ) : c.coincide === false ? (
-                          <span className="mx-diag-falla inline-flex items-center gap-1 font-semibold">
-                            <XCircle size={15} aria-hidden />
-                            No coincide
-                          </span>
-                        ) : (
-                          <span className="mx-muted">sin dato en la póliza</span>
+                        {conOcrEmision && (
+                          <td className="mx-diag-ocr" data-label="Leído por OCR al emitir">
+                            {c.enOcrAlEmitir ?? <span className="mx-muted">—</span>}
+                          </td>
                         )}
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="mx-diag-marca" data-label="¿Coincide?">
+                          {marca === 'modificado' ? (
+                            <span className="mx-diag-modificado inline-flex items-center gap-1 font-semibold">
+                              <PencilLine size={15} aria-hidden />
+                              Modificado en el formulario
+                            </span>
+                          ) : marca === 'informativo' ? (
+                            <span
+                              className="mx-diag-informativo inline-flex items-center gap-1"
+                              title="Diferencia informativa: no marca el documento como errado"
+                            >
+                              <Info size={15} aria-hidden />
+                              Difiere (informativo)
+                            </span>
+                          ) : marca === 'coincide' ? (
+                            <span className="mx-diag-si inline-flex items-center gap-1">
+                              <CheckCircle2 size={15} aria-hidden />
+                              Coincide
+                            </span>
+                          ) : marca === 'no_coincide' ? (
+                            <span className="mx-diag-falla inline-flex items-center gap-1 font-semibold">
+                              <XCircle size={15} aria-hidden />
+                              No coincide
+                            </span>
+                          ) : (
+                            <span className="mx-muted">
+                              {marca === 'no_leido' ? 'no se leyó en el documento' : 'sin dato en la póliza'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
