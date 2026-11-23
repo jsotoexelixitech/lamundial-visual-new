@@ -1,15 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Building2, ChevronDown, Layers, UserRound } from 'lucide-react';
 import {
+  obtenerHistorico,
   obtenerIndicadores,
   isExpedientesError,
   ExpedientesError,
+  type HistoricoExpedientes,
   type Indicadores,
 } from '@/lib/expedientes-api';
 import { AvisoError, BarraApilada, BarrasH, Esqueleto, type TonoGrafico } from './expedientes-ui';
 import { categoriasVisibles, numero } from './expedientes-format';
 import { useReanimar } from './expedientes-anim';
 import {
+  BloqueHistorico,
   BloqueOcr,
   EsqueletoKpi,
   KpiPrincipales,
@@ -49,6 +52,23 @@ export function IndicadoresExpedientes({
   const peticion = useRef(0);
   const animRef = useReanimar<HTMLDivElement>(`${version}|${areaKpi}`);
   const [escritorio] = useState(esEscritorio);
+  /** Histórico de Sis2000: no depende del área ni de las fechas; null = Nexus sin la carga. */
+  const [historico, setHistorico] = useState<HistoricoExpedientes | null>(null);
+
+  useEffect(() => {
+    let vigente = true;
+    obtenerHistorico()
+      .then((h) => {
+        if (vigente) setHistorico(h);
+      })
+      // Bloque secundario: si falla, la pestaña sigue igual sin él.
+      .catch(() => {
+        if (vigente) setHistorico(null);
+      });
+    return () => {
+      vigente = false;
+    };
+  }, [recargaKey, reintento]);
 
   useEffect(() => {
     const n = ++peticion.current;
@@ -151,6 +171,7 @@ export function IndicadoresExpedientes({
               <PanelEmisores d={kpiRes.data} escritorio={escritorio} />
             </>
           )}
+          {historico && <BloqueHistorico h={historico} escritorio={escritorio} />}
           <Comparativo res={res} />
           <div className="mx-kpi-grid">
             {AREAS.map((a) => (

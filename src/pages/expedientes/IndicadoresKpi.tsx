@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { ChevronDown, Info } from 'lucide-react';
 import type {
+  CifrasHistorico,
+  HistoricoExpedientes,
   Indicadores,
   KpisExpedientes,
   RankingActor,
   RankingEmisor,
 } from '@/lib/expedientes-api';
-import { etiquetaProducto, etiquetaRequisito, numero, SIN_IDENTIFICAR } from './expedientes-format';
+import {
+  etiquetaProducto,
+  etiquetaRequisito,
+  fechaHora,
+  numero,
+  SIN_IDENTIFICAR,
+} from './expedientes-format';
 import { useCuenta } from './expedientes-anim';
 import type { TonoGrafico } from './expedientes-ui';
 
@@ -753,5 +761,161 @@ export function PanelesKpi({
         <p className="text-xs mx-muted">Hora de Caracas. Cada gráfico tiene su propia escala.</p>
       </Plegable>
     </>
+  );
+}
+
+// ─── Histórico (carga de Sis2000 por mes y origen) ──────────────────────────
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const mesTexto = (m: string) => {
+  const [anio, mm] = m.split('-');
+  const nombre = MESES[Number(mm) - 1];
+  return nombre && anio ? `${nombre} ${anio}` : m;
+};
+const ESTADO_CARGA: Record<string, string> = {
+  sin_iniciar: 'sin iniciar',
+  en_curso: 'en curso',
+  completada: 'completada',
+  detenida: 'detenida (errores seguidos; la reanuda Exélixi)',
+};
+
+function CeldasHistorico({ c }: { c: CifrasHistorico }) {
+  return (
+    <>
+      <td className="mx-num">{numero(c.total)}</td>
+      <td className="mx-num">{numero(c.pasoOcr)}</td>
+      <td className="mx-num">{numero(c.noPasoOcr)}</td>
+      <td className="mx-num">{numero(c.pendientes + c.errores)}</td>
+      <td className="mx-num">{c.pctPasoOcr == null ? '—' : `${pctAbajo(c.pctPasoOcr)} %`}</td>
+    </>
+  );
+}
+
+const IZQ = { textAlign: 'left' as const };
+
+/**
+ * «Histórico 2026»: pólizas de Sis2000 emitidas por canales digitales desde enero, según si
+ * pasaron por el OCR, por mes y por origen. Solo cifras (sin datos personales). Independiente del
+ * área y de las fechas de arriba. No se muestra si Nexus no tiene la carga o está vacía y apagada.
+ */
+export function BloqueHistorico({ h, escritorio }: { h: HistoricoExpedientes; escritorio: boolean }) {
+  const t = h.totales;
+  if (t.total === 0 && !h.habilitada) return null;
+  const anio = h.porMes[0]?.mes.slice(0, 4) || h.carga.desde?.slice(0, 4) || '';
+  const etiqueta = (o: string) => h.etiquetasOrigen[o] ?? o;
+  const porClasificar = t.pendientes + t.errores;
+  return (
+    <Plegable
+      titulo={`Histórico ${anio}`.trim()}
+      resumen={
+        t.total ? (
+          <>
+            <strong className="mx-num">{pctTexto(t.pctPasoOcr)}</strong> pasó por el OCR
+          </>
+        ) : (
+          'Sin pólizas cargadas todavía'
+        )
+      }
+      abiertoInicial={escritorio}
+    >
+      <div className="mx-kpi-mini">
+        <div>
+          <strong className="mx-num">{numero(t.total)}</strong>
+          <span>Pólizas cargadas</span>
+        </div>
+        <div>
+          <strong className="mx-num">{numero(t.pasoOcr)}</strong>
+          <span>Pasaron por el OCR · {pctTexto(t.pctPasoOcr)}</span>
+        </div>
+        <div className={t.noPasoOcr > 0 ? 'is-ambar' : ''}>
+          <strong className="mx-num">{numero(t.noPasoOcr)}</strong>
+          <span>No pasaron por el OCR</span>
+        </div>
+        {porClasificar > 0 && (
+          <div>
+            <strong className="mx-num">{numero(porClasificar)}</strong>
+            <span>
+              Por clasificar{t.errores ? ` (${numero(t.errores)} con error del OCR)` : ''}
+            </span>
+          </div>
+        )}
+      </div>
+      <p className="text-xs mx-muted">
+        Carga {ESTADO_CARGA[h.carga.estado] ?? h.carga.estado}
+        {h.carga.enCurso ? ' (corriendo ahora)' : ''}
+        {h.carga.hasta ? ` · corte ${h.carga.hasta}` : ''}
+        {h.carga.ultimaCorrida ? ` · última corrida ${fechaHora(h.carga.ultimaCorrida)}` : ''}
+      </p>
+      {t.total > 0 && (
+        <figure className="mx-graf mx-ranking">
+          <figcaption className="sr-only">Pólizas por mes y origen según si pasaron por el OCR</figcaption>
+          <div className="mx-ranking-scroll">
+            <table className="mx-ranking-tabla">
+              <thead>
+                <tr>
+                  <th scope="col">Mes</th>
+                  <th scope="col" style={IZQ}>
+                    Origen
+                  </th>
+                  <th scope="col">Pólizas</th>
+                  <th scope="col">Pasó OCR</th>
+                  <th scope="col">No pasó</th>
+                  <th scope="col">Por clasificar</th>
+                  <th scope="col">% pasó OCR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {h.porMes.map((m) => {
+                  const filas = h.filas.filter((f) => f.mes === m.mes);
+                  return (
+                    <React.Fragment key={m.mes}>
+                      {filas.map((f) => (
+                        <tr key={`${f.mes}|${f.origen}`}>
+                          <th scope="row">{mesTexto(f.mes)}</th>
+                          <td className="mx-muted" style={IZQ}>
+                            {etiqueta(f.origen)}
+                          </td>
+                          <CeldasHistorico c={f} />
+                        </tr>
+                      ))}
+                      {filas.length > 1 && (
+                        <tr className="font-semibold">
+                          <th scope="row">{mesTexto(m.mes)}</th>
+                          <td style={IZQ}>Todos</td>
+                          <CeldasHistorico c={m} />
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                {h.porOrigen.map((o) => (
+                  <tr key={o.origen}>
+                    <th scope="row">Total</th>
+                    <td className="mx-muted" style={IZQ}>
+                      {etiqueta(o.origen)}
+                    </td>
+                    <CeldasHistorico c={o} />
+                  </tr>
+                ))}
+                <tr className="font-semibold">
+                  <th scope="row">Total</th>
+                  <td style={IZQ}>Todos</td>
+                  <CeldasHistorico c={t} />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </figure>
+      )}
+      <QueMide>
+        Pólizas de Sis2000 emitidas por canales digitales desde enero (una vez por número de
+        póliza, aunque tenga varias versiones). «Pasó por el OCR»: el monitor o el OCR tienen sus
+        documentos; «No pasó»: se emitió sin pasar por la lectura de documentos. El porcentaje se
+        calcula sobre las ya clasificadas. Origen: Nexus (nuestro flujo), MarketPlace de SysIP o
+        nest-api (SysIP e integradores). Estas pólizas no generan recordatorios ni correos.
+      </QueMide>
+    </Plegable>
   );
 }
