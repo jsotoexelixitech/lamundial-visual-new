@@ -218,6 +218,37 @@ export interface Indicadores {
   porArea: { canales: number; productores: number; sinDatos: number } | null;
   /** v1.4: KPI agregados con el mismo filtro. Puede faltar si Nexus aún no lo publica. */
   kpis?: KpisExpedientes;
+  /** Por quién emitió («Emitida por»). `null` si Nexus aún no lo manda (no se muestra). */
+  porEmisor: RankingEmisor[] | null;
+  /** Pasaron / no pasaron por el OCR. `null` si Nexus aún no lo manda (no se muestra). */
+  ocr: ClasificacionOcr | null;
+}
+
+/** Texto del grupo de pólizas sin canal ni productor identificado. */
+export const EMISOR_SIN_IDENTIFICAR = 'Emisor sin identificar';
+
+/** Fila del ranking por emisor: el mismo texto «Emitida por» de la bandeja. */
+export interface RankingEmisor {
+  emisor: string;
+  /** Canal (incluye gestores), productor o null (sin identificar). */
+  grupo: 'canal' | 'productor' | null;
+  /** «Canal 27» / «Productor 215»; null si no se conoce. */
+  contexto: string | null;
+  total: number;
+  completos: number;
+  incompletos: number;
+  /** 0..1: incompletos / total. */
+  pctIncompletos: number | null;
+}
+
+/** Pólizas del período que pasaron por el OCR (en el monitor) y las que no (descartadas). */
+export interface ClasificacionOcr {
+  pasaron: number;
+  noPasaron: number;
+  total: number;
+  /** 0..1; null si no hay pólizas. */
+  pctPasaron: number | null;
+  pctNoPasaron: number | null;
 }
 
 /** Fila del ranking por canal o por productor (dónde quedan pólizas sin documentos). */
@@ -832,6 +863,44 @@ function normalizarPorArea(v: unknown): Indicadores['porArea'] {
   return { canales: num(p.canales), productores: num(p.productores), sinDatos: num(p.sinDatos) };
 }
 
+/** Ranking por emisor; null si Nexus aún no lo manda. Nunca muestra un login ni un correo. */
+export function normalizarPorEmisor(v: unknown): RankingEmisor[] | null {
+  if (!Array.isArray(v)) return null;
+  return lista(v).map((t) => {
+    const texto = typeof t.emisor === 'string' ? t.emisor.trim() : '';
+    const valido = !!texto && !texto.includes('@');
+    const grupo = t.grupo === 'canal' || t.grupo === 'productor' ? t.grupo : null;
+    const contexto = typeof t.contexto === 'string' && t.contexto.trim() ? t.contexto.trim() : null;
+    return {
+      emisor: valido ? texto : EMISOR_SIN_IDENTIFICAR,
+      grupo: valido ? grupo : null,
+      contexto: valido ? contexto : null,
+      total: num(t.total),
+      completos: num(t.completos),
+      incompletos: num(t.incompletos),
+      pctIncompletos: numONull(t.pctIncompletos),
+    };
+  });
+}
+
+/** Pasaron / no pasaron por el OCR; null si Nexus aún no lo manda o viene incompleto. */
+export function normalizarOcr(v: unknown): ClasificacionOcr | null {
+  if (!v || typeof v !== 'object') return null;
+  const o = v as Record<string, unknown>;
+  const pasaron = numONull(o.pasaron);
+  const noPasaron = numONull(o.noPasaron);
+  if (pasaron == null || noPasaron == null) return null;
+  const total = pasaron + noPasaron;
+  const pct = (n: number) => (total > 0 ? n / total : null);
+  return {
+    pasaron,
+    noPasaron,
+    total,
+    pctPasaron: numONull(o.pctPasaron) ?? pct(pasaron),
+    pctNoPasaron: numONull(o.pctNoPasaron) ?? pct(noPasaron),
+  };
+}
+
 /** v1.4: KPI de Nexus. Si Nexus aún no los publica, undefined (la pantalla lo avisa). */
 function normalizarKpis(v: unknown): KpisExpedientes | undefined {
   if (!v || typeof v !== 'object') return undefined;
@@ -919,6 +988,8 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       emisionesNexus: numONull(r.emisionesNexus),
       porArea: normalizarPorArea(r.porArea),
       kpis: normalizarKpis(r.kpis),
+      porEmisor: normalizarPorEmisor(r.porEmisor),
+      ocr: normalizarOcr(r.ocr),
     };
   } catch (err) {
     throw toExpedientesError(err, 'coleccion');

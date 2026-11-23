@@ -9,7 +9,14 @@ import {
 import { AvisoError, BarraApilada, BarrasH, Esqueleto, type TonoGrafico } from './expedientes-ui';
 import { categoriasVisibles, numero } from './expedientes-format';
 import { useReanimar } from './expedientes-anim';
-import { EsqueletoKpi, KpiPrincipales, PanelesKpi, type GrupoRanking } from './IndicadoresKpi';
+import {
+  BloqueOcr,
+  EsqueletoKpi,
+  KpiPrincipales,
+  PanelEmisores,
+  PanelesKpi,
+  type GrupoRanking,
+} from './IndicadoresKpi';
 
 type Icono = React.ComponentType<{ size?: number; 'aria-hidden'?: boolean; className?: string }>;
 
@@ -139,7 +146,9 @@ export function IndicadoresExpedientes({
             <>
               {areaKpi === 'todas' && <RepartoConsolidado d={kpiRes.data} />}
               <KpiPrincipales d={kpiRes.data} clave={`${version}|${areaKpi}`} />
+              <BloqueOcr d={kpiRes.data} escritorio={escritorio} />
               <PanelesKpi d={kpiRes.data} escritorio={escritorio} onElegirActor={onElegirActor} />
+              <PanelEmisores d={kpiRes.data} escritorio={escritorio} />
             </>
           )}
           <Comparativo res={res} />
