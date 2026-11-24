@@ -2684,6 +2684,7 @@ textarea.mx-input {
 
 .mx-docbar-tramo.is-errado,
 .mx-docbar-tramo.is-ilegible,
+.mx-docbar-tramo.is-sobrescrito,
 .mx-apilada-seg.is-rojo,
 .mx-graf-muestra.is-rojo,
 .mx-barras-relleno.is-rojo {
@@ -2691,6 +2692,7 @@ textarea.mx-input {
 }
 
 .mx-docbar-tramo.is-sin_informacion,
+.mx-docbar-tramo.is-no_aplica,
 .mx-docbar-tramo.is-otro,
 .mx-apilada-seg.is-gris,
 .mx-graf-muestra.is-gris,

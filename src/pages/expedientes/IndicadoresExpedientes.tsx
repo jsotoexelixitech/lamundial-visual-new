@@ -225,6 +225,10 @@ function RepartoConsolidado({ d }: { d: Indicadores }) {
  */
 function filasDocumentos(d: Indicadores): { label: string; valor: number; tono?: TonoGrafico }[] {
   const ia = { label: 'Validados por IA', valor: d.validadosIa, tono: 'verde' as const };
+  // v12: pólizas con un documento sobrescrito (ya cuentan en «Con errores»): hay que pedirlo de nuevo.
+  const sobrescritos = d.sobrescritos
+    ? [{ label: 'Documento sobrescrito (pedirlo de nuevo)', valor: d.sobrescritos, tono: 'rojo' as const }]
+    : [];
   const desglose = d.desglose;
   if (desglose) {
     return [
@@ -233,11 +237,13 @@ function filasDocumentos(d: Indicadores): { label: string; valor: number; tono?:
         valor: desglose[c.key],
         tono: c.tono,
       })),
+      ...sobrescritos,
       ia,
     ];
   }
   return [
     { label: 'Con errores', valor: d.conErrores, tono: 'rojo' },
+    ...sobrescritos,
     { label: 'Datos cambiados', valor: d.datosModificados ?? 0, tono: 'violeta' },
     { label: 'Observados', valor: d.observados, tono: 'ambar' },
     ...filasValidacion(d),

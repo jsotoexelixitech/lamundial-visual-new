@@ -26,7 +26,18 @@ type OtroEstado = string & {};
 export type EstadoPago = 'pagada' | 'pendiente' | OtroEstado;
 /** sin_informacion / descartada: Nexus los saca del monitor; si aún llegan, la pantalla los ignora. */
 export type EstadoDocumental = 'completo' | 'incompleto' | 'sin_informacion' | OtroEstado;
-export type EstadoRequisitoConocido = 'faltante' | 'recibido' | 'observado' | 'validado' | 'sin_informacion';
+/**
+ * v12: no_aplica = no se exige en esa póliza (no falta ni cuenta); sobrescrito = el archivo guardado
+ * es de otra persona (hay que pedirlo de nuevo).
+ */
+export type EstadoRequisitoConocido =
+  | 'faltante'
+  | 'recibido'
+  | 'observado'
+  | 'validado'
+  | 'sin_informacion'
+  | 'no_aplica'
+  | 'sobrescrito';
 export type EstadoRequisito = EstadoRequisitoConocido | OtroEstado;
 /** cedula | licencia | certificado (configurable en Nexus: puede llegar otro tipo). */
 export type TipoRequisito = string;
@@ -85,6 +96,8 @@ export interface Requisito {
   diagnostico?: Diagnostico | null;
   /** Quién validó u observó: `ia` (o `auto`) = automática; otro valor = usuario. */
   actor?: string | null;
+  /** v12: rótulo de Nexus (personas: «RIF del tomador», «Cédula del tomador», «Cédula del titular»). */
+  label?: string | null;
 }
 
 export interface AseguradoResumen {
@@ -202,6 +215,8 @@ export interface Indicadores {
   noLeidos: number;
   /** v1.3: pólizas con datos cambiados en el formulario respecto al documento. */
   datosModificados: number;
+  /** v12: pólizas con un documento sobrescrito por el de otra persona (pedirlo de nuevo). */
+  sobrescritos: number;
   /**
    * Por qué siguen incompletas: cada póliza incompleta en UNA sola categoría, así la suma es
    * `incompletos`. Los contadores sueltos de arriba se pisan («con algún documento en X»).
@@ -387,6 +402,8 @@ export interface FiltrosBandeja {
   conErrores?: boolean;
   /** v1.3: solo pólizas con datos cambiados en el formulario. Se envía como `datosModificados=true`. */
   datosModificados?: boolean;
+  /** v12: solo pólizas con un documento sobrescrito. Se envía como `sobrescritos=true`. */
+  sobrescritos?: boolean;
   page: number;
   pageSize: number;
 }
@@ -737,6 +754,7 @@ function normalizarRequisitos(raw: unknown, documentos?: unknown): Requisito[] {
       ref: refDe(r, docs),
       diagnostico: normalizarDiagnostico(r),
       actor: texto(r.actor) ?? texto(r.validadoPor),
+      label: texto(r.label),
     }));
 }
 
@@ -800,13 +818,14 @@ function exclusionesAplicadas(raw: unknown): ExclusionAplicada[] {
 
 export async function listarExpedientes(f: FiltrosBandeja): Promise<PaginaExpedientes> {
   try {
-    const { conErrores, datosModificados, ...resto } = f;
+    const { conErrores, datosModificados, sobrescritos, ...resto } = f;
     const { data } = await api.get(BASE, {
       headers: authHeaders(),
       params: limpiarParams({
         ...resto,
         conErrores: conErrores ? 'true' : undefined,
         datosModificados: datosModificados ? 'true' : undefined,
+        sobrescritos: sobrescritos ? 'true' : undefined,
       }),
     });
     const raw = unwrap<unknown>(data);
@@ -981,6 +1000,7 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       analizando: num(r.analizando ?? r.enAnalisis),
       noLeidos: num(r.noLeidos),
       datosModificados: num(r.datosModificados),
+      sobrescritos: num(r.sobrescritos),
       desglose: normalizarDesglose(r.desglose),
       validacion:
         r.validacion === 'manual' || r.validacion === 'automatica' ? r.validacion : undefined,

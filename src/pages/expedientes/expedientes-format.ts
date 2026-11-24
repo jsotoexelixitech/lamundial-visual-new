@@ -25,6 +25,10 @@ export function esActorIa(actor?: string | null): boolean {
  *   el OCR leyó del documento al emitir (se cambiaron en el formulario).
  * - recibido sin diagnóstico o con error_tecnico → analizando (con validación manual: por validar).
  * - observado sin resultado de la IA = observado a mano.
+ * - no_aplica (v12): el requisito no se exige en esa póliza (p. ej. titular = tomador o póliza
+ *   registrada antes de separar los documentos por persona). No falta ni cuenta.
+ * - sobrescrito (v12): el archivo guardado es de otra persona (lo pisó otra emisión del mismo
+ *   tomador antes del arreglo del 23-nov). Hay que pedirlo de nuevo.
  */
 export type EstadoVisual =
   | 'faltante'
@@ -38,6 +42,8 @@ export type EstadoVisual =
   | 'por_validar'
   | 'observado'
   | 'sin_informacion'
+  | 'no_aplica'
+  | 'sobrescrito'
   | 'otro';
 
 export function estadoVisual(
@@ -50,6 +56,10 @@ export function estadoVisual(
       return 'faltante';
     case 'sin_informacion':
       return 'sin_informacion';
+    case 'no_aplica':
+      return 'no_aplica';
+    case 'sobrescrito':
+      return 'sobrescrito';
     case 'validado':
       if (req.actor) return esActorIa(req.actor) ? 'validado_ia' : 'validado_manual';
       return resultado === 'coincide' ? 'validado_ia' : 'validado_manual';
@@ -75,6 +85,7 @@ export type Tono = 'gris' | 'azul' | 'ambar' | 'rojo' | 'violeta' | 'verde';
 const TONO_VISUAL: Record<EstadoVisual, Tono> = {
   faltante: 'gris',
   sin_informacion: 'gris',
+  no_aplica: 'gris',
   otro: 'gris',
   analizando: 'azul',
   por_validar: 'azul',
@@ -82,6 +93,7 @@ const TONO_VISUAL: Record<EstadoVisual, Tono> = {
   observado: 'ambar',
   errado: 'rojo',
   ilegible: 'rojo',
+  sobrescrito: 'rojo',
   datos_cambiados: 'violeta',
   validado_ia: 'verde',
   validado_manual: 'verde',
@@ -202,6 +214,7 @@ export function lineaSumaIncompletos(
 const PRIORIDAD: Record<EstadoVisual, number> = {
   errado: 0,
   ilegible: 0,
+  sobrescrito: 0,
   datos_cambiados: 1,
   observado: 1,
   revisar: 2,
@@ -212,6 +225,7 @@ const PRIORIDAD: Record<EstadoVisual, number> = {
   validado_ia: 6,
   sin_informacion: 7,
   otro: 7,
+  no_aplica: 8,
 };
 
 /** Copia ordenada por gravedad (estable: a igual gravedad se respeta el orden original). */
@@ -235,11 +249,15 @@ export interface ConteoRequisitos {
   total: number;
 }
 
-/** Cuenta los documentos por grupo para la línea «qué falta y qué está mal». */
+/**
+ * Cuenta los documentos por grupo para la línea «qué falta y qué está mal». v12: lo que no aplica
+ * no cuenta (ni en el total); el sobrescrito cuenta como documento con problema.
+ */
 export function contarRequisitos(
   reqs: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>[],
   modo?: ModoValidacion,
 ): ConteoRequisitos {
+  const aplican = reqs.filter((r) => estadoVisual(r, modo) !== 'no_aplica');
   const c: ConteoRequisitos = {
     conProblema: 0,
     datosCambiados: 0,
@@ -247,11 +265,11 @@ export function contarRequisitos(
     sinCargar: 0,
     enCurso: 0,
     validados: 0,
-    total: reqs.length,
+    total: aplican.length,
   };
-  for (const r of reqs) {
+  for (const r of aplican) {
     const v = estadoVisual(r, modo);
-    if (v === 'errado' || v === 'ilegible') c.conProblema++;
+    if (v === 'errado' || v === 'ilegible' || v === 'sobrescrito') c.conProblema++;
     else if (v === 'datos_cambiados') c.datosCambiados++;
     else if (v === 'observado' || v === 'revisar') c.porRevisar++;
     else if (v === 'faltante') c.sinCargar++;
@@ -270,10 +288,24 @@ export function polizaEnmascarada(p?: string | null): string | null {
   return visibles ? `•••• ${visibles}` : null;
 }
 
-/** Documento con problema: errado, ilegible, datos cambiados u observado (filtro «Con documentos errados»). */
+/**
+ * Documento con problema: errado, ilegible, datos cambiados, observado o sobrescrito (v12)
+ * (filtro «Con documentos errados»).
+ */
 export function esDocumentoErrado(req: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>): boolean {
   const v = estadoVisual(req);
-  return v === 'errado' || v === 'ilegible' || v === 'observado' || v === 'datos_cambiados';
+  return (
+    v === 'errado' ||
+    v === 'ilegible' ||
+    v === 'observado' ||
+    v === 'datos_cambiados' ||
+    v === 'sobrescrito'
+  );
+}
+
+/** v12: el archivo guardado es de otra persona: hay que pedirlo de nuevo. */
+export function esDocumentoSobrescrito(req: Pick<Requisito, 'estado' | 'diagnostico' | 'actor'>): boolean {
+  return estadoVisual(req) === 'sobrescrito';
 }
 
 /** v1.3: algún dato de la póliza se cambió en el formulario respecto a lo que leyó el OCR. */
@@ -362,9 +394,16 @@ const ETIQUETAS_RCV: Record<string, string> = {
 /**
  * Etiqueta del documento según el producto: RCV usa sus propias etiquetas;
  * personas, funerario y patrimoniales, las de la mesa técnica.
+ * v12: en personas manda el rótulo de Nexus (`label`), que sabe si el tomador es empresa:
+ * «RIF del tomador» / «Cédula del tomador» y «Cédula del titular».
  */
-export function etiquetaRequisito(tipo: string, producto?: string | null): string {
+export function etiquetaRequisito(
+  tipo: string,
+  producto?: string | null,
+  labelNexus?: string | null,
+): string {
   const t = tipo.toLowerCase();
+  if ((producto ?? '').toLowerCase() === 'personas' && labelNexus?.trim()) return labelNexus.trim();
   if ((producto ?? '').toLowerCase() === 'rcv' && ETIQUETAS_RCV[t]) return ETIQUETAS_RCV[t];
   if (OCR_DOC_LABELS[t]) return OCR_DOC_LABELS[t];
   return t ? `Documento ${t}` : 'Documento';
