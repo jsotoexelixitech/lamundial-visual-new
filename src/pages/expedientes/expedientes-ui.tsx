@@ -4,6 +4,7 @@ import {
   CheckCircle2,
   CircleDashed,
   CircleHelp,
+  CircleMinus,
   EyeOff,
   FileWarning,
   Hourglass,
@@ -110,6 +111,10 @@ const REQ_META: Record<Exclude<EstadoVisual, 'otro'>, MetaReq> = {
   por_validar: { label: 'Por validar', clase: 'mx-req--recibido', Icon: Hourglass },
   observado: { label: 'Observado', clase: 'mx-req--observado', Icon: AlertTriangle },
   sin_informacion: { label: 'Sin información', clase: 'mx-req--sin-info', Icon: CircleHelp },
+  // v12: no se exige en esta póliza (p. ej. el titular es el mismo tomador).
+  no_aplica: { label: 'No aplica', clase: 'mx-req--sin-info', Icon: CircleMinus },
+  // v12: el archivo guardado es de otra persona (lo pisó otra emisión): pedirlo de nuevo.
+  sobrescrito: { label: 'Documento sobrescrito', clase: 'mx-req--errado', Icon: FileWarning },
 };
 
 function metaRequisito(visual: EstadoVisual, estado: EstadoRequisito): MetaReq {
@@ -126,6 +131,7 @@ function metaRequisito(visual: EstadoVisual, estado: EstadoRequisito): MetaReq {
 export function ChipRequisito({
   tipo,
   producto,
+  label,
   estado,
   motivo,
   diagnostico,
@@ -135,6 +141,8 @@ export function ChipRequisito({
 }: {
   tipo: string;
   producto?: string | null;
+  /** v12: rótulo de Nexus (personas: «RIF del tomador», «Cédula del titular»…). */
+  label?: string | null;
   estado: EstadoRequisito;
   motivo?: string | null;
   diagnostico?: Diagnostico | null;
@@ -145,10 +153,14 @@ export function ChipRequisito({
   const visual = estadoVisual({ estado, diagnostico, actor }, modo);
   const meta = metaRequisito(visual, estado);
   const Icon = meta.Icon;
-  const nombre = etiquetaRequisito(tipo, producto);
+  const nombre = etiquetaRequisito(tipo, producto, label);
   const quien =
     visual === 'validado_manual' && actor && !esActorIa(actor) ? ` por ${actor}` : '';
-  const detalle = diagnostico?.resumen || motivo;
+  // v12: en el sobrescrito y en lo que no aplica manda el motivo de Nexus (por qué).
+  const detalle =
+    visual === 'sobrescrito' || visual === 'no_aplica'
+      ? motivo || diagnostico?.resumen
+      : diagnostico?.resumen || motivo;
   const titulo = detalle || quien ? `${nombre}: ${meta.label}${quien}${detalle ? ` — ${detalle}` : ''}` : undefined;
   return (
     <span className={`mx-req ${meta.clase}`} title={titulo}>
@@ -191,6 +203,7 @@ type ReqResumen = {
   estado: EstadoRequisito;
   diagnostico?: Diagnostico | null;
   actor?: string | null;
+  label?: string | null;
 };
 
 /** Orden de los tramos de la barra: lo validado a la izquierda, lo que falta al final. */
@@ -204,9 +217,11 @@ const ORDEN_BARRA: Record<EstadoVisual, number> = {
   datos_cambiados: 3,
   errado: 4,
   ilegible: 4,
+  sobrescrito: 4,
   sin_informacion: 5,
   otro: 5,
   faltante: 6,
+  no_aplica: 7,
 };
 
 /**
@@ -233,14 +248,17 @@ export function LineaPendiente({
   if (c.sinCargar) partes.push(['is-gris', `${c.sinCargar} sin cargar`]);
   if (c.enCurso) partes.push(['is-azul', `${c.enCurso} ${modo === 'manual' ? 'por validar' : 'en análisis'}`]);
 
+  // v12: lo que no aplica en la póliza no va en la barra ni en «N de M validados».
   const tramos = requisitos
     .map((r, i) => {
       const visual = estadoVisual(r, modo);
       return { r, i, visual, o: ORDEN_BARRA[visual] };
     })
+    .filter((t) => t.visual !== 'no_aplica')
     .sort((a, b) => a.o - b.o || a.i - b.i);
+  if (tramos.length === 0) return null;
   const descripcion = tramos
-    .map(({ r, visual }) => `${etiquetaRequisito(r.tipo, producto)}: ${metaRequisito(visual, r.estado).label}`)
+    .map(({ r, visual }) => `${etiquetaRequisito(r.tipo, producto, r.label)}: ${metaRequisito(visual, r.estado).label}`)
     .join('; ');
   const completo = c.validados === c.total;
 
@@ -252,7 +270,7 @@ export function LineaPendiente({
             <span
               key={`${r.tipo}-${visual}`}
               className={`mx-docbar-tramo is-${visual}`}
-              title={`${etiquetaRequisito(r.tipo, producto)}: ${metaRequisito(visual, r.estado).label}`}
+              title={`${etiquetaRequisito(r.tipo, producto, r.label)}: ${metaRequisito(visual, r.estado).label}`}
             />
           ))}
         </div>
@@ -283,8 +301,9 @@ export function LeyendaEstados() {
     ['mx-req--recibido', 'Recibido, en análisis o por validar', 'analizando'],
     ['mx-req--observado', 'Observado o revisar', 'observado'],
     ['mx-req--modificado', 'Datos cambiados', 'datos_cambiados'],
-    ['mx-req--errado', 'Errado o ilegible', 'errado'],
+    ['mx-req--errado', 'Errado, ilegible o documento sobrescrito', 'errado'],
     ['mx-req--faltante', 'No cargado', 'faltante'],
+    ['mx-req--sin-info', 'No aplica en esta póliza', 'no_aplica'],
   ];
   return (
     <details className="mx-leyenda">

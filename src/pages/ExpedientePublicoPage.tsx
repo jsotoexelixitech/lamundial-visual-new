@@ -432,7 +432,7 @@ function Expediente({
                 req={r}
                 producto={r.producto ?? data.producto}
                 onSubido={() =>
-                  trasSubir(r.tipo, etiquetaRequisito(r.tipo, r.producto ?? data.producto))
+                  trasSubir(r.tipo, etiquetaRequisito(r.tipo, r.producto ?? data.producto, r.label))
                 }
                 onEnlaceCaido={onEnlaceCaido}
               />
@@ -461,7 +461,7 @@ function Expediente({
                       <span className="mx-pub-doc-icono" aria-hidden>
                         {nuevo ? <CheckAnimado /> : <FileText size={18} />}
                       </span>
-                      {etiquetaRequisito(r.tipo, r.producto ?? data.producto)}
+                      {etiquetaRequisito(r.tipo, r.producto ?? data.producto, r.label)}
                     </span>
                     {aprobado ? (
                       <span className="mx-req mx-req--validado">
@@ -524,7 +524,7 @@ function DocumentoPendiente({
   const [archivo, setArchivo] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const nombre = etiquetaRequisito(req.tipo, producto);
+  const nombre = etiquetaRequisito(req.tipo, producto, req.label);
   const subiendo = pct !== null;
   // v1.3: datos cambiados en el formulario = el documento está bien, se revisa la póliza.
   const enRevision = req.estado !== 'validado' && req.diagnostico?.resultado === 'datos_modificados';

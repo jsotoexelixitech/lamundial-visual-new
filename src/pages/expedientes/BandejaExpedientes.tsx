@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ChevronUp,
   Eye,
+  FileWarning,
   PencilLine,
   RotateCcw,
   Search,
@@ -39,6 +40,7 @@ import {
   OPCIONES_AREA,
   OPCIONES_PRODUCTO,
   esDocumentoErrado,
+  esDocumentoSobrescrito,
   etiquetaArea,
   etiquetaProducto,
   fechaCorta,
@@ -62,6 +64,8 @@ interface FiltrosUI {
   conErrores: boolean;
   /** v1.3: solo pólizas con datos cambiados en el formulario respecto al OCR al emitir. */
   datosModificados: boolean;
+  /** v12: solo pólizas con un documento sobrescrito por el de otra persona (pedirlo de nuevo). */
+  sobrescritos: boolean;
 }
 
 const FILTROS_INICIALES: FiltrosUI = {
@@ -75,6 +79,7 @@ const FILTROS_INICIALES: FiltrosUI = {
   agrupar: 'poliza',
   conErrores: false,
   datosModificados: false,
+  sobrescritos: false,
 };
 
 const TAMANOS = [25, 50, 100];
@@ -153,6 +158,8 @@ export function BandejaExpedientes({
   const conErrores = estadoDoc === 'incompleto' && filtros.conErrores;
   // Datos cambiados = documento observado: también solo en los incompletos.
   const datosModificados = estadoDoc === 'incompleto' && filtros.datosModificados;
+  // v12: documento sobrescrito = incompleto (hay que pedirlo de nuevo).
+  const sobrescritos = estadoDoc === 'incompleto' && filtros.sobrescritos;
   const canal = filtroActor?.grupo === 'canal' ? filtroActor.codigo : undefined;
   const productor = filtroActor?.grupo === 'productor' ? filtroActor.codigo : undefined;
 
@@ -180,6 +187,7 @@ export function BandejaExpedientes({
       agrupar,
       conErrores,
       datosModificados,
+      sobrescritos,
       canal,
       productor,
       page,
@@ -196,7 +204,7 @@ export function BandejaExpedientes({
       .finally(() => {
         if (n === peticion.current) setCargando(false);
       });
-  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, datosModificados, canal, productor, page, pageSize, recargaKey, reintento]);
+  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, datosModificados, sobrescritos, canal, productor, page, pageSize, recargaKey, reintento]);
 
   const cambiar = <K extends keyof FiltrosUI>(k: K, v: FiltrosUI[K]) => {
     setFiltros((p) => ({ ...p, [k]: v }));
@@ -222,8 +230,9 @@ export function BandejaExpedientes({
     let lista = datos?.items ?? [];
     if (conErrores) lista = lista.filter((it) => it.requisitos.some(esDocumentoErrado));
     if (datosModificados) lista = lista.filter((it) => it.datosModificados);
+    if (sobrescritos) lista = lista.filter((it) => it.requisitos.some(esDocumentoSobrescrito));
     return lista;
-  }, [datos, conErrores, datosModificados]);
+  }, [datos, conErrores, datosModificados, sobrescritos]);
   const total = datos?.total ?? 0;
   const paginas = Math.max(1, Math.ceil(total / pageSize));
   const desdeN = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -353,6 +362,16 @@ export function BandejaExpedientes({
                 >
                   <PencilLine size={14} aria-hidden />
                   Datos cambiados
+                </button>
+                <button
+                  type="button"
+                  className="mx-toggle mx-toggle--rojo"
+                  aria-pressed={filtros.sobrescritos}
+                  onClick={() => cambiar('sobrescritos', !filtros.sobrescritos)}
+                  title="El archivo guardado es de otra persona (lo reemplazó otra emisión del mismo tomador): hay que pedirlo de nuevo."
+                >
+                  <FileWarning size={14} aria-hidden />
+                  Documento sobrescrito
                 </button>
               </div>
             )}
@@ -642,6 +661,7 @@ function Requisitos({ it, modo }: { it: ExpedienteItem; modo?: ModoValidacion })
           key={r.tipo}
           tipo={r.tipo}
           producto={it.producto}
+          label={r.label}
           estado={r.estado}
           motivo={r.motivo}
           diagnostico={r.diagnostico}

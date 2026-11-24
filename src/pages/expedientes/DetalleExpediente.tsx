@@ -515,7 +515,7 @@ function TarjetaDocumento({
   const [motivo, setMotivo] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
-  const nombre = etiquetaRequisito(req.tipo, producto);
+  const nombre = etiquetaRequisito(req.tipo, producto, req.label);
   const decision = ultimaDecision(req.tipo, eventos);
   const actor = req.actor ?? decision?.actor ?? null;
   const visual = estadoVisual({ ...req, actor }, modo);
@@ -527,7 +527,11 @@ function TarjetaDocumento({
     ? 'Cargado'
     : req.estado === 'faltante'
       ? 'No cargado'
-      : 'Sin información de carga';
+      : visual === 'no_aplica'
+        ? 'No se pide en esta póliza'
+        : 'Sin información de carga';
+  // v12: el archivo guardado es de otra persona (lo pisó otra emisión): hay que pedirlo de nuevo.
+  const sobrescrito = visual === 'sobrescrito';
   const url = urlDocumento(req.ref);
   const motivoOk = motivo.trim().length >= MOTIVO_MIN;
   const confianza = nivelConfianza(diag?.confianza);
@@ -553,8 +557,11 @@ function TarjetaDocumento({
     }
   };
 
-  const puedeValidarEste = puedeValidar && (req.estado === 'recibido' || req.estado === 'observado');
-  const puedeObservarEste = puedeValidar && (req.estado === 'recibido' || req.estado === 'validado');
+  // v12: el sobrescrito se puede observar (pedirlo de nuevo) o validar si el analista confirma que es de esta póliza.
+  const puedeValidarEste =
+    puedeValidar && (req.estado === 'recibido' || req.estado === 'observado' || sobrescrito);
+  const puedeObservarEste =
+    puedeValidar && (req.estado === 'recibido' || req.estado === 'validado' || sobrescrito);
 
   // Carga desde el monitor: Nexus no acepta reemplazar un documento ya validado.
   const archivoRef = useRef<HTMLInputElement>(null);
@@ -583,6 +590,25 @@ function TarjetaDocumento({
 
   return (
     <li className={`mx-doc-card mx-tono--${tonoVisual(visual)}`}>
+      {sobrescrito && (
+        <div className="mx-aviso mx-aviso--error" role="alert">
+          <AlertTriangle size={18} aria-hidden className="shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="font-semibold">Documento sobrescrito: pedirlo de nuevo</p>
+            <p className="mt-0.5">
+              {req.motivo ??
+                'El archivo guardado es el documento de otra persona: otra emisión del mismo tomador lo reemplazó.'}{' '}
+              No se envían correos automáticos por este documento: use «Observar» para pedirlo al asegurado o cárguelo aquí.
+            </p>
+          </div>
+        </div>
+      )}
+      {visual === 'no_aplica' && req.motivo && (
+        <p className="mx-sub flex items-center gap-1.5">
+          <Info size={14} aria-hidden />
+          {req.motivo}
+        </p>
+      )}
       {datosCambiados && (
         <div className="mx-aviso mx-aviso--modificado" role="alert">
           <AlertTriangle size={18} aria-hidden className="shrink-0 mt-0.5" />
@@ -599,6 +625,7 @@ function TarjetaDocumento({
             <ChipRequisito
               tipo={req.tipo}
               producto={producto}
+              label={req.label}
               estado={req.estado}
               diagnostico={diag}
               actor={actor}
