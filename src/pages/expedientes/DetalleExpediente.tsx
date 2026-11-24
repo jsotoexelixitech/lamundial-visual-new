@@ -494,6 +494,14 @@ const TEXTO_RESULTADO: Record<string, string> = {
  * salvo que ya esté validado) y, solo para administradores y como excepción, validar u observar
  * a mano.
  */
+/** DD/MM de una fecha ISO (sin año). */
+function diaMes(iso?: string | null): string {
+  if (!iso) return 'día anterior';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 'día anterior';
+  return d.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit' });
+}
+
 function TarjetaDocumento({
   expId,
   req,
@@ -532,7 +540,10 @@ function TarjetaDocumento({
         : 'Sin información de carga';
   // v12: el archivo guardado es de otra persona (lo pisó otra emisión): hay que pedirlo de nuevo.
   const sobrescrito = visual === 'sobrescrito';
-  const url = urlDocumento(req.ref);
+  // 24-nov: el archivo guardado hoy no es el que se analizó: no se ofrece «Ver documento» como si fuera el validado.
+  const archivoCambiado = req.archivoCambiado ?? null;
+  const url = archivoCambiado ? null : urlDocumento(req.ref);
+  const rifCompartido = req.actor === 'rif_compartido';
   const motivoOk = motivo.trim().length >= MOTIVO_MIN;
   const confianza = nivelConfianza(diag?.confianza);
   const manual = !!actor && !esActorIa(actor);
@@ -566,7 +577,8 @@ function TarjetaDocumento({
   // Carga desde el monitor: Nexus no acepta reemplazar un documento ya validado.
   const archivoRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState<number | null>(null);
-  const puedeCargarEste = req.estado !== 'validado';
+  // Lo validado con el RIF compartido de la empresa admite cargar un RIF propio.
+  const puedeCargarEste = req.estado !== 'validado' || rifCompartido;
   const cargarArchivo = async (file: File) => {
     const rechazo = validarArchivo(file);
     if (rechazo) {
@@ -604,6 +616,28 @@ function TarjetaDocumento({
         </div>
       )}
       {visual === 'no_aplica' && req.motivo && (
+        <p className="mx-sub flex items-center gap-1.5">
+          <Info size={14} aria-hidden />
+          {req.motivo}
+        </p>
+      )}
+      {archivoCambiado && (
+        <div className="mx-aviso mx-aviso--modificado" role="alert">
+          <AlertTriangle size={18} aria-hidden className="shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="font-semibold">
+              Este documento se validó el {diaMes(archivoCambiado.validadoEn)}, pero el archivo guardado hoy es otro
+            </p>
+            <p className="mt-0.5">
+              {archivoCambiado.motivo === 'no_existe'
+                ? 'El archivo que se validó ya no está guardado. '
+                : 'El archivo que se validó fue reemplazado por otro. '}
+              Es solo un aviso: el estado del documento no cambió. Si hace falta, pídalo de nuevo.
+            </p>
+          </div>
+        </div>
+      )}
+      {rifCompartido && req.motivo && (
         <p className="mx-sub flex items-center gap-1.5">
           <Info size={14} aria-hidden />
           {req.motivo}
