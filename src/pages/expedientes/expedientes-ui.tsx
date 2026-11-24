@@ -48,6 +48,14 @@ export function ChipPago({ estado }: { estado: EstadoPago }) {
       </span>
     );
   }
+  if (estado === 'anulada') {
+    return (
+      <span className="mx-chip mx-chip--neutral" title="El recibo está anulado en Sis2000; la póliza no está anulada">
+        <Wallet size={13} aria-hidden />
+        Recibo anulado
+      </span>
+    );
+  }
   if (estado === 'pagada') {
     return (
       <span className="mx-chip mx-chip--pago-ok">

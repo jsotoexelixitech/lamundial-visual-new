@@ -52,7 +52,7 @@ import {
 } from './expedientes-format';
 
 interface FiltrosUI {
-  estadoPago: '' | 'pagada' | 'pendiente';
+  estadoPago: '' | 'pagada' | 'pendiente' | 'anulada';
   area: string;
   producto: string;
   desde: string;
@@ -66,6 +66,8 @@ interface FiltrosUI {
   datosModificados: boolean;
   /** v12: solo pólizas con un documento sobrescrito por el de otra persona (pedirlo de nuevo). */
   sobrescritos: boolean;
+  /** 24-nov: el archivo guardado hoy ya no es el analizado. */
+  archivoCambiado: boolean;
 }
 
 const FILTROS_INICIALES: FiltrosUI = {
@@ -80,6 +82,7 @@ const FILTROS_INICIALES: FiltrosUI = {
   conErrores: false,
   datosModificados: false,
   sobrescritos: false,
+  archivoCambiado: false,
 };
 
 const TAMANOS = [25, 50, 100];
@@ -160,6 +163,7 @@ export function BandejaExpedientes({
   const datosModificados = estadoDoc === 'incompleto' && filtros.datosModificados;
   // v12: documento sobrescrito = incompleto (hay que pedirlo de nuevo).
   const sobrescritos = estadoDoc === 'incompleto' && filtros.sobrescritos;
+  const archivoCambiado = filtros.archivoCambiado;
   const canal = filtroActor?.grupo === 'canal' ? filtroActor.codigo : undefined;
   const productor = filtroActor?.grupo === 'productor' ? filtroActor.codigo : undefined;
 
@@ -188,6 +192,7 @@ export function BandejaExpedientes({
       conErrores,
       datosModificados,
       sobrescritos,
+      archivoCambiado,
       canal,
       productor,
       page,
@@ -204,7 +209,7 @@ export function BandejaExpedientes({
       .finally(() => {
         if (n === peticion.current) setCargando(false);
       });
-  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, datosModificados, sobrescritos, canal, productor, page, pageSize, recargaKey, reintento]);
+  }, [estadoDoc, estadoPago, area, producto, desde, hasta, vendedor, q, agrupar, conErrores, datosModificados, sobrescritos, archivoCambiado, canal, productor, page, pageSize, recargaKey, reintento]);
 
   const cambiar = <K extends keyof FiltrosUI>(k: K, v: FiltrosUI[K]) => {
     setFiltros((p) => ({ ...p, [k]: v }));
@@ -231,8 +236,9 @@ export function BandejaExpedientes({
     if (conErrores) lista = lista.filter((it) => it.requisitos.some(esDocumentoErrado));
     if (datosModificados) lista = lista.filter((it) => it.datosModificados);
     if (sobrescritos) lista = lista.filter((it) => it.requisitos.some(esDocumentoSobrescrito));
+    if (archivoCambiado) lista = lista.filter((it) => it.requisitos.some((r) => !!r.archivoCambiado));
     return lista;
-  }, [datos, conErrores, datosModificados, sobrescritos]);
+  }, [datos, conErrores, datosModificados, sobrescritos, archivoCambiado]);
   const total = datos?.total ?? 0;
   const paginas = Math.max(1, Math.ceil(total / pageSize));
   const desdeN = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -375,6 +381,16 @@ export function BandejaExpedientes({
                 </button>
               </div>
             )}
+            <button
+              type="button"
+              className="mx-toggle mx-toggle--violeta"
+              aria-pressed={filtros.archivoCambiado}
+              onClick={() => cambiar('archivoCambiado', !filtros.archivoCambiado)}
+              title="Documentos que se validaron con un archivo y hoy el archivo guardado es otro. Es solo un aviso: el estado no cambia."
+            >
+              <FileWarning size={14} aria-hidden />
+              Archivo cambiado
+            </button>
             <div className="mx-segmento" role="group" aria-label="Agrupar">
               <button
                 type="button"
@@ -406,6 +422,7 @@ export function BandejaExpedientes({
               <option value="">Todos</option>
               <option value="pagada">Pagada</option>
               <option value="pendiente">Pendiente de pago</option>
+              <option value="anulada">Recibo anulado</option>
             </select>
           </label>
           <label className="mx-field" htmlFor={`${idPrefijo}-area`}>

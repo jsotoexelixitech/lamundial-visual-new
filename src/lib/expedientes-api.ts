@@ -23,7 +23,8 @@ import {
 
 // Un estado que Nexus agregue después se muestra tal cual: nunca se convierte a otro.
 type OtroEstado = string & {};
-export type EstadoPago = 'pagada' | 'pendiente' | OtroEstado;
+/** `anulada` = el RECIBO está anulado en Sis2000 (no la póliza). */
+export type EstadoPago = 'pagada' | 'pendiente' | 'anulada' | OtroEstado;
 /** sin_informacion / descartada: Nexus los saca del monitor; si aún llegan, la pantalla los ignora. */
 export type EstadoDocumental = 'completo' | 'incompleto' | 'sin_informacion' | OtroEstado;
 /**
@@ -98,6 +99,11 @@ export interface Requisito {
   actor?: string | null;
   /** v12: rótulo de Nexus (personas: «RIF del tomador», «Cédula del tomador», «Cédula del titular»). */
   label?: string | null;
+  /**
+   * 24-nov: el archivo guardado hoy ya no es el que se analizó (solo aviso; el estado no cambia).
+   * `validadoEn` es la fecha en que se validó.
+   */
+  archivoCambiado?: { detectadoEn: string | null; motivo: 'otro' | 'no_existe'; validadoEn: string | null } | null;
 }
 
 export interface AseguradoResumen {
@@ -199,6 +205,10 @@ export interface Indicadores {
   sinInformacion: number;
   pagadas: number;
   pendientesPago: number;
+  /** 24-nov: recibo anulado en Sis2000 (no cuenta como pendiente de pago). */
+  reciboAnulado: number;
+  /** 24-nov: con un documento cuyo archivo guardado hoy ya no es el analizado. */
+  archivoCambiado: number;
   porValidar: number;
   observados: number;
   sinCorreo: number;
@@ -404,6 +414,8 @@ export interface FiltrosBandeja {
   datosModificados?: boolean;
   /** v12: solo pólizas con un documento sobrescrito. Se envía como `sobrescritos=true`. */
   sobrescritos?: boolean;
+  /** 24-nov: solo pólizas con un documento cuyo archivo guardado hoy ya no es el analizado. */
+  archivoCambiado?: boolean;
   page: number;
   pageSize: number;
 }
@@ -755,7 +767,18 @@ function normalizarRequisitos(raw: unknown, documentos?: unknown): Requisito[] {
       diagnostico: normalizarDiagnostico(r),
       actor: texto(r.actor) ?? texto(r.validadoPor),
       label: texto(r.label),
+      archivoCambiado: archivoCambiadoDe(r.archivoCambiado, r.validadoEn),
     }));
+}
+
+function archivoCambiadoDe(raw: unknown, validadoEn: unknown): Requisito['archivoCambiado'] {
+  if (!raw || typeof raw !== 'object') return null;
+  const m = raw as Record<string, unknown>;
+  return {
+    detectadoEn: texto(m.detectadoEn),
+    motivo: m.motivo === 'no_existe' ? 'no_existe' : 'otro',
+    validadoEn: texto(m.validadoEn) ?? texto(validadoEn),
+  };
 }
 
 function normalizarItem(raw: Record<string, unknown>): ExpedienteItem {
@@ -818,7 +841,7 @@ function exclusionesAplicadas(raw: unknown): ExclusionAplicada[] {
 
 export async function listarExpedientes(f: FiltrosBandeja): Promise<PaginaExpedientes> {
   try {
-    const { conErrores, datosModificados, sobrescritos, ...resto } = f;
+    const { conErrores, datosModificados, sobrescritos, archivoCambiado, ...resto } = f;
     const { data } = await api.get(BASE, {
       headers: authHeaders(),
       params: limpiarParams({
@@ -826,6 +849,7 @@ export async function listarExpedientes(f: FiltrosBandeja): Promise<PaginaExpedi
         conErrores: conErrores ? 'true' : undefined,
         datosModificados: datosModificados ? 'true' : undefined,
         sobrescritos: sobrescritos ? 'true' : undefined,
+        archivoCambiado: archivoCambiado ? 'true' : undefined,
       }),
     });
     const raw = unwrap<unknown>(data);
@@ -988,6 +1012,8 @@ export async function obtenerIndicadores(f: FiltrosIndicadores): Promise<Indicad
       sinInformacion: 0,
       pagadas: num(r.pagadas),
       pendientesPago: num(r.pendientesPago),
+      reciboAnulado: num(r.reciboAnulado),
+      archivoCambiado: num(r.archivoCambiado),
       porValidar: num(r.porValidar),
       observados: num(r.observados),
       sinCorreo: num(r.sinCorreo),

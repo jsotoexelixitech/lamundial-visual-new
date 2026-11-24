@@ -229,6 +229,10 @@ function filasDocumentos(d: Indicadores): { label: string; valor: number; tono?:
   const sobrescritos = d.sobrescritos
     ? [{ label: 'Documento sobrescrito (pedirlo de nuevo)', valor: d.sobrescritos, tono: 'rojo' as const }]
     : [];
+  // 24-nov: documentos validados cuyo archivo guardado hoy ya no es el analizado (solo aviso).
+  const archivoCambiado = d.archivoCambiado
+    ? [{ label: 'Archivo cambiado después de validar', valor: d.archivoCambiado, tono: 'ambar' as const }]
+    : [];
   const desglose = d.desglose;
   if (desglose) {
     return [
@@ -238,12 +242,14 @@ function filasDocumentos(d: Indicadores): { label: string; valor: number; tono?:
         tono: c.tono,
       })),
       ...sobrescritos,
+      ...archivoCambiado,
       ia,
     ];
   }
   return [
     { label: 'Con errores', valor: d.conErrores, tono: 'rojo' },
     ...sobrescritos,
+    ...archivoCambiado,
     { label: 'Datos cambiados', valor: d.datosModificados ?? 0, tono: 'violeta' },
     { label: 'Observados', valor: d.observados, tono: 'ambar' },
     ...filasValidacion(d),
@@ -369,6 +375,7 @@ function Contenido({ d }: { d: Indicadores }) {
         segmentos={[
           { label: 'Pagadas', valor: d.pagadas, tono: 'tinta' },
           { label: 'Pendientes de pago', valor: d.pendientesPago, tono: 'gris' },
+          ...(d.reciboAnulado ? [{ label: 'Recibo anulado', valor: d.reciboAnulado, tono: 'ambar' as const }] : []),
         ]}
       />
       <BarrasH
